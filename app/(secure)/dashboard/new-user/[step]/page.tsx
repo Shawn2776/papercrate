@@ -7,17 +7,17 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 
-interface PageProps {
+interface Props {
   params: {
     step: string;
   };
 }
 
-export default async function StepPage({ params }: PageProps) {
-  const stepNumber = parseInt(params.step, 10);
+export default async function StepPage({ params }: Props) {
+  const step = parseInt(params.step, 10);
 
-  if (isNaN(stepNumber) || stepNumber < 1 || stepNumber > 5) {
-    notFound(); // optional: handle invalid steps
+  if (isNaN(step) || step < 1 || step > 5) {
+    notFound(); // Invalid step number
   }
 
   const { userId } = await auth();
@@ -31,13 +31,7 @@ export default async function StepPage({ params }: PageProps) {
   });
 
   if (existingMembership) {
-    return redirect("/dashboard"); // or your actual app home
-  }
-
-  const step = parseInt(params.step);
-
-  if (isNaN(step) || step < 1 || step > 5) {
-    return redirect("/dashboard/new-user/1");
+    return redirect("/dashboard");
   }
 
   const stepComponents = {
