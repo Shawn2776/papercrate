@@ -1,5 +1,4 @@
 // app/(secure)/dashboard/new-user/[step]/page.tsx
-export const dynamic = "force-dynamic";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
@@ -9,13 +8,15 @@ import StepThreeSubcategory from "@/components/forms/new-user/StepThreeSubcatego
 import StepFourBusinessDetails from "@/components/forms/new-user/StepFourBusinessDetails";
 import StepFiveReviewSubmit from "@/components/forms/new-user/StepFiveReviewSubmit";
 
-type Props = {
+export const dynamic = "force-dynamic";
+
+type StepPageProps = {
   params: {
     step: string;
   };
 };
 
-export default async function StepPage({ params }: Props) {
+export default async function StepPage({ params }: StepPageProps) {
   const stepNumber = parseInt(params.step, 10);
   if (isNaN(stepNumber) || stepNumber < 1 || stepNumber > 5) notFound();
 
