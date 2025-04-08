@@ -1,44 +1,53 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { Product } from "@/lib/schemas";
+// lib/redux/slices/productsSlice.ts
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 
-// Async thunk
-export const fetchProducts = createAsyncThunk<Product[]>(
-  "products/fetch",
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await fetch("/api/products");
-      if (!res.ok) throw new Error(`Failed to fetch products (${res.status})`);
-      return await res.json();
-    } catch (err) {
-      return rejectWithValue(getErrorMessage(err));
-    }
-  }
-);
+// Define the product type
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  sku?: string;
+  barcode?: string;
+  imageUrl?: string;
+  description?: string;
+}
 
-// State type
+// Define the state
 interface ProductsState {
-  data: Product[];
+  products: Product[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: ProductsState = {
-  data: [],
+  products: [],
   loading: false,
   error: null,
 };
+
+// Async thunk to fetch products
+export const fetchProducts = createAsyncThunk<
+  Product[],
+  void,
+  { rejectValue: string }
+>("products/fetchProducts", async (_, { rejectWithValue }) => {
+  try {
+    const res = await fetch("/api/products");
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    return rejectWithValue(getErrorMessage(err));
+  }
+});
 
 const productsSlice = createSlice({
   name: "products",
   initialState,
   reducers: {
-    setProducts: (state, action: PayloadAction<Product[]>) => {
-      state.data = action.payload;
-    },
-    addProduct: (state, action: PayloadAction<Product>) => {
-      state.data.push(action.payload);
+    addProduct(state, action: PayloadAction<Product>) {
+      state.products.push(action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -48,22 +57,22 @@ const productsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.products = action.payload;
         state.loading = false;
-        state.data = action.payload;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Failed to fetch products";
       });
   },
 });
 
-// ✅ Selectors
-export const selectProducts = (state: RootState) => state.products.data;
+export const { addProduct } = productsSlice.actions;
+
+// Selectors
+export const selectProducts = (state: RootState) => state.products.products;
 export const selectProductsLoading = (state: RootState) =>
   state.products.loading;
 export const selectProductsError = (state: RootState) => state.products.error;
 
-// Export reducer + actions
-export const { setProducts, addProduct } = productsSlice.actions;
 export default productsSlice.reducer;

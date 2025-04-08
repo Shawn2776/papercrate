@@ -1,23 +1,8 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Customer } from "@/lib/schemas";
 import { RootState } from "../store";
 import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 
-// Async thunk to fetch customers
-export const fetchCustomers = createAsyncThunk<Customer[]>(
-  "customers/fetch",
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await fetch("/api/customers");
-      if (!res.ok) throw new Error(`Failed to fetch customers (${res.status})`);
-      return await res.json();
-    } catch (err) {
-      return rejectWithValue(getErrorMessage(err));
-    }
-  }
-);
-
-// Slice state type
 interface CustomersState {
   data: Customer[];
   loading: boolean;
@@ -30,13 +15,24 @@ const initialState: CustomersState = {
   error: null,
 };
 
+export const fetchCustomers = createAsyncThunk<
+  Customer[],
+  void,
+  { rejectValue: string }
+>("customers/fetch", async (_, { rejectWithValue }) => {
+  try {
+    const res = await fetch("/api/customers");
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();
+  } catch (err) {
+    return rejectWithValue(getErrorMessage(err));
+  }
+});
+
 const customersSlice = createSlice({
   name: "customers",
   initialState,
   reducers: {
-    setCustomers: (state, action: PayloadAction<Customer[]>) => {
-      state.data = action.payload;
-    },
     addCustomer: (state, action: PayloadAction<Customer>) => {
       state.data.push(action.payload);
     },
@@ -53,17 +49,15 @@ const customersSlice = createSlice({
       })
       .addCase(fetchCustomers.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload ?? "Failed to load customers";
       });
   },
 });
 
-// ✅ Selectors
+export const { addCustomer } = customersSlice.actions;
 export const selectCustomers = (state: RootState) => state.customers.data;
 export const selectCustomersLoading = (state: RootState) =>
   state.customers.loading;
 export const selectCustomersError = (state: RootState) => state.customers.error;
 
-// Actions + reducer
-export const { setCustomers, addCustomer } = customersSlice.actions;
 export default customersSlice.reducer;

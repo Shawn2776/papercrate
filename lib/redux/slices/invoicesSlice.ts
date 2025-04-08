@@ -1,37 +1,62 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+// lib/redux/slices/invoicesSlice.ts
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 import { formatCurrency } from "@/lib/functions/formatCurrency";
+import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 
+// Raw data returned from the API
+interface InvoiceApiResponse {
+  id: string;
+  number: string;
+  status: string;
+  amount: number;
+  customer: {
+    name: string;
+  } | null;
+  createdAt: string;
+}
+
+// Transformed invoice row used in the table
 export interface Invoice {
   id: string;
   number: string;
   status: string;
-  amount: string;
+  amount: string; // Formatted currency string
   customer: string;
   createdAt: string;
 }
 
-const initialState: Invoice[] = [];
+interface InvoicesState {
+  invoices: Invoice[];
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: InvoicesState = {
+  invoices: [],
+  loading: false,
+  error: null,
+};
 
 export const fetchInvoices = createAsyncThunk<
-  Invoice[],
-  void,
+  Invoice[], // return type
+  void, // argument
   { rejectValue: string }
 >("invoices/fetchInvoices", async (_, { rejectWithValue }) => {
   try {
     const res = await fetch("/api/invoices");
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    const data: InvoiceApiResponse[] = await res.json();
 
-    const rawData = await res.json();
-    const transformed: Invoice[] = rawData.map((inv: any) => ({
+    const transformed: Invoice[] = data.map((inv) => ({
       id: inv.id,
-      status: inv.status,
       number: inv.number,
+      status: inv.status,
       amount: formatCurrency(inv.amount),
       customer: inv.customer?.name || "Unknown",
       createdAt: inv.createdAt,
     }));
+
     return transformed;
   } catch (err) {
     return rejectWithValue(getErrorMessage(err));
@@ -41,13 +66,33 @@ export const fetchInvoices = createAsyncThunk<
 const invoicesSlice = createSlice({
   name: "invoices",
   initialState,
-  reducers: {},
+  reducers: {
+    addInvoice(state, action: PayloadAction<Invoice>) {
+      state.invoices.push(action.payload);
+    },
+  },
   extraReducers: (builder) => {
-    builder.addCase(fetchInvoices.fulfilled, (_, action) => {
-      return action.payload;
-    });
+    builder
+      .addCase(fetchInvoices.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchInvoices.fulfilled, (state, action) => {
+        state.invoices = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchInvoices.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to fetch invoices";
+      });
   },
 });
 
-export const selectInvoices = (state: RootState) => state.invoices;
+export const { addInvoice } = invoicesSlice.actions;
+
+export const selectInvoices = (state: RootState) => state.invoices.invoices;
+export const selectInvoicesLoading = (state: RootState) =>
+  state.invoices.loading;
+export const selectInvoicesError = (state: RootState) => state.invoices.error;
+
 export default invoicesSlice.reducer;

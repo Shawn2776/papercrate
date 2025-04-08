@@ -1,44 +1,49 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { Discount } from "@/lib/schemas";
+// lib/redux/slices/discountsSlice.ts
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 
-// Async thunk to fetch discounts
-export const fetchDiscounts = createAsyncThunk<Discount[]>(
-  "discounts/fetch",
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await fetch("/api/discounts");
-      if (!res.ok) throw new Error(`Failed to fetch discounts (${res.status})`);
-      return await res.json();
-    } catch (err) {
-      return rejectWithValue(getErrorMessage(err));
-    }
-  }
-);
+// Discount model type
+export interface Discount {
+  id: number;
+  name: string;
+  discountValue: number;
+}
 
-// State definition
+// Slice state
 interface DiscountsState {
-  data: Discount[];
+  discounts: Discount[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: DiscountsState = {
-  data: [],
+  discounts: [],
   loading: false,
   error: null,
 };
+
+// Async thunk to fetch discounts
+export const fetchDiscounts = createAsyncThunk<
+  Discount[],
+  void,
+  { rejectValue: string }
+>("discounts/fetchDiscounts", async (_, { rejectWithValue }) => {
+  try {
+    const res = await fetch("/api/discounts");
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    return rejectWithValue(getErrorMessage(err));
+  }
+});
 
 const discountsSlice = createSlice({
   name: "discounts",
   initialState,
   reducers: {
-    setDiscounts: (state, action: PayloadAction<Discount[]>) => {
-      state.data = action.payload;
-    },
-    addDiscount: (state, action: PayloadAction<Discount>) => {
-      state.data.push(action.payload);
+    addDiscount(state, action: PayloadAction<Discount>) {
+      state.discounts.push(action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -48,22 +53,22 @@ const discountsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchDiscounts.fulfilled, (state, action) => {
+        state.discounts = action.payload;
         state.loading = false;
-        state.data = action.payload;
       })
       .addCase(fetchDiscounts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload || "Failed to fetch discounts";
       });
   },
 });
 
-// ✅ Selectors
-export const selectDiscounts = (state: RootState) => state.discounts.data;
+export const { addDiscount } = discountsSlice.actions;
+
+// Selectors
+export const selectDiscounts = (state: RootState) => state.discounts.discounts;
 export const selectDiscountsLoading = (state: RootState) =>
   state.discounts.loading;
 export const selectDiscountsError = (state: RootState) => state.discounts.error;
 
-// Export actions + reducer
-export const { setDiscounts, addDiscount } = discountsSlice.actions;
 export default discountsSlice.reducer;

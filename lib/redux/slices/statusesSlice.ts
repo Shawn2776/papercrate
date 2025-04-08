@@ -1,46 +1,49 @@
-import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 
-// Change this to enum if needed
+// Define type for each status string (or use an enum if you prefer)
 export type InvoiceStatus = string;
 
-// Async thunk to fetch statuses
-export const fetchStatuses = createAsyncThunk<InvoiceStatus[]>(
-  "statuses/fetch",
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await fetch("/api/enums/invoice-status");
-      if (!res.ok) throw new Error(`Failed to fetch statuses (${res.status})`);
-      return await res.json();
-    } catch (err) {
-      return rejectWithValue(getErrorMessage(err));
-    }
-  }
-);
-
 interface StatusesState {
-  data: InvoiceStatus[];
+  items: InvoiceStatus[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: StatusesState = {
-  data: [],
+  items: [],
   loading: false,
   error: null,
 };
 
+// Async thunk to fetch statuses
+export const fetchStatuses = createAsyncThunk<
+  InvoiceStatus[],
+  void,
+  { rejectValue: string }
+>("statuses/fetch", async (_, { rejectWithValue }) => {
+  try {
+    const res = await fetch("/api/enums/invoice-status");
+    if (!res.ok) throw new Error(`Failed: ${res.status}`);
+    const data: InvoiceStatus[] = await res.json();
+    return data;
+  } catch (err) {
+    return rejectWithValue(getErrorMessage(err));
+  }
+});
+
+// Slice
 const statusesSlice = createSlice({
   name: "statuses",
   initialState,
   reducers: {
     setStatuses: (state, action: PayloadAction<InvoiceStatus[]>) => {
-      state.data = action.payload;
+      state.items = action.payload;
     },
     addStatus: (state, action: PayloadAction<InvoiceStatus>) => {
-      if (!state.data.includes(action.payload)) {
-        state.data.push(action.payload);
+      if (!state.items.includes(action.payload)) {
+        state.items.push(action.payload);
       }
     },
   },
@@ -51,21 +54,21 @@ const statusesSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchStatuses.fulfilled, (state, action) => {
+        state.items = action.payload;
         state.loading = false;
-        state.data = action.payload;
       })
       .addCase(fetchStatuses.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload ?? "Failed to fetch statuses";
       });
   },
 });
 
-// ✅ Selectors
-export const selectStatuses = (state: RootState) => state.statuses.data;
+// Exports
+export const { setStatuses, addStatus } = statusesSlice.actions;
+export const selectStatuses = (state: RootState) => state.statuses.items;
 export const selectStatusesLoading = (state: RootState) =>
   state.statuses.loading;
 export const selectStatusesError = (state: RootState) => state.statuses.error;
 
-export const { setStatuses, addStatus } = statusesSlice.actions;
 export default statusesSlice.reducer;
