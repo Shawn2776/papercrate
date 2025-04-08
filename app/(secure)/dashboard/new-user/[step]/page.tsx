@@ -7,11 +7,13 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 
-export default async function StepPage({
-  params,
-}: {
-  params: { step: string };
-}) {
+type Props = {
+  params: {
+    step: string;
+  };
+};
+
+export default async function StepPage({ params }: Props) {
   const step = parseInt(params.step, 10);
 
   if (isNaN(step) || step < 1 || step > 5) {
