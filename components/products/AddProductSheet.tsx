@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { getErrorMessage } from "@/lib/functions/getErrorMessage";
+import { Product } from "@prisma/client";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -29,7 +31,7 @@ const productSchema = z.object({
 type ProductFormData = z.infer<typeof productSchema>;
 
 interface AddProductSheetProps {
-  onProductCreated?: (product: any) => void;
+  onProductCreated?: (product: Pick<Product, "id" | "name" | "price">) => void;
 }
 
 export default function AddProductSheet({
@@ -65,8 +67,8 @@ export default function AddProductSheet({
       onProductCreated?.(product);
       reset();
       setOpen(false);
-    } catch (err: any) {
-      setFormError(err.message);
+    } catch (err) {
+      setFormError(getErrorMessage(err));
     }
   };
 

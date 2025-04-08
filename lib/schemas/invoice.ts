@@ -13,17 +13,26 @@ export const lineItemSchema = z.object({
 });
 
 // Main invoice form schema
-export const invoiceFormSchema = z.object({
-  customerId: z.string().min(1, "Customer is required"),
-  status: z.string().min(1, "Status is required"),
-  lineItems: z
-    .array(lineItemSchema)
-    .min(1, "At least one line item is required"),
-  taxRateId: z.string().optional().nullable(),
-  taxExempt: z.boolean().optional(),
-  taxExemptId: z.string().optional().nullable(),
-});
+export const invoiceFormSchema = z
+  .object({
+    customerId: z.string().min(1, "Customer is required"),
+    status: z.string().min(1, "Status is required"),
+    lineItems: z
+      .array(lineItemSchema)
+      .min(1, "At least one line item is required"),
+    taxRateId: z.string().optional().nullable(),
+    taxExempt: z.boolean().optional(),
+    taxExemptId: z.string().optional().nullable(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.taxExempt && !data.taxExemptId) {
+      ctx.addIssue({
+        path: ["taxExemptId"],
+        code: z.ZodIssueCode.custom,
+        message: "Tax Exempt ID is required when tax is exempted.",
+      });
+    }
+  });
 
 // Inferred types
-// ✅ Export the inferred types
 export type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;

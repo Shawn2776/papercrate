@@ -4,35 +4,55 @@ import { z } from "zod";
 
 const prisma = new PrismaClient();
 
-const invoiceSchema = z.object({
-  customerId: z.union([z.string(), z.number()]).transform(Number),
-  status: z.nativeEnum(InvoiceStatus),
-  lineItems: z.array(
-    z.object({
-      productId: z.union([z.string(), z.number()]).transform(Number),
-      quantity: z.number().min(1),
-      discountId: z
-        .union([z.string(), z.number()])
-        .nullable()
-        .transform((val) => (val ? Number(val) : null)),
-    })
-  ),
-  taxRateId: z.union([z.string(), z.number()]).nullable().optional(),
-  taxExempt: z.boolean().optional(),
-  taxExemptId: z.string().nullable().optional(),
-});
+const invoiceSchema = z
+  .object({
+    customerId: z.union([z.string(), z.number()]).transform(Number),
+    status: z.nativeEnum(InvoiceStatus),
+    lineItems: z.array(
+      z.object({
+        productId: z.union([z.string(), z.number()]).transform(Number),
+        quantity: z.number().min(1),
+        discountId: z
+          .union([z.string(), z.number()])
+          .nullable()
+          .transform((val) => (val ? Number(val) : null)),
+      })
+    ),
+    taxRateId: z.union([z.string(), z.number()]).nullable().optional(),
+    taxExempt: z.boolean().optional(),
+    taxExemptId: z.string().nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.taxExempt && !data.taxExemptId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Tax Exempt ID is required when tax is exempted.",
+        path: ["taxExemptId"],
+      });
+    }
+  });
 
-async function getUpdatedTenantCounter(tenant: any): Promise<number> {
+interface TenantSafe {
+  id: string; // 🔄 was number, now matches Prisma schema
+  invoiceCounter: number;
+  lastResetYear?: number | null;
+  autoResetYearly?: boolean | null;
+  invoicePrefix?: string | null;
+  invoiceFormat?: string | null;
+}
+
+async function getUpdatedTenantCounter(tenant: TenantSafe): Promise<number> {
   const currentYear = new Date().getFullYear();
 
   if (tenant.autoResetYearly && tenant.lastResetYear !== currentYear) {
     await prisma.tenant.update({
-      where: { id: tenant.id },
+      where: { id: tenant.id.toString() },
       data: {
         invoiceCounter: 1,
         lastResetYear: currentYear,
       },
     });
+
     tenant.invoiceCounter = 1;
     tenant.lastResetYear = currentYear;
   }
@@ -97,7 +117,7 @@ export async function POST(req: Request): Promise<Response> {
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) return new Response("Tenant not found", { status: 404 });
 
-  tenant.invoiceCounter = await getUpdatedTenantCounter(tenant);
+  tenant.invoiceCounter = await getUpdatedTenantCounter(tenant as TenantSafe);
 
   const now = new Date();
   const year = now.getFullYear();
@@ -154,6 +174,8 @@ export async function POST(req: Request): Promise<Response> {
       updatedBy: { connect: { id: dbUser.id } },
       customer: { connect: { id: customerId } },
       tenant: { connect: { id: tenantId } },
+      taxExempt: taxExempt ?? false,
+      taxExemptId: taxExemptId ?? null,
       InvoiceDetail: { create: details },
     },
   });

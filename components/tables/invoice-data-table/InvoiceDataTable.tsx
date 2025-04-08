@@ -8,6 +8,8 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  ColumnDef,
+  Row,
 } from "@tanstack/react-table";
 
 import {
@@ -24,20 +26,31 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import Link from "next/link";
 
-type InvoiceDataTableProps<TData> = {
-  columns: any;
-  data: TData[];
+// Extend this if needed
+export interface InvoiceRow {
+  id: string;
+  number: string;
+  status: string;
+  amount: string;
+  customer: string;
+  createdAt: string;
+}
+
+type InvoiceDataTableProps = {
+  columns: ColumnDef<InvoiceRow>[];
+  data: InvoiceRow[];
 };
 
-const globalFilterFn = (row: any, columnId: string, filterValue: string) => {
+const globalFilterFn = (
+  row: Row<InvoiceRow>,
+  columnId: string,
+  filterValue: string
+): boolean => {
   const itemRank = rankItem(row.getValue(columnId), filterValue);
   return itemRank.passed;
 };
 
-export function InvoiceDataTable<TData>({
-  columns,
-  data,
-}: InvoiceDataTableProps<TData>) {
+export function InvoiceDataTable({ columns, data }: InvoiceDataTableProps) {
   const [filter, setFilter] = React.useState("");
 
   const table = useReactTable({
@@ -82,11 +95,12 @@ export function InvoiceDataTable<TData>({
                       header.column.columnDef.header,
                       header.getContext()
                     )}
-                    {{
-                      asc: " 🔼",
-                      desc: " 🔽",
-                      false: " ⬍",
-                    }[header.column.getIsSorted() as string || "false"]}
+                    {header.column.getCanSort() &&
+                      {
+                        asc: " 🔼",
+                        desc: " 🔽",
+                        false: " ⬍",
+                      }[(header.column.getIsSorted() as string) || "false"]}
                   </TableHead>
                 ))}
               </TableRow>
@@ -106,8 +120,9 @@ export function InvoiceDataTable<TData>({
                     <TableCell key={cell.id}>
                       <div
                         onClick={(e) => {
-                          const isButtonOrLink =
-                            e.target.closest("button, a, svg");
+                          const isButtonOrLink = (
+                            e.target as HTMLElement
+                          )?.closest("button, a, svg");
                           if (isButtonOrLink) e.stopPropagation();
                         }}
                       >

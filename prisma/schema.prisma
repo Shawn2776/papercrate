@@ -72,6 +72,9 @@ model Invoice {
   orderId         String?
   parentInvoiceId String?
 
+  taxExempt   Boolean @default(false) // ✅ Add this
+  taxExemptId String? // ✅ Add this
+
   customerId   Int
   tenantId     String
   createdById  String

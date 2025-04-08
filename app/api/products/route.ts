@@ -75,10 +75,10 @@ export async function POST(req: Request) {
     imageUrl,
     description,
     variant,
-    specs,
+    // specs,
   } = body;
 
-  const parsedSpecs = specs ? JSON.parse(specs) : undefined;
+  // const parsedSpecs = specs ? JSON.parse(specs) : undefined;
 
   const generatedSku = sku || generateSku();
   const generatedBarcode = barcode || generateBarcode();

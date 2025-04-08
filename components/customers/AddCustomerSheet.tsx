@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 
 const customerSchema = z.object({
   name: z.string().min(1, "Name is required."),
@@ -25,7 +26,7 @@ const customerSchema = z.object({
 type CustomerFormData = z.infer<typeof customerSchema>;
 
 interface AddCustomerSheetProps {
-  onCustomerCreated?: (customer: any) => void;
+  onCustomerCreated?: (customer: { id: number; name: string }) => void;
 }
 
 export default function AddCustomerSheet({
@@ -61,8 +62,8 @@ export default function AddCustomerSheet({
       onCustomerCreated?.(customer);
       reset();
       setOpen(false);
-    } catch (err: any) {
-      setFormError(err.message);
+    } catch (err) {
+      setFormError(getErrorMessage(err));
     }
   };
 

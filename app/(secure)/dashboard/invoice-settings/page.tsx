@@ -15,11 +15,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface Settings {
+  layout: "modern" | "classic" | "minimal";
+  primaryColor: string;
+  includeCustomerInfo: boolean;
+  includePaymentTerms: boolean;
+  includeDueDate: boolean;
+  includeNotes: boolean;
+}
+
 export default function InvoiceSettingsPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<Settings>({
     layout: "modern",
     primaryColor: "#3b82f6",
     includeCustomerInfo: true,
@@ -30,19 +39,22 @@ export default function InvoiceSettingsPage() {
 
   useEffect(() => {
     const fetchSettings = async () => {
-      const res = await fetch("/api/tenant/invoice-settings");
-      if (res.ok) {
+      try {
+        const res = await fetch("/api/tenant/invoice-settings");
+        if (!res.ok) throw new Error("Failed to load settings");
         const data = await res.json();
-        setSettings((prev) => ({
-          ...prev,
-          ...data,
-        }));
+        setSettings((prev) => ({ ...prev, ...data }));
+      } catch (err) {
+        console.error("Failed to fetch invoice settings", err);
       }
     };
     fetchSettings();
   }, []);
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof Settings>(
+    field: K,
+    value: Settings[K]
+  ) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -76,7 +88,9 @@ export default function InvoiceSettingsPage() {
           <Label>Invoice Style</Label>
           <Select
             value={settings.layout}
-            onValueChange={(val) => handleChange("layout", val)}
+            onValueChange={(val) =>
+              handleChange("layout", val as Settings["layout"])
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a style" />

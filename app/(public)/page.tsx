@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function LandingPage() {
@@ -37,27 +38,30 @@ export default function LandingPage() {
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <a
+              <Link
                 href="/sign-up"
                 className="px-6 py-3 rounded-md bg-gray-900 text-white hover:bg-gray-800 transition text-sm font-medium"
               >
                 Start for Free
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/sign-in"
                 className="px-6 py-3 rounded-md border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition text-sm font-medium"
               >
                 Sign In
-              </a>
+              </Link>
             </div>
           </div>
 
           {/* Hero Image */}
           <div className="w-full lg:w-1/2 flex justify-center">
-            <img
+            <Image
               src="/hero.png"
               alt="PaperCrate illustration"
+              width={500} // 👈 Set a fixed width
+              height={500} // 👈 Set a fixed height (you can adjust this or use `layout="intrinsic"` if needed)
               className="w-[200px] sm:w-[250px] md:w-[300px] lg:w-[400px] xl:w-[500px]"
+              priority // 👈 Optional: preload the image for better performance
             />
           </div>
         </div>
