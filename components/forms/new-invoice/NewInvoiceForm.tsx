@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   useForm,
   useFieldArray,
@@ -19,36 +18,30 @@ import {
 } from "@/components/ui/select";
 import AddCustomerSheet from "@/components/customers/AddCustomerSheet";
 import AddProductSheet from "@/components/products/AddProductSheet";
+import { invoiceFormSchema, InvoiceFormValues } from "@/lib/schemas/invoice";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import {
-  invoiceFormSchema,
-  InvoiceFormValues,
-  Customer,
-  Product,
-  Discount,
-  TaxRate,
-} from "@/lib/schemas";
+  addCustomer,
+  selectCustomers,
+} from "@/lib/redux/slices/customersSlice";
+import { addProduct, selectProducts } from "@/lib/redux/slices/productsSlice";
+import { selectDiscounts } from "@/lib/redux/slices/discountsSlice";
+import { selectTaxRates } from "@/lib/redux/slices/taxRatesSlice";
+import { selectStatuses } from "@/lib/redux/slices/statusesSlice";
 
 interface Props {
-  customers: Customer[];
-  products: Product[];
-  discounts: Discount[];
-  taxRates: TaxRate[];
-  statuses: string[];
   onSubmit: (data: InvoiceFormValues) => void;
   loading?: boolean;
 }
 
-export default function NewInvoiceForm({
-  customers,
-  products,
-  discounts,
-  taxRates,
-  statuses,
-  onSubmit,
-  loading,
-}: Props) {
-  const [customerList, setCustomerList] = useState(customers);
-  const [productList, setProductList] = useState(products);
+export default function NewInvoiceForm({ onSubmit, loading }: Props) {
+  const dispatch = useAppDispatch();
+
+  const customers = useAppSelector(selectCustomers);
+  const products = useAppSelector(selectProducts);
+  const discounts = useAppSelector(selectDiscounts);
+  const taxRates = useAppSelector(selectTaxRates);
+  const statuses = useAppSelector(selectStatuses);
 
   const {
     control,
@@ -80,14 +73,6 @@ export default function NewInvoiceForm({
     onSubmit(data);
   };
 
-  useEffect(() => {
-    setCustomerList(customers);
-  }, [customers]);
-
-  useEffect(() => {
-    setProductList(products);
-  }, [products]);
-
   return (
     <form
       onSubmit={handleSubmit(submitForm)}
@@ -101,7 +86,7 @@ export default function NewInvoiceForm({
           <label className="font-medium">Customer</label>
           <AddCustomerSheet
             onCustomerCreated={(newCustomer) => {
-              setCustomerList((prev) => [...prev, newCustomer]);
+              dispatch(addCustomer(newCustomer));
               setValue("customerId", String(newCustomer.id));
             }}
           />
@@ -118,7 +103,7 @@ export default function NewInvoiceForm({
                 <SelectValue placeholder="Select customer" />
               </SelectTrigger>
               <SelectContent>
-                {customerList.map((c) => (
+                {customers.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
                     {c.name}
                   </SelectItem>
@@ -139,9 +124,17 @@ export default function NewInvoiceForm({
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-medium">Line Items</h3>
           <AddProductSheet
-            onProductCreated={(newProduct) =>
-              setProductList((prev) => [...prev, newProduct])
-            }
+            onProductCreated={(newProduct) => {
+              dispatch(
+                addProduct({
+                  ...newProduct,
+                  price:
+                    typeof newProduct.price === "number"
+                      ? newProduct.price
+                      : parseFloat(newProduct.price.toString()),
+                })
+              );
+            }}
           />
         </div>
 
@@ -159,7 +152,7 @@ export default function NewInvoiceForm({
                     <SelectValue placeholder="Product" />
                   </SelectTrigger>
                   <SelectContent>
-                    {productList.map((p) => (
+                    {products.map((p) => (
                       <SelectItem key={p.id} value={String(p.id)}>
                         {p.name}
                       </SelectItem>
