@@ -1,0 +1,77 @@
+import { NextRequest, NextResponse } from "next/server";
+import { currentUser } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+import { prismaWithUser } from "@/prisma/withAudit";
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  const clerkUser = await currentUser();
+  if (!clerkUser) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkId: clerkUser.id },
+  });
+
+  if (!dbUser) {
+    return NextResponse.json(
+      { error: "User not found in DB" },
+      { status: 404 }
+    );
+  }
+
+  const body = await req.json();
+
+  // Use user-aware prisma client with auditing
+  const prismaWithContext = prismaWithUser(dbUser.id);
+
+  try {
+    // Create Tenant
+    const tenant = await prismaWithContext.tenant.create({
+      data: {
+        name: body.legalBusinessName,
+        email: body.businessEmail || null,
+        website: body.onlineLink || null,
+        memberships: {
+          create: {
+            userId: dbUser.id,
+            role: "OWNER",
+          },
+        },
+      },
+    });
+
+    // Create Business and associate to tenant
+    const business = await prismaWithContext.business.create({
+      data: {
+        businessType: body.businessType,
+        businessCategory: body.businessCategory,
+        businessSubcategory: body.businessSubcategory,
+        legalBusinessName: body.legalBusinessName,
+        doingBusinessAs: body.doingBusinessAs || null,
+        ein: body.ein,
+        businessEmail: body.businessEmail || null,
+        businessState: body.businessState,
+        addressLine1: body.addressLine1,
+        addressLine2: body.addressLine2 || null,
+        zip: body.zip,
+        city: body.city,
+        isManualEntry: body.isManualEntry || false,
+        onlineStatus: body.onlineStatus,
+        onlineLink: body.onlineLink || null,
+        tenantId: tenant.id,
+        createdById: dbUser.id,
+        updatedById: dbUser.id,
+      },
+    });
+
+    return NextResponse.json(business, { status: 201 });
+  } catch (err: unknown) {
+    console.error("Error creating tenant/business:", err);
+
+    const message =
+      err instanceof Error ? err.message : "An unknown error occurred";
+
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
