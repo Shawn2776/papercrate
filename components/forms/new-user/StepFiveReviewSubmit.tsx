@@ -23,7 +23,7 @@ export default function StepFiveReviewSubmit() {
 
   const handleBack = () => {
     dispatch(setStep(step - 1));
-    router.push(`/dashboard/new-user/${step - 1}`);
+    router.push(`/dashboard/new-user/4`);
   };
 
   const handleSubmit = async () => {

@@ -49,7 +49,7 @@ const StepFourBusinessDetails = () => {
 
   const handleBack = () => {
     dispatch(setStep(step - 1));
-    router.push(`/dashboard/new-user/${step - 1}`);
+    router.push(`/dashboard/new-user/3`);
   };
 
   const handleNext = () => {
@@ -73,7 +73,7 @@ const StepFourBusinessDetails = () => {
     );
 
     dispatch(setStep(step + 1));
-    router.push(`/dashboard/new-user/${step + 1}`);
+    router.push(`/dashboard/new-user/5`);
   };
 
   useEffect(() => {

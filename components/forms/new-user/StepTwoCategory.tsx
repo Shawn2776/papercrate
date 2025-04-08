@@ -103,13 +103,13 @@ export default function StepTwoCategory() {
     setSelected(category.id);
     dispatch(setFormData({ businessCategory: category.id }));
     dispatch(setStep(step + 1));
-    router.push(`/dashboard/new-user/${step + 1}`);
+    router.push(`/dashboard/new-user/3`);
   };
 
   const handleBack = () => {
     if (step > 1) {
       dispatch(setStep(step - 1));
-      router.push(`/dashboard/new-user/${step - 1}`);
+      router.push(`/dashboard/new-user/2`);
     }
   };
 
