@@ -1,4 +1,5 @@
 // app/(secure)/dashboard/new-user/[step]/page.tsx
+export const dynamic = "force-dynamic";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
