@@ -1,40 +1,36 @@
-import StepFiveReviewSubmit from "@/components/forms/new-user/StepFiveReviewSubmit";
-import StepFourBusinessDetails from "@/components/forms/new-user/StepFourBusinessDetails";
-import StepOneBusinessType from "@/components/forms/new-user/StepOneBusinessType";
-import StepThreeSubcategory from "@/components/forms/new-user/StepThreeSubcategory";
-import StepTwoCategory from "@/components/forms/new-user/StepTwoCategory";
-import { prisma } from "@/lib/prisma";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { redirect, notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
-interface Props {
+import StepOneBusinessType from "@/components/forms/new-user/StepOneBusinessType";
+import StepTwoCategory from "@/components/forms/new-user/StepTwoCategory";
+import StepThreeSubcategory from "@/components/forms/new-user/StepThreeSubcategory";
+import StepFourBusinessDetails from "@/components/forms/new-user/StepFourBusinessDetails";
+import StepFiveReviewSubmit from "@/components/forms/new-user/StepFiveReviewSubmit";
+
+export interface PageProps {
   params: {
     step: string;
   };
 }
 
-export default async function StepPage({ params }: Props) {
-  const step = parseInt(params.step, 10);
+export default async function StepPage({ params }: PageProps) {
+  const step = Number(params.step);
 
-  if (isNaN(step) || step < 1 || step > 5) {
-    notFound(); // Invalid step number
+  if (!step || step < 1 || step > 5) {
+    notFound();
   }
 
   const { userId } = await auth();
+  if (!userId) return redirect("/sign-in");
 
-  if (!userId) {
-    return redirect("/sign-in");
-  }
-
-  const existingMembership = await prisma.tenantMembership.findFirst({
+  const membership = await prisma.tenantMembership.findFirst({
     where: { userId },
   });
 
-  if (existingMembership) {
-    return redirect("/dashboard");
-  }
+  if (membership) return redirect("/dashboard");
 
-  const stepComponents = {
+  const components = {
     1: <StepOneBusinessType />,
     2: <StepTwoCategory />,
     3: <StepThreeSubcategory />,
@@ -44,8 +40,8 @@ export default async function StepPage({ params }: Props) {
 
   return (
     <main className="min-h-screen">
-      {stepComponents[step as keyof typeof stepComponents] || (
-        <p className="text-center p-8 text-red-600">Unknown step</p>
+      {components[step as keyof typeof components] ?? (
+        <p className="p-4 text-red-600 text-center">Step not found.</p>
       )}
     </main>
   );
