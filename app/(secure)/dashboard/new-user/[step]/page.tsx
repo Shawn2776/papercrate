@@ -5,9 +5,21 @@ import StepThreeSubcategory from "@/components/forms/new-user/StepThreeSubcatego
 import StepTwoCategory from "@/components/forms/new-user/StepTwoCategory";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 
-export default async function Page({ params }: { params: { step: string } }) {
+interface PageProps {
+  params: {
+    step: string;
+  };
+}
+
+export default async function StepPage({ params }: PageProps) {
+  const stepNumber = parseInt(params.step, 10);
+
+  if (isNaN(stepNumber) || stepNumber < 1 || stepNumber > 5) {
+    notFound(); // optional: handle invalid steps
+  }
+
   const { userId } = await auth();
 
   if (!userId) {
