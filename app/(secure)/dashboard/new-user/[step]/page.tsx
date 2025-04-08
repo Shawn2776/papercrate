@@ -1,6 +1,5 @@
-// app/(secure)/dashboard/new-user/[step]/page.tsx
-import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import StepOneBusinessType from "@/components/forms/new-user/StepOneBusinessType";
 import StepTwoCategory from "@/components/forms/new-user/StepTwoCategory";
@@ -10,11 +9,11 @@ import StepFiveReviewSubmit from "@/components/forms/new-user/StepFiveReviewSubm
 
 export const dynamic = "force-dynamic";
 
-type StepPageProps = {
+interface StepPageProps {
   params: {
     step: string;
   };
-};
+}
 
 export default async function StepPage({ params }: StepPageProps) {
   const stepNumber = parseInt(params.step, 10);
@@ -29,11 +28,11 @@ export default async function StepPage({ params }: StepPageProps) {
 
   if (!dbUser) redirect("/sign-in");
 
-  const membership = await prisma.tenantMembership.findFirst({
+  const existingMembership = await prisma.tenantMembership.findFirst({
     where: { userId: dbUser.id },
   });
 
-  if (membership) redirect("/dashboard");
+  if (existingMembership) redirect("/dashboard");
 
   const steps = {
     1: <StepOneBusinessType />,
