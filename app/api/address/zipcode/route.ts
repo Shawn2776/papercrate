@@ -26,7 +26,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   // Fetch from ZipCodeAPI if not cached
   try {
-    console.log("trying to fetch from ZipCodeAPI 2");
+    console.log("trying to fetch from ZipCodeAPI 3");
 
     const apiKey = process.env.ZIPCODE_API_KEY;
     if (!apiKey) {
