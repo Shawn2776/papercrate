@@ -1,0 +1,6 @@
+{
+  "buildCommand": "npm run build && npm run prisma:deploy",
+  "env": {
+    "DATABASE_URL": "@DATABASE_URL"
+  }
+}
