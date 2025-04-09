@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   useForm,
   useFieldArray,
@@ -7,6 +8,7 @@ import {
   SubmitHandler,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,18 +18,35 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+
 import AddCustomerSheet from "@/components/customers/AddCustomerSheet";
 import AddProductSheet from "@/components/products/AddProductSheet";
-import { invoiceFormSchema, InvoiceFormValues } from "@/lib/schemas/invoice";
+
+import { invoiceFormSchema, InvoiceFormValues } from "@/lib/schemas";
+
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import {
-  addCustomer,
+  fetchCustomers,
   selectCustomers,
+  addCustomer,
 } from "@/lib/redux/slices/customersSlice";
-import { addProduct, selectProducts } from "@/lib/redux/slices/productsSlice";
-import { selectDiscounts } from "@/lib/redux/slices/discountsSlice";
-import { selectTaxRates } from "@/lib/redux/slices/taxRatesSlice";
-import { selectStatuses } from "@/lib/redux/slices/statusesSlice";
+import {
+  fetchProducts,
+  selectProducts,
+  addProduct,
+} from "@/lib/redux/slices/productsSlice";
+import {
+  fetchDiscounts,
+  selectDiscounts,
+} from "@/lib/redux/slices/discountsSlice";
+import {
+  fetchTaxRates,
+  selectTaxRates,
+} from "@/lib/redux/slices/taxRatesSlice";
+import {
+  fetchStatuses,
+  selectStatuses,
+} from "@/lib/redux/slices/statusesSlice";
 
 interface Props {
   onSubmit: (data: InvoiceFormValues) => void;
@@ -43,12 +62,20 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
   const taxRates = useAppSelector(selectTaxRates);
   const statuses = useAppSelector(selectStatuses);
 
+  useEffect(() => {
+    dispatch(fetchCustomers());
+    dispatch(fetchProducts());
+    dispatch(fetchDiscounts());
+    dispatch(fetchTaxRates());
+    dispatch(fetchStatuses());
+  }, [dispatch]);
+
   const {
     control,
     handleSubmit,
     register,
-    watch,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
@@ -203,7 +230,7 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
         </Button>
       </div>
 
-      {/* Tax Section */}
+      {/* Tax */}
       <div className="pt-4 border-t">
         <label className="font-medium">Tax Options</label>
         <div className="flex items-center gap-3">
