@@ -1,6 +1,11 @@
+"use client";
+
 import { SignedIn, SignedOut, SignUpButton, UserButton } from "@clerk/nextjs";
+import { DotIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { MdDashboard } from "react-icons/md";
 
 export default function LandingPage() {
   return (
@@ -19,7 +24,15 @@ export default function LandingPage() {
             <SignUpButton />
           </SignedOut>
           <SignedIn>
-            <UserButton />
+            <UserButton>
+              <UserButton.MenuItems>
+                <UserButton.Action
+                  label="Go to Dashboard"
+                  labelIcon={<MdDashboard />}
+                  onClick={() => redirect("/dashboard")}
+                />
+              </UserButton.MenuItems>
+            </UserButton>
           </SignedIn>
         </nav>
       </header>
