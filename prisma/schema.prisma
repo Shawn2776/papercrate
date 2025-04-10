@@ -150,6 +150,7 @@ model Invoice {
 model Product {
   id                     Int                    @id @default(autoincrement())
   name                   String                 @db.VarChar(100)
+  slug                   String?                @db.VarChar(120)
   description            String?
   price                  Decimal                @db.Decimal(10, 2)
   unit                   String?                @db.VarChar(20)
@@ -185,6 +186,7 @@ model Product {
   variants      ProductVariant[]
 
   @@unique([tenantId, name])
+  @@unique([tenantId, slug])
 }
 
 model ProductIdentifier {
