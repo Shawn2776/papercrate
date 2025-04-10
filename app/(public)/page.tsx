@@ -1,7 +1,6 @@
 "use client";
 
 import { SignedIn, SignedOut, SignUpButton, UserButton } from "@clerk/nextjs";
-import { DotIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
