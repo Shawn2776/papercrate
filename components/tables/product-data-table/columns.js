@@ -9,11 +9,13 @@ export const columns = [
   {
     accessorKey: "sku",
     header: "SKU",
+    meta: { className: "hidden sm:table-cell" },
     cell: (row) => row?.sku || "N/A",
   },
   {
     accessorKey: "barcode",
     header: "Barcode",
+    meta: { className: "hidden sm:table-cell" },
     cell: (row) => row?.barcode || "N/A",
   },
   {
@@ -25,6 +27,7 @@ export const columns = [
   {
     accessorKey: "createdAt",
     header: "Created",
+    meta: { className: "hidden sm:table-cell" },
     cell: (row) =>
       row?.createdAt
         ? format(new Date(row.createdAt), "yyyy-MM-dd hh:mm a")

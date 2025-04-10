@@ -6,6 +6,7 @@ import invoicesReducer from "./slices/invoicesSlice";
 import discountsReducer from "./slices/discountsSlice";
 import taxRatesReducer from "./slices/taxRatesSlice";
 import statusesReducer from "./slices/statusesSlice";
+import authReducer from "./slices/authSlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     discounts: discountsReducer,
     taxRates: taxRatesReducer,
     statuses: statusesReducer,
+    auth: authReducer,
   },
 });
 

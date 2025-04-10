@@ -7,15 +7,21 @@ import {
   selectInvoices,
 } from "@/lib/redux/slices/invoicesSlice";
 import { InvoiceDataTable } from "@/components/tables/invoice-data-table/InvoiceDataTable";
-import { columns } from "@/components/tables/invoice-data-table/columns";
+import { selectUserPermissions } from "@/lib/redux/slices/authSlice";
 
 export default function InvoicesPage() {
   const dispatch = useAppDispatch();
   const invoices = useAppSelector(selectInvoices);
+  const userPermissions = useAppSelector(selectUserPermissions); // ✅ NEW
 
   useEffect(() => {
     dispatch(fetchInvoices());
   }, [dispatch]);
 
-  return <InvoiceDataTable columns={columns} data={invoices} />;
+  return (
+    <InvoiceDataTable
+      data={invoices}
+      userPermissions={userPermissions ?? []} // ✅ FIX
+    />
+  );
 }
