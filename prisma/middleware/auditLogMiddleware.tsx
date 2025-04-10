@@ -20,9 +20,9 @@ export function auditLogMiddleware(userId: string): Prisma.Middleware {
         await prisma.auditLog.create({
           data: {
             action: actionType,
-            table: model,
-            recordId,
-            data: params.args?.data ?? null,
+            entityType: model,
+            entityId: recordId,
+            payload: params.args?.data ?? null, // ✅ match new field name
             userId,
           },
         });
