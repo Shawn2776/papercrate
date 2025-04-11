@@ -1,11 +1,13 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { softDeleteTenant } from "@/lib/functions/softDeleteTenant";
 
+export const runtime = "nodejs"; // 👈 prevents edge validation bug
+
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } } // ✅ this MUST be inline
+  context: { params: { id: string } }
 ) {
   const user = await currentUser();
 
