@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const showDeleted = url.searchParams.get("deleted") === "true";
 
   const tenants = await prisma.tenant.findMany({
-    where: showDeleted ? {} : { deleted: false },
+    where: showDeleted ? undefined : { deleted: false }, // avoids `{}` as a "no filter"
     orderBy: { createdAt: "desc" },
     take: 100,
   });
