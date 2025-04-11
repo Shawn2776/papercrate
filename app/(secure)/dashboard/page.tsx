@@ -19,6 +19,7 @@ import { useUser } from "@clerk/nextjs";
 
 export default function DashboardPage() {
   const { user } = useUser();
+  console.log(user);
 
   const firstName = user?.firstName || "there";
 
