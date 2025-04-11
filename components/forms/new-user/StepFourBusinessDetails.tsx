@@ -73,7 +73,7 @@ const StepFourBusinessDetails = () => {
     );
 
     dispatch(setStep(step + 1));
-    router.push(`/dashboard/new-user/5`);
+    router.push(`/new-user/5`);
   };
 
   useEffect(() => {

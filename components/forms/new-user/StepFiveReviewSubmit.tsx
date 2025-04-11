@@ -23,7 +23,7 @@ export default function StepFiveReviewSubmit() {
 
   const handleBack = () => {
     dispatch(setStep(step - 1));
-    router.push(`/dashboard/new-user/4`);
+    router.push(`/new-user/4`);
   };
 
   const handleSubmit = async () => {
@@ -43,7 +43,7 @@ export default function StepFiveReviewSubmit() {
       }
 
       dispatch(resetOnboarding());
-      router.push("/dashboard/new-user/success");
+      router.push("/new-user/success");
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

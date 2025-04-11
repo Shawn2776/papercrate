@@ -70,7 +70,7 @@ const StepOneBusinessType = () => {
 
       dispatch(setFormData({ businessType: type.id }));
       dispatch(setStep(step + 1));
-      router.push(`/dashboard/new-user/2`);
+      router.push(`/new-user/2`);
     } catch (err) {
       console.log(err);
       setErrorMessage("Server error. Please try again.");
