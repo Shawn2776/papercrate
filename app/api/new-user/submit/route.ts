@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { prismaWithUser } from "@/prisma/withAudit";
+import { TenantCreateSchema } from "@/lib/schemas/tenant";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const clerkUser = await currentUser();
@@ -24,6 +25,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // Use user-aware prisma client with auditing
   const prismaWithContext = prismaWithUser(dbUser.id);
+  const parsed = TenantCreateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
 
   try {
     // Create Tenant
