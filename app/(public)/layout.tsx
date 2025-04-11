@@ -1,3 +1,4 @@
+import TopNav from "@/components/public-nav/TopNav";
 import React from "react";
 
 const PublicLayout = ({
@@ -5,7 +6,12 @@ const PublicLayout = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  return <div>{children}</div>;
+  return (
+    <div className="w-full min-h-screen">
+      <TopNav />
+      {children}
+    </div>
+  );
 };
 
 export default PublicLayout;

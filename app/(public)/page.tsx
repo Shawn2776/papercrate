@@ -10,31 +10,6 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-white text-gray-900 flex flex-col items-center">
       {/* Navbar */}
-      <header className="w-full py-4 px-6 border-b flex justify-between items-center">
-        <h1 className="text-xl font-bold text-primary">PaperCrate</h1>
-        <nav className="space-x-4 flex items-center">
-          <Link href="/features" className="hover:underline">
-            Features
-          </Link>
-          <Link href="/pricing" className="hover:underline">
-            Pricing
-          </Link>
-          <SignedOut>
-            <SignUpButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton>
-              <UserButton.MenuItems>
-                <UserButton.Action
-                  label="Go to Dashboard"
-                  labelIcon={<MdDashboard />}
-                  onClick={() => redirect("/dashboard")}
-                />
-              </UserButton.MenuItems>
-            </UserButton>
-          </SignedIn>
-        </nav>
-      </header>
 
       {/* Hero Section */}
       <section className="bg-white dark:bg-gray-900 py-16 px-6">
