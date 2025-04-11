@@ -183,6 +183,7 @@ model Product {
   createdById            String
   updatedById            String
   tenantId               String
+  deleted                Boolean                @default(false)
 
   createdBy     User                @relation("CreatedProducts", fields: [createdById], references: [id])
   updatedBy     User                @relation("UpdatedProducts", fields: [updatedById], references: [id])
@@ -216,6 +217,7 @@ model ProductVariant {
   price     Decimal @db.Decimal(10, 2)
   imageUrl  String?
   specs     Json?
+  deleted   Boolean @default(false)
   product   Product @relation(fields: [productId], references: [id])
 
   @@index([productId])
@@ -226,6 +228,7 @@ model TenantMembership {
   tenantId    String
   userId      String
   role        TenantRole
+  deleted     Boolean      @default(false)
   permissions Permission[] @default([])
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
@@ -297,6 +300,7 @@ model User {
   clerkId           String             @unique
   name              String?
   role              Role               @default(SUPPORT)
+  deleted           Boolean            @default(false)
   createdAt         DateTime           @default(now())
   auditLogs         AuditLog[]
   createdBusinesses Business[]         @relation("CreatedBusinesses")
@@ -354,6 +358,7 @@ model Order {
   tenantId    String
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  deleted     Boolean     @default(false)
   customer    Customer?   @relation(fields: [customerId], references: [id])
   tenant      Tenant      @relation(fields: [tenantId], references: [id])
   items       OrderItem[]
@@ -382,11 +387,12 @@ model OrderItem {
 }
 
 model BankDetail {
-  id            Int    @id @default(autoincrement())
-  bankName      String @db.VarChar(100)
-  accountNumber String @db.VarChar(50)
-  iban          String @db.VarChar(50)
-  bic           String @db.VarChar(50)
+  id            Int     @id @default(autoincrement())
+  bankName      String  @db.VarChar(100)
+  accountNumber String  @db.VarChar(50)
+  iban          String  @db.VarChar(50)
+  bic           String  @db.VarChar(50)
+  deleted       Boolean @default(false)
 }
 
 model Customer {
@@ -400,6 +406,7 @@ model Customer {
   createdById String
   updatedById String
   tenantId    String
+  deleted     Boolean   @default(false)
   createdBy   User      @relation("CreatedCustomers", fields: [createdById], references: [id])
   updatedBy   User      @relation("UpdatedCustomers", fields: [updatedById], references: [id])
   tenant      Tenant    @relation(fields: [tenantId], references: [id])
@@ -415,6 +422,7 @@ model Discount {
   discountValue Decimal         @db.Decimal(5, 2)
   createdById   String
   updatedById   String
+  deleted       Boolean         @default(false)
   createdBy     User            @relation("CreatedDiscounts", fields: [createdById], references: [id])
   updatedBy     User            @relation("UpdatedDiscounts", fields: [updatedById], references: [id])
   InvoiceDetail InvoiceDetail[]
@@ -428,6 +436,7 @@ model ShippingDetail {
   estimatedArrival DateTime
   createdById      String
   updatedById      String
+  deleted          Boolean  @default(false)
   createdBy        User     @relation("CreatedShipping", fields: [createdById], references: [id])
   updatedBy        User     @relation("UpdatedShipping", fields: [updatedById], references: [id])
   Invoice          Invoice  @relation(fields: [invoiceId], references: [id])
@@ -439,6 +448,7 @@ model TaxRate {
   rate          Decimal         @db.Decimal(5, 2)
   createdById   String
   updatedById   String
+  deleted       Boolean         @default(false)
   createdBy     User            @relation("CreatedTaxRates", fields: [createdById], references: [id])
   updatedBy     User            @relation("UpdatedTaxRates", fields: [updatedById], references: [id])
   InvoiceDetail InvoiceDetail[]
@@ -468,6 +478,7 @@ model InvoiceSettings {
   includePaymentTerms Boolean @default(true)
   includeDueDate      Boolean @default(true)
   includeNotes        Boolean @default(false)
+  deleted             Boolean @default(false)
   tenant              Tenant  @relation(fields: [tenantId], references: [id])
 }
 
@@ -481,6 +492,7 @@ model Payment {
   reference   String?  @db.VarChar(255)
   createdById String
   updatedById String
+  deleted     Boolean  @default(false)
   createdBy   User     @relation("CreatedPayments", fields: [createdById], references: [id])
   updatedBy   User     @relation("UpdatedPayments", fields: [updatedById], references: [id])
   Invoice     Invoice  @relation(fields: [invoiceId], references: [id])
@@ -496,12 +508,14 @@ model PaymentMethod {
   id          Int     @id @default(autoincrement())
   name        String  @db.VarChar(50)
   description String?
+  deleted     Boolean @default(false)
 }
 
 model PaymentStatus {
   id          Int     @id @default(autoincrement())
   name        String  @db.VarChar(50)
   description String?
+  deleted     Boolean @default(false)
 }
 
 model ZipCache {
