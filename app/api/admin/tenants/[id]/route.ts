@@ -1,35 +1,24 @@
-// app/api/admin/tenants/[id]/route.ts
 import { currentUser } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { softDeleteTenant } from "@/lib/functions/softDeleteTenant";
 
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 
 export async function DELETE(
-  _: Request,
+  req: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<Response> {
   const user = await currentUser();
   if (!user || user.id !== SUPERADMIN_ID) {
     return new Response("Unauthorized", { status: 403 });
   }
 
-  const id = params.id;
-  const existing = await prisma.tenant.findUnique({ where: { id } });
-  if (!existing) return new Response("Not found", { status: 404 });
+  const tenantId = params.id;
 
-  await prisma.$transaction([
-    prisma.tenant.delete({ where: { id } }),
-    prisma.auditLog.create({
-      data: {
-        action: "DELETE",
-        entityType: "Tenant",
-        entityId: id,
-        before: existing,
-        after: { deleted: true },
-        userId: user.id,
-      },
-    }),
-  ]);
-
-  return new Response("Deleted", { status: 200 });
+  try {
+    await softDeleteTenant(tenantId);
+    return new Response("Tenant soft-deleted", { status: 200 });
+  } catch (err) {
+    console.error("Error deleting tenant:", err);
+    return new Response("Failed to delete tenant", { status: 500 });
+  }
 }
