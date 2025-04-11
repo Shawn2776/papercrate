@@ -19,6 +19,7 @@ export function AuthInitializer() {
           setAuth({
             role: data.role as Role,
             permissions: data.permissions as Permission[],
+            loading: false, // ✅ add this
           })
         );
       } catch (error) {
