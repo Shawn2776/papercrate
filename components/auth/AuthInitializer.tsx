@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useAppDispatch } from "@/lib/redux/hooks";
 import { setAuth } from "@/lib/redux/slices/authSlice";
-import { Role, Permission } from "@/lib/constants/permissions";
+import { Permission, Role } from "@prisma/client";
 
 export function AuthInitializer() {
   const dispatch = useAppDispatch();
@@ -23,7 +23,13 @@ export function AuthInitializer() {
           })
         );
       } catch (error) {
-        console.error("Auth initialization failed", error);
+        dispatch(
+          setAuth({
+            role: null,
+            permissions: [],
+            loading: false, // ✅ Still set loading to false even on error
+          })
+        );
       }
     }
 

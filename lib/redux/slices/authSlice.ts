@@ -1,6 +1,6 @@
 // lib/redux/slices/authSlice.ts
+import { Permission, Role } from "@prisma/client";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Role, Permission } from "@/lib/constants/permissions";
 
 type AuthState = {
   role: Role | null;
