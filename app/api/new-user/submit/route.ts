@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { prismaWithUser } from "@/prisma/withAudit";
 import { TenantCreateSchema } from "@/lib/schemas/tenant";
+import { defaultPermissionsByRole } from "@/lib/constants/permissions";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const clerkUser = await currentUser();
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           create: {
             userId: dbUser.id,
             role: "OWNER",
+            permissions: defaultPermissionsByRole["OWNER"],
           },
         },
       },
