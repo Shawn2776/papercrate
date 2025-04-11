@@ -1,21 +1,25 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { softDeleteTenant } from "@/lib/functions/softDeleteTenant";
 
-export const runtime = "nodejs"; // 👈 prevents edge validation bug
+export const runtime = "nodejs";
 
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 
-export async function DELETE(
-  request: Request,
-  context: { params: { id: string } }
-) {
+export async function DELETE(request: Request) {
   const user = await currentUser();
 
   if (!user || user.id !== SUPERADMIN_ID) {
     return new Response("Unauthorized", { status: 403 });
   }
 
-  const tenantId = context.params.id;
+  // ✅ Extract tenant ID from URL manually
+  const url = new URL(request.url);
+  const segments = url.pathname.split("/");
+  const tenantId = segments[segments.indexOf("tenants") + 1];
+
+  if (!tenantId) {
+    return new Response("Missing tenant ID", { status: 400 });
+  }
 
   try {
     await softDeleteTenant(tenantId);
