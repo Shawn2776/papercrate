@@ -8,13 +8,13 @@ const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 export async function DELETE(
   req: Request,
   context: { params: { id: string } }
-) {
+): Promise<Response> {
   const user = await currentUser();
   if (!user || user.id !== SUPERADMIN_ID) {
     return new Response("Unauthorized", { status: 403 });
   }
 
-  const tenantId = context.params.id;
+  const { id: tenantId } = context.params;
 
   try {
     await softDeleteTenant(tenantId);
