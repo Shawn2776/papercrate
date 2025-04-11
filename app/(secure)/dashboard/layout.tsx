@@ -1,3 +1,4 @@
+import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AuthInitializer } from "@/components/auth/AuthInitializer";
 import { PermissionGuard } from "@/components/auth/PermissionGuard";
 import { Permission } from "@prisma/client";
@@ -12,7 +13,10 @@ const DashboardLayout = ({
     <>
       <AuthInitializer />
       <PermissionGuard required={[Permission.VIEW_INVOICES]}>
-        <div className="max-w-2xl mx-auto mt-2 px-2">{children}</div>
+        <div className="flex min-h-screen">
+          <AppSidebar />
+          <main className="flex-1 overflow-auto p-4">{children}</main>
+        </div>
       </PermissionGuard>
     </>
   );
