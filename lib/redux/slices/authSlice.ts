@@ -23,7 +23,7 @@ const authSlice = createSlice({
       action: PayloadAction<{
         role: Role | null;
         permissions: Permission[];
-        loading: true;
+        loading: boolean;
       }>
     ) {
       state.role = action.payload.role;
