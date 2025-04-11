@@ -5,11 +5,13 @@ import { Role, Permission } from "@/lib/constants/permissions";
 type AuthState = {
   role: Role | null;
   permissions: Permission[];
+  loading: boolean;
 };
 
 const initialState: AuthState = {
   role: null,
   permissions: [],
+  loading: true,
 };
 
 const authSlice = createSlice({
@@ -18,10 +20,15 @@ const authSlice = createSlice({
   reducers: {
     setAuth(
       state,
-      action: PayloadAction<{ role: Role | null; permissions: Permission[] }>
+      action: PayloadAction<{
+        role: Role | null;
+        permissions: Permission[];
+        loading: true;
+      }>
     ) {
       state.role = action.payload.role;
       state.permissions = action.payload.permissions;
+      state.loading = action.payload.loading;
     },
   },
 });
