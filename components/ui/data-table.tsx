@@ -1,5 +1,7 @@
 "use client";
 
+import "@/lib/types/table"; // ✅ important!
+
 import {
   flexRender,
   getCoreRowModel,
@@ -21,13 +23,6 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-// ✅ Extend TanStack's ColumnMeta to support className
-declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData extends RowData, TValue> {
-    className?: string;
-  }
-}
-
 type DataTableProps<TData extends RowData> = {
   columns: ColumnDef<TData>[];
   data: TData[];
@@ -37,10 +32,6 @@ export function DataTable<TData extends RowData>({
   columns,
   data,
 }: DataTableProps<TData>) {
-  // ✅ Silences unused type param warning
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  type _FixTData = TData;
-
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({
