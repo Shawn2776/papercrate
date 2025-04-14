@@ -23,16 +23,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const body = await req.json();
+  console.log(body);
 
   // Use user-aware prisma client with auditing
   const prismaWithContext = prismaWithUser(dbUser.id);
   const parsed = TenantCreateSchema.safeParse(body);
   if (!parsed.success) {
+    console.log("parsing issue");
+    console.log(parsed.error.format()); // Add this line
+
     return NextResponse.json(
       { error: parsed.error.flatten() },
       { status: 400 }
     );
   }
+  const data = parsed.data;
+  console.log(data);
 
   try {
     // Create Tenant
@@ -50,6 +56,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         },
       },
     });
+
+    console.log("Created Tenant");
 
     // Create Business and associate to tenant
     const business = await prismaWithContext.business.create({
@@ -74,6 +82,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         updatedById: dbUser.id,
       },
     });
+
+    console.log("Created assoc");
 
     return NextResponse.json(business, { status: 201 });
   } catch (err: unknown) {

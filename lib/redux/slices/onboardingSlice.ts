@@ -1,4 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  loadFromLocalStorage,
+  saveToLocalStorage,
+} from "@/lib/utils/localStorage";
 
 interface FormData {
   businessType?: string;
@@ -24,9 +28,20 @@ interface OnboardingState {
   formData: FormData;
 }
 
-const initialState: OnboardingState = {
+const defaultState: OnboardingState = {
   step: 1,
   formData: {},
+};
+
+// Load persisted state if it exists
+const persistedState = loadFromLocalStorage<OnboardingState>(
+  "onboarding",
+  defaultState
+);
+
+const initialState: OnboardingState = {
+  ...defaultState,
+  ...persistedState,
 };
 
 const onboardingSlice = createSlice({
@@ -35,20 +50,28 @@ const onboardingSlice = createSlice({
   reducers: {
     setStep: (state, action: PayloadAction<number>) => {
       state.step = action.payload;
+      saveToLocalStorage("onboarding", state);
     },
     nextStep: (state) => {
       state.step += 1;
+      saveToLocalStorage("onboarding", state);
     },
     prevStep: (state) => {
       state.step = Math.max(1, state.step - 1);
+      saveToLocalStorage("onboarding", state);
     },
     setFormData: (state, action: PayloadAction<Partial<FormData>>) => {
       state.formData = {
         ...state.formData,
         ...action.payload,
       };
+      saveToLocalStorage("onboarding", state);
     },
-    resetOnboarding: () => initialState,
+    resetOnboarding: () => {
+      const reset = { ...defaultState };
+      saveToLocalStorage("onboarding", reset);
+      return reset;
+    },
   },
 });
 

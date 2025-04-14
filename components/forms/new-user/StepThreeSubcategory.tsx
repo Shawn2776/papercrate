@@ -65,7 +65,7 @@ export default function StepThreeSubcategory() {
     }
 
     dispatch(setStep(step + 1));
-    router.push(`new-user/4`);
+    router.push(`/new-user/4`);
   };
 
   const handleCustomInput = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,12 +97,12 @@ export default function StepThreeSubcategory() {
     }
 
     dispatch(setStep(step + 1));
-    router.push(`/dashboard/new-user/4`);
+    router.push(`/new-user/4`);
   };
 
   const handleBack = () => {
     dispatch(setStep(step - 1));
-    router.push(`/dashboard/new-user/3`);
+    router.push(`/new-user/2`);
   };
 
   return (

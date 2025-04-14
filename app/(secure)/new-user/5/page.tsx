@@ -5,7 +5,7 @@ import StepFiveReviewSubmit from "@/components/forms/new-user/StepFiveReviewSubm
 import { getDbUserOrRedirect } from "@/lib/functions/getDbUserOrRedirect";
 
 export default async function StepFivePage() {
-  getDbUserOrRedirect();
+  await getDbUserOrRedirect();
 
   return (
     <main className="min-h-screen">

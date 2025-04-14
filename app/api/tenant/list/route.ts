@@ -23,6 +23,7 @@ export async function GET() {
   const tenants = dbUser.memberships.map((m) => ({
     id: m.tenant.id,
     name: m.tenant.name,
+    plan: m.tenant.plan, // ✅ add this
   }));
 
   return Response.json(tenants);

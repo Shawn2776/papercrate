@@ -1,12 +1,19 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { decrement, increment, reset } from "@/lib/redux/slices/counterSlice";
+import { AppDispatch, RootState } from "@/lib/redux/store";
 import { SignedIn, SignedOut, SignUpButton, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MdDashboard } from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function LandingPage() {
+  const count = useSelector((state: RootState) => state.counter.value);
+  const dispatch = useDispatch<AppDispatch>();
+
   return (
     <main className="min-h-screen bg-white text-gray-900 flex flex-col items-center">
       {/* Navbar */}
@@ -52,6 +59,26 @@ export default function LandingPage() {
               priority // 👈 Optional: preload the image for better performance
             />
           </div>
+        </div>
+      </section>
+      <section>
+        <h2>Counter Slice</h2>
+        <div className="flex gap-4">
+          <Button variant="outline" onClick={() => dispatch(increment())}>
+            +
+          </Button>
+          <Button variant="ghost">{count}</Button>
+          <Button variant="outline" onClick={() => dispatch(decrement())}>
+            -
+          </Button>
+        </div>
+        <div>
+          <Button
+            className="w-full mt-2 bg-red-500 text-white"
+            onClick={() => dispatch(reset())}
+          >
+            Reset
+          </Button>
         </div>
       </section>
     </main>

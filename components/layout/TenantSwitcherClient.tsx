@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import {
   fetchTenants,
@@ -9,6 +12,7 @@ import {
   selectCurrentTenant,
   selectTenantsLoading,
 } from "@/lib/redux/slices/tenantSlice";
+
 import {
   Select,
   SelectTrigger,
@@ -19,6 +23,7 @@ import {
 
 export const TenantSwitcherClient = () => {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const tenants = useAppSelector(selectAllTenants);
   const currentTenant = useAppSelector(selectCurrentTenant);
   const loading = useAppSelector(selectTenantsLoading);
@@ -29,10 +34,30 @@ export const TenantSwitcherClient = () => {
 
   const handleSwitch = (value: string) => {
     if (value === "__create__") {
-      // Redirect to create tenant page or open modal
-      window.location.href = "/dashboard/new-user/1"; // Or your actual onboarding route
+      const currentPlan = currentTenant?.plan ?? "FREE";
+      const isLimitedPlan = currentPlan === "FREE" || currentPlan === "BASIC";
+      const alreadyHasATenant = tenants.length >= 1;
+
+      console.log("🚨 tenant check", {
+        currentPlan,
+        tenantsCount: tenants.length,
+        currentTenant,
+      });
+
+      if (isLimitedPlan && alreadyHasATenant) {
+        toast.error("Your plan doesn't allow multiple tenants.", {
+          action: {
+            label: "Upgrade Plan",
+            onClick: () => router.push("/dashboard/settings/billing"), // or your upgrade page
+          },
+        });
+        return;
+      }
+
+      router.push("/dashboard/new-user/1"); // or /new-tenant
       return;
     }
+
     const selected = tenants.find((t) => t.id === value);
     if (selected) {
       dispatch(setCurrentTenant(selected));

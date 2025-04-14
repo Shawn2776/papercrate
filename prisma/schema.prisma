@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -9,8 +10,13 @@ datasource db {
 
 enum Role {
   SUPER_ADMIN
+  ADMIN
   SUPPORT
   DEVELOPER
+  AUDITOR
+  MARKETING
+  BILLING_MANAGER
+  NONE
 }
 
 enum TenantRole {

@@ -9,7 +9,7 @@ import {
   FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, UserButton } from "@clerk/nextjs";
 
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -45,7 +45,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6">
+          <div>
+            <UserButton />
+          </div>
+          {children}
+        </main>
       </div>
     </ClerkProvider>
   );

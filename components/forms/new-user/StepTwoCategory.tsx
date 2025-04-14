@@ -107,10 +107,8 @@ export default function StepTwoCategory() {
   };
 
   const handleBack = () => {
-    if (step > 1) {
-      dispatch(setStep(step - 1));
-      router.push(`/new-user/2`);
-    }
+    dispatch(setStep(step - 1));
+    router.push(`/new-user/1`);
   };
 
   return (

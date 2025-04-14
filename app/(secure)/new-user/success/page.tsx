@@ -1,7 +1,7 @@
 import { getDbUserOrRedirect } from "@/lib/functions/getDbUserOrRedirect";
 
-export default function SuccessPage() {
-  getDbUserOrRedirect();
+export default async function SuccessPage() {
+  await getDbUserOrRedirect();
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
       <div className="bg-white rounded-md shadow-xl p-8 max-w-md">

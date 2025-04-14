@@ -1,10 +1,12 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { getErrorMessage } from "@/lib/functions/getErrorMessage";
+import { PlanTier } from "@prisma/client";
 
 export type Tenant = {
   id: string;
   name: string;
+  plan: PlanTier;
 };
 
 interface TenantState {

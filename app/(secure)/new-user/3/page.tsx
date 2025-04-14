@@ -5,7 +5,7 @@ import StepThreeSubcategory from "@/components/forms/new-user/StepThreeSubcatego
 import { getDbUserOrRedirect } from "@/lib/functions/getDbUserOrRedirect";
 
 export default async function StepThreePage() {
-  getDbUserOrRedirect();
+  await getDbUserOrRedirect();
 
   return (
     <main className="min-h-screen">

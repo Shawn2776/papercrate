@@ -5,7 +5,7 @@ import StepTwoCategory from "@/components/forms/new-user/StepTwoCategory";
 import { getDbUserOrRedirect } from "@/lib/functions/getDbUserOrRedirect";
 
 export default async function StepTwoPage() {
-  getDbUserOrRedirect();
+  await getDbUserOrRedirect();
 
   return (
     <main className="min-h-screen">

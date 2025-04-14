@@ -5,7 +5,7 @@ import StepFourBusinessDetails from "@/components/forms/new-user/StepFourBusines
 import { getDbUserOrRedirect } from "@/lib/functions/getDbUserOrRedirect";
 
 export default async function StepFourPage() {
-  getDbUserOrRedirect();
+  await getDbUserOrRedirect();
 
   return (
     <main className="min-h-screen">
