@@ -5,20 +5,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 
-export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function GET(req: NextRequest) {
   const user = await currentUser();
-  if (!user || user.id !== SUPERADMIN_ID) {
+  if (!user || user.id !== process.env.SUPERADMIN_ID) {
     return new Response("Unauthorized", { status: 403 });
   }
 
-  const userId = context.params.id;
+  const id = req.nextUrl.pathname.split("/").pop();
+  if (!id) return new Response("Missing user ID", { status: 400 });
 
   try {
     const fullUser = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id },
       include: {
         memberships: { include: { tenant: true } },
         createdInvoices: true,
@@ -53,7 +51,7 @@ export async function DELETE(req: NextRequest) {
     return new Response("Unauthorized", { status: 403 });
   }
 
-  const id = req.nextUrl.pathname.split("/").at(-1); // Extract `[id]` from URL
+  const id = req.nextUrl.pathname.split("/").pop();
   if (!id) return new Response("Missing user ID", { status: 400 });
 
   try {
@@ -82,7 +80,12 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const id = req.nextUrl.pathname.split("/").at(-1);
+  const user = await currentUser();
+  if (!user || user.id !== process.env.SUPERADMIN_ID) {
+    return new Response("Unauthorized", { status: 403 });
+  }
+
+  const id = req.nextUrl.pathname.split("/").pop();
   if (!id) return new Response("Missing user ID", { status: 400 });
 
   const body = await req.json();
