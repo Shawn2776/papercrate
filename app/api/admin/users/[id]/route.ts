@@ -1,17 +1,17 @@
-// app/api/admin/users/[id]/route.ts
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserIdFromUrl } from "@/lib/functions/getUserIdFromUrl";
 
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 
 export async function GET(req: NextRequest) {
   const user = await currentUser();
-  if (!user || user.id !== process.env.SUPERADMIN_ID) {
+  if (!user || user.id !== SUPERADMIN_ID) {
     return new Response("Unauthorized", { status: 403 });
   }
 
-  const id = req.nextUrl.pathname.split("/").pop();
+  const id = getUserIdFromUrl(req);
   if (!id) return new Response("Missing user ID", { status: 400 });
 
   try {
@@ -51,7 +51,7 @@ export async function DELETE(req: NextRequest) {
     return new Response("Unauthorized", { status: 403 });
   }
 
-  const id = req.nextUrl.pathname.split("/").pop();
+  const id = getUserIdFromUrl(req);
   if (!id) return new Response("Missing user ID", { status: 400 });
 
   try {
@@ -80,19 +80,15 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const user = await currentUser();
-  if (!user || user.id !== process.env.SUPERADMIN_ID) {
-    return new Response("Unauthorized", { status: 403 });
-  }
-
-  const id = req.nextUrl.pathname.split("/").pop();
-  if (!id) return new Response("Missing user ID", { status: 400 });
-
-  const body = await req.json();
   const clerkUser = await currentUser();
   if (!clerkUser || clerkUser.id !== SUPERADMIN_ID) {
     return new Response("Unauthorized", { status: 403 });
   }
+
+  const id = getUserIdFromUrl(req);
+  if (!id) return new Response("Missing user ID", { status: 400 });
+
+  const body = await req.json();
 
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: clerkUser.id },

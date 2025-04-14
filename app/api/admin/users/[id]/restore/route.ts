@@ -1,23 +1,21 @@
+// app/api/admin/users/[id]/restore/route.ts
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
+import { getUserIdFromUrl } from "@/lib/functions/getUserIdFromUrl";
 
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 
 export async function PATCH(req: NextRequest) {
+  const user = await currentUser();
+  if (!user || user.id !== SUPERADMIN_ID) {
+    return new Response("Unauthorized", { status: 403 });
+  }
+
+  const id = getUserIdFromUrl(req);
+  if (!id) return new Response("Missing user ID", { status: 400 });
+
   try {
-    const url = new URL(req.url);
-    const id = url.pathname.split("/").at(-2); // Gets the `[id]` param from the path
-
-    if (!id) {
-      return new Response("Missing user ID", { status: 400 });
-    }
-
-    const user = await currentUser();
-    if (!user || user.id !== SUPERADMIN_ID) {
-      return new Response("Unauthorized", { status: 403 });
-    }
-
     const existingUser = await prisma.user.findUnique({ where: { id } });
 
     if (!existingUser) {

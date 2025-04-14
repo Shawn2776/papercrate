@@ -1,25 +1,24 @@
 // app/api/admin/users/[id]/soft-delete/route.ts
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth, currentUser } from "@clerk/nextjs/server"; // optional, if using Clerk
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { getUserIdFromUrl } from "@/lib/functions/getUserIdFromUrl";
 
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest) {
   const authUser = await currentUser();
   if (!authUser || authUser.id !== SUPERADMIN_ID) {
     return new Response("Unauthorized", { status: 403 });
   }
 
+  const id = getUserIdFromUrl(req);
+  if (!id) return new Response("Missing user ID", { status: 400 });
+
   try {
-    const { id } = params;
-    const { userId } = await auth(); // acting admin (optional)
+    const { userId } = await auth(); // Acting admin (optional for logging)
 
     const existingUser = await prisma.user.findUnique({ where: { id } });
-
     if (!existingUser) {
       return new Response("User not found", { status: 404 });
     }
