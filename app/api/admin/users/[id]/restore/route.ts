@@ -1,16 +1,17 @@
-// app/api/admin/users/[id]/restore/route.ts
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest) {
   try {
-    const { id } = params;
+    const url = new URL(req.url);
+    const id = url.pathname.split("/").at(-2); // Gets the `[id]` param from the path
+
+    if (!id) {
+      return new Response("Missing user ID", { status: 400 });
+    }
 
     const user = await currentUser();
     if (!user || user.id !== SUPERADMIN_ID) {
@@ -23,7 +24,7 @@ export async function PATCH(
       return new Response("User not found", { status: 404 });
     }
 
-    const updatedUser = await prisma.$transaction([
+    await prisma.$transaction([
       prisma.user.update({
         where: { id },
         data: { deleted: false },
