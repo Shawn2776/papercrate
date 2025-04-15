@@ -14,6 +14,7 @@ export async function PATCH(
   req: NextRequest,
   context: { params: { id: string } }
 ) {
+  const { id } = context.params;
   try {
     const dbUser = await getDbUserOrThrow();
     const invoiceId = context.params.id;
@@ -127,6 +128,7 @@ export async function GET(
   req: NextRequest,
   context: { params: { id: string } }
 ) {
+  const { id } = context.params;
   try {
     const invoice = await prisma.invoice.findUnique({
       where: { id: context.params.id },
