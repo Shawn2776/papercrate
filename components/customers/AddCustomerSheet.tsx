@@ -25,8 +25,10 @@ const customerSchema = z.object({
 
 type CustomerFormData = z.infer<typeof customerSchema>;
 
-interface AddCustomerSheetProps {
-  onCustomerCreated?: (customer: { id: number; name: string }) => void;
+export interface AddCustomerSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCustomerCreated: (newCustomer: { id: number; name: string }) => void;
 }
 
 export default function AddCustomerSheet({
