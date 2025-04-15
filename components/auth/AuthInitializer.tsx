@@ -19,7 +19,8 @@ export function AuthInitializer() {
           setAuth({
             role: data.role as Role,
             permissions: data.permissions as Permission[],
-            loading: false, // ✅ add this
+            loading: false,
+            hasTenant: data.hasTenant ?? false, // Add this line
           })
         );
       } catch (error) {
@@ -27,7 +28,8 @@ export function AuthInitializer() {
           setAuth({
             role: null,
             permissions: [],
-            loading: false, // ✅ Still set loading to false even on error
+            loading: false,
+            hasTenant: false, // Add this line
           })
         );
       }
