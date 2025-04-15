@@ -10,11 +10,5 @@ export async function getDbUserOrRedirect() {
   const dbUser = await prisma.user.findUnique({ where: { clerkId } });
   if (!dbUser) redirect("/sign-in");
 
-  const existingMembership = await prisma.tenantMembership.findFirst({
-    where: { userId: dbUser.id },
-  });
-
-  if (existingMembership) redirect("/dashboard");
-
   return dbUser;
 }

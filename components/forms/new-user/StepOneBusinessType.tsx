@@ -83,31 +83,32 @@ const StepOneBusinessType = () => {
         h2="Business Type"
         p="Select the legal type of your business"
       />
-      <Card className="rounded-none shadow-lg p-0 mb-0 gap-0">
-        <CardContent className="w-full p-0 mb-0">
+      <Card className="shadow-md border rounded-lg overflow-hidden">
+        <CardContent className="p-0">
           {businessTypes.map((type) => (
             <button
               key={type.id}
-              className={`w-full h-20 flex px-4 justify-between items-center border-b transition-all duration-200 ${
+              className={`w-full h-20 flex items-center justify-between px-6 border-b last:border-0 transition ${
                 selected === type.id
                   ? "bg-primary text-white"
-                  : "bg-card text-card-foreground"
-              } hover:bg-primary/50 hover:text-black hover:cursor-pointer`}
+                  : "hover:bg-muted/70"
+              }`}
               onClick={() => handleSelect(type)}
             >
-              <div className="flex items-center gap-8">
-                <type.icon className="w-6 h-6" />
-                <span className="text-left">{type.name}</span>
+              <div className="flex items-center gap-4">
+                <type.icon className="w-5 h-5" />
+                <span className="text-left font-medium">{type.name}</span>
               </div>
               <FaChevronRight />
             </button>
           ))}
         </CardContent>
-        <CardFooter>
-          {errorMessage && (
-            <p className="text-red-600 text-sm">{errorMessage}</p>
-          )}
-        </CardFooter>
+
+        {errorMessage && (
+          <CardFooter className="bg-red-100 text-red-700 text-sm p-4">
+            {errorMessage}
+          </CardFooter>
+        )}
       </Card>
     </>
   );

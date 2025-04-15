@@ -1,69 +1,54 @@
-"use client";
-
-import { useState } from "react";
+import { ReactNode } from "react";
+import { redirect } from "next/navigation";
+import { getDbUserOrRedirect } from "@/lib/functions/getDbUserOrRedirect";
+import { prisma } from "@/lib/prisma";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { AuthInitializer } from "@/components/auth/AuthInitializer";
-import { PermissionGuard } from "@/components/auth/PermissionGuard";
-import { Permission } from "@prisma/client";
-import { Toaster } from "@/components/ui/sonner";
 import { UserButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Toaster } from "@/components/ui/sonner";
+import dynamic from "next/dynamic";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { headers } from "next/headers";
+import { TenantSwitcher } from "@/components/layout/TenantSwitcher";
+import { PageBreadcrumbs } from "@/components/layout/PageBreadcrumbs";
 
-const DashboardLayout = ({
+export default async function DashboardLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+}: {
+  children: ReactNode;
+}) {
+  const user = await getDbUserOrRedirect();
+
+  const memberships = await prisma.tenantMembership.findMany({
+    where: { userId: user.id },
+  });
+
+  const hasTenant = memberships.length > 0;
+  if (!hasTenant) redirect("/new-user/1");
+
+  const pathname = (await headers()).get("x-pathname") ?? "/dashboard";
+  const pathSegments = pathname.split("/").filter(Boolean).slice(1); // removes 'dashboard'
 
   return (
-    <>
-      <AuthInitializer />
-      <PermissionGuard required={[Permission.VIEW_INVOICES]}>
-        <div className="flex min-h-screen">
-          {/* Mobile Sidebar Overlay */}
-          {sidebarOpen && (
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40 md:hidden"
-              onClick={() => setSidebarOpen(false)}
-            />
-          )}
+    <div className="flex min-h-screen">
+      <AppSidebar />
 
-          {/* Sidebar */}
-          <div
-            className={`fixed z-50 top-0 left-0 h-full bg-white shadow-md transform transition-transform duration-300 ease-in-out
-            ${
-              sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            } md:static md:translate-x-0 md:block`}
-          >
-            <AppSidebar hideCollapseToggleOnMobile />
-          </div>
-
-          {/* Main content */}
-          <main className="flex-1 overflow-auto p-4 w-full">
-            <div className="flex items-center justify-between mb-4 md:hidden">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="w-6 h-6" />
-              </Button>
-              <UserButton />
-            </div>
-
-            <div className="hidden md:flex justify-end mb-4">
-              <UserButton />
-            </div>
-
-            {children}
-            <Toaster richColors position="top-center" />
-          </main>
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+          <PageBreadcrumbs />
+          <UserButton />
         </div>
-      </PermissionGuard>
-    </>
-  );
-};
 
-export default DashboardLayout;
+        {/* Main content */}
+        <main className="flex-1 p-4 w-full">{children}</main>
+        <Toaster richColors position="top-center" />
+      </div>
+    </div>
+  );
+}

@@ -8,8 +8,10 @@ export default async function StepThreePage() {
   await getDbUserOrRedirect();
 
   return (
-    <main className="min-h-screen">
-      <StepThreeSubcategory />
+    <main className="min-h-screen bg-background px-4 py-10 md:px-8">
+      <div className="max-w-3xl mx-auto">
+        <StepThreeSubcategory />
+      </div>
     </main>
   );
 }

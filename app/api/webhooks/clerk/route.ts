@@ -1,8 +1,10 @@
+// app/api/webhooks/clerk/route.ts
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Permission, TenantRole } from "@prisma/client";
 
 export async function POST(req: Request) {
   const SIGNING_SECRET = process.env.CLERK_SIGNING_SECRET;
@@ -20,7 +22,6 @@ export async function POST(req: Request) {
   const svix_signature = headerPayload.get("svix-signature") ?? "";
 
   const wh = new Webhook(SIGNING_SECRET);
-
   let evt: WebhookEvent;
 
   try {
@@ -37,36 +38,28 @@ export async function POST(req: Request) {
   console.log("📨 Clerk Webhook received:", evt.type);
 
   if (evt.type === "user.created") {
-    const { id, email_addresses, first_name, last_name } = evt.data;
+    const { id: clerkId, email_addresses, first_name, last_name } = evt.data;
+    const email = email_addresses?.[0]?.email_address;
+    const name = `${first_name ?? ""} ${last_name ?? ""}`.trim();
 
-    if (!email_addresses || email_addresses.length === 0) {
-      console.error("❌ No email address provided in user.created event");
+    if (!email) {
+      console.error("❌ Missing email in user.created event");
       return new Response("Missing email", { status: 400 });
     }
 
-    const email = email_addresses[0]?.email_address;
-    const name = `${first_name ?? ""} ${last_name ?? ""}`.trim();
+    let user = await prisma.user.findFirst({ where: { email } });
 
-    console.log("🔍 Looking up existing user by email:", email);
-
-    const existing = await prisma.user.findFirst({
-      where: { email },
-    });
-
-    if (existing) {
-      console.log("⚠️ User already exists, skipping create:", existing.id);
-    } else {
-      console.log("🆕 Creating user in DB:", { clerkId: id, email });
-
-      await prisma.user.create({
+    if (!user) {
+      user = await prisma.user.create({
         data: {
-          clerkId: id,
+          clerkId,
           email,
           name,
         },
       });
-
-      console.log("✅ User created");
+      console.log("✅ User created:", user.id);
+    } else {
+      console.log("ℹ️ User already exists:", user.id);
     }
   }
 
