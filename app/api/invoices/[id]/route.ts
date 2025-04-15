@@ -1,22 +1,25 @@
+// app/api/invoices/[id]/route.ts
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getDbUserOrThrow } from "@/lib/functions/getDbUser";
 import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 import { InvoiceStatus } from "@prisma/client";
 
+// PATCH /api/invoices/[id]
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const dbUser = await getDbUserOrThrow();
-    const invoiceId = params.id;
+    const invoiceId = context.params.id;
 
     if (!invoiceId) {
-      return new Response("Invalid invoice ID", { status: 400 });
+      return new NextResponse("Invalid invoice ID", { status: 400 });
     }
 
     const body = await req.json();
@@ -38,7 +41,7 @@ export async function PATCH(
     } = body;
 
     if (!customerId || !Array.isArray(lineItems) || lineItems.length === 0) {
-      return new Response("Missing required fields", { status: 400 });
+      return new NextResponse("Missing required fields", { status: 400 });
     }
 
     const existing = await prisma.invoice.findUnique({
@@ -47,7 +50,7 @@ export async function PATCH(
     });
 
     if (!existing) {
-      return new Response("Invoice not found", { status: 404 });
+      return new NextResponse("Invoice not found", { status: 404 });
     }
 
     await prisma.invoiceVersion.create({
@@ -93,7 +96,7 @@ export async function PATCH(
           quantity: item.quantity,
           discountId: item.discountId ? Number(item.discountId) : null,
           taxId: item.taxId ? Number(item.taxId) : null,
-          lineTotal: Math.round(lineTotal * 100) / 100, // safely round to 2 decimals
+          lineTotal: Math.round(lineTotal * 100) / 100,
         };
       })
     );
@@ -112,22 +115,21 @@ export async function PATCH(
       },
     });
 
-    return Response.json(updated);
+    return NextResponse.json(updated);
   } catch (error: unknown) {
     console.error("PATCH /invoice/:id error:", error);
-    return new Response(getErrorMessage(error), {
-      status: 500,
-    });
+    return new NextResponse(getErrorMessage(error), { status: 500 });
   }
 }
 
+// GET /api/invoices/[id]
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
     const invoice = await prisma.invoice.findUnique({
-      where: { id: params.id },
+      where: { id: context.params.id },
       include: {
         customer: true,
         tenant: {
@@ -145,13 +147,13 @@ export async function GET(
       },
     });
 
-    if (!invoice) return new Response("Not found", { status: 404 });
+    if (!invoice) {
+      return new NextResponse("Not found", { status: 404 });
+    }
 
-    return Response.json(invoice);
+    return NextResponse.json(invoice);
   } catch (error: unknown) {
     console.error("GET /invoice/:id error:", error);
-    return new Response(getErrorMessage(error), {
-      status: 500,
-    });
+    return new NextResponse(getErrorMessage(error), { status: 500 });
   }
 }

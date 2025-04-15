@@ -32,7 +32,7 @@ export default function InvoiceDetailPage() {
   }
 
   const primaryColor =
-    invoice.tenant.InvoiceSettings?.primaryColor ?? "#1E3A8A";
+    invoice.tenant.InvoiceSettings?.[0]?.primaryColor ?? "#1E3A8A";
   const lineItems = invoice.InvoiceDetail;
 
   const subtotal = lineItems.reduce((sum, i) => sum + Number(i.lineTotal), 0);
