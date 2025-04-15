@@ -35,8 +35,6 @@ export async function POST(req: Request) {
     return new Response("Invalid signature", { status: 400 });
   }
 
-  console.log("📨 Clerk Webhook received:", evt.type);
-
   if (evt.type === "user.created") {
     const { id: clerkId, email_addresses, first_name, last_name } = evt.data;
     const email = email_addresses?.[0]?.email_address;
@@ -57,9 +55,6 @@ export async function POST(req: Request) {
           name,
         },
       });
-      console.log("✅ User created:", user.id);
-    } else {
-      console.log("ℹ️ User already exists:", user.id);
     }
   }
 

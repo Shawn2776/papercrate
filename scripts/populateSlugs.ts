@@ -14,7 +14,6 @@ async function main() {
         where: { id: product.id },
         data: { slug: tenantSlug },
       });
-      console.log(`Slug set for product ${product.name}: ${tenantSlug}`);
     }
   }
 }

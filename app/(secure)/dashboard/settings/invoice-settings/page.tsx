@@ -55,10 +55,7 @@ export default function InvoiceSettingsPage() {
     if (authLoading || !hasPermission || !activeTenantId) return;
 
     const fetchSettings = async () => {
-      console.log("🔎 Fetching for tenant:", activeTenantId);
-
       try {
-        console.log("Fetching settings for tenant:", activeTenantId);
         const res = await fetch("/api/tenant/invoice-settings", {
           headers: {
             "x-tenant-id": activeTenantId,
@@ -76,7 +73,6 @@ export default function InvoiceSettingsPage() {
         }
 
         const data = await res.json();
-        console.log("Loaded invoice settings:", data);
         setSettings((prev) => ({ ...prev, ...data }));
       } catch (err) {
         console.error("Failed to fetch invoice settings", err);
@@ -107,7 +103,6 @@ export default function InvoiceSettingsPage() {
     }
 
     try {
-      console.log("Submitting settings:", settings);
       const res = await fetch("/api/tenant/invoice-settings", {
         method: "POST",
         headers: {

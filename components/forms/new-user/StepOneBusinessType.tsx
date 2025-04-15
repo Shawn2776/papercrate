@@ -72,7 +72,6 @@ const StepOneBusinessType = () => {
       dispatch(setStep(step + 1));
       router.push(`/new-user/2`);
     } catch (err) {
-      console.log(err);
       setErrorMessage("Server error. Please try again.");
     }
   };

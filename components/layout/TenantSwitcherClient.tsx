@@ -38,12 +38,6 @@ export const TenantSwitcherClient = () => {
       const isLimitedPlan = currentPlan === "FREE" || currentPlan === "BASIC";
       const alreadyHasATenant = tenants.length >= 1;
 
-      console.log("🚨 tenant check", {
-        currentPlan,
-        tenantsCount: tenants.length,
-        currentTenant,
-      });
-
       if (isLimitedPlan && alreadyHasATenant) {
         toast.error("Your plan doesn't allow multiple tenants.", {
           action: {

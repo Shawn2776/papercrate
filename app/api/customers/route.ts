@@ -7,14 +7,10 @@ export async function GET() {
   const user = await currentUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
 
-  console.log(user);
-
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: user.id },
     include: { memberships: true },
   });
-
-  console.log(dbUser);
 
   const tenantId = dbUser?.memberships?.[0]?.tenantId;
   if (!tenantId) return new Response("Missing tenant", { status: 400 });

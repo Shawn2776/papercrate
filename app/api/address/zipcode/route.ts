@@ -26,8 +26,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   // Fetch from ZipCodeAPI if not cached
   try {
-    console.log("trying to fetch from ZipCodeAPI 3");
-
     const apiKey = process.env.ZIPCODE_API_KEY;
     if (!apiKey) {
       throw new Error("ZIPCODE_API_KEY not set in environment");
