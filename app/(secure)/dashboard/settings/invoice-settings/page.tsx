@@ -14,6 +14,12 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { useHasPermission } from "@/lib/functions/userHasPermission";
+import { Permission } from "@prisma/client";
+import { toast } from "sonner";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
+import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 
 interface Settings {
   layout: "modern" | "classic" | "minimal";
@@ -22,10 +28,17 @@ interface Settings {
   includePaymentTerms: boolean;
   includeDueDate: boolean;
   includeNotes: boolean;
+  defaultNotes: string;
 }
 
 export default function InvoiceSettingsPage() {
   const router = useRouter();
+  const hasPermission = useHasPermission(Permission.MANAGE_BILLING);
+  const { permissions, loading: authLoading } = useAppSelector(
+    (state) => state.auth
+  );
+  const currentTenant = useAppSelector(selectCurrentTenant);
+  const activeTenantId = currentTenant?.id;
 
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState<Settings>({
@@ -35,21 +48,43 @@ export default function InvoiceSettingsPage() {
     includePaymentTerms: true,
     includeDueDate: true,
     includeNotes: true,
+    defaultNotes: "",
   });
 
   useEffect(() => {
+    if (authLoading || !hasPermission || !activeTenantId) return;
+
     const fetchSettings = async () => {
+      console.log("🔎 Fetching for tenant:", activeTenantId);
+
       try {
-        const res = await fetch("/api/tenant/invoice-settings");
-        if (!res.ok) throw new Error("Failed to load settings");
+        console.log("Fetching settings for tenant:", activeTenantId);
+        const res = await fetch("/api/tenant/invoice-settings", {
+          headers: {
+            "x-tenant-id": activeTenantId,
+          },
+        });
+
+        if (!res.ok) {
+          const contentType = res.headers.get("content-type") || "";
+          const errorMessage = contentType.includes("application/json")
+            ? (await res.json()).error
+            : await res.text();
+
+          console.error("Fetch failed:", res.status, errorMessage);
+          throw new Error(errorMessage || "Failed to load settings");
+        }
+
         const data = await res.json();
+        console.log("Loaded invoice settings:", data);
         setSettings((prev) => ({ ...prev, ...data }));
       } catch (err) {
         console.error("Failed to fetch invoice settings", err);
       }
     };
+
     fetchSettings();
-  }, []);
+  }, [hasPermission, authLoading, activeTenantId]);
 
   const handleChange = <K extends keyof Settings>(
     field: K,
@@ -59,21 +94,54 @@ export default function InvoiceSettingsPage() {
   };
 
   const handleSubmit = async () => {
+    if (!activeTenantId) return;
     setLoading(true);
-    const res = await fetch("/api/tenant/invoice-settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
-    });
-    setLoading(false);
 
-    if (res.ok) {
+    const isValidHex = /^#[0-9a-fA-F]{6}$/.test(settings.primaryColor);
+    if (!isValidHex) {
+      toast.error(
+        "Primary color must be a valid 6-digit hex color (e.g., #3b82f6)"
+      );
+      setLoading(false);
+      return;
+    }
+
+    try {
+      console.log("Submitting settings:", settings);
+      const res = await fetch("/api/tenant/invoice-settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-tenant-id": activeTenantId,
+        },
+        body: JSON.stringify(settings),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        console.error("Error saving settings", error);
+        throw new Error("Failed to update settings");
+      }
+
+      toast.success("Invoice settings updated!");
       router.refresh();
-    } else {
-      const error = await res.json();
-      console.error("Error saving settings", error);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (!hasPermission) {
+    return (
+      <div className="max-w-xl mx-auto mt-20 text-center">
+        <h2 className="text-xl font-semibold">Access Denied</h2>
+        <p className="text-muted-foreground mt-2">
+          You don’t have permission to view or update invoice settings.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <Card className="max-w-2xl mx-auto mt-10">
@@ -105,12 +173,15 @@ export default function InvoiceSettingsPage() {
 
         <div>
           <Label>Primary Color</Label>
-          <Input
-            type="color"
-            value={settings.primaryColor}
-            onChange={(e) => handleChange("primaryColor", e.target.value)}
-            className="w-20 h-10 p-0 border-none"
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              type="color"
+              value={settings.primaryColor}
+              onChange={(e) => handleChange("primaryColor", e.target.value)}
+              className="w-12 h-12 p-0 border rounded"
+            />
+            <span>{settings.primaryColor}</span>
+          </div>
         </div>
 
         <div className="grid gap-2">
@@ -146,6 +217,18 @@ export default function InvoiceSettingsPage() {
               onCheckedChange={(val) => handleChange("includeNotes", val)}
             />
           </Label>
+        </div>
+
+        <div>
+          <Label htmlFor="defaultNotes">Default Notes</Label>
+          <textarea
+            id="defaultNotes"
+            value={settings.defaultNotes}
+            onChange={(e) => handleChange("defaultNotes", e.target.value)}
+            rows={4}
+            className="w-full mt-1 p-2 border rounded-md bg-background text-sm"
+            placeholder="Thank you for your business! Payment due in 15 days."
+          />
         </div>
 
         <Button

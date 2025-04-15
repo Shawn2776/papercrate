@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   useForm,
   useFieldArray,
@@ -21,8 +21,6 @@ import {
 
 import AddCustomerSheet from "@/components/customers/AddCustomerSheet";
 import AddProductSheet from "@/components/products/AddProductSheet";
-
-import { invoiceFormSchema, InvoiceFormValues } from "@/lib/schemas";
 
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import {
@@ -48,13 +46,32 @@ import {
   selectStatuses,
 } from "@/lib/redux/slices/statusesSlice";
 
+import { invoiceFormSchema, InvoiceFormValues } from "@/lib/schemas/invoice";
+import { InvoiceStatus } from "@prisma/client";
+import { Textarea } from "@/components/ui/textarea";
+
 interface Props {
   onSubmit: (data: InvoiceFormValues) => void;
   loading?: boolean;
 }
 
+type AddProductSheetProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onProductCreated: (product: {
+    id: number;
+    name: string;
+    price: number;
+    // add other fields if needed
+  }) => void;
+};
+
 export default function NewInvoiceForm({ onSubmit, loading }: Props) {
   const dispatch = useAppDispatch();
+
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [productRowIndex, setProductRowIndex] = useState<number | null>(null);
 
   const customers = useAppSelector(selectCustomers);
   const products = useAppSelector(selectProducts);
@@ -81,7 +98,7 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
       customerId: "",
-      status: statuses[0] || "PENDING",
+      status: InvoiceStatus.PENDING,
       lineItems: [{ productId: "", quantity: 1, discountId: "" }],
       taxRateId: "",
       taxExempt: false,
@@ -109,21 +126,19 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
 
       {/* Customer */}
       <div>
-        <div className="flex justify-between items-center mb-2">
-          <label className="font-medium">Customer</label>
-          <AddCustomerSheet
-            onCustomerCreated={(newCustomer) => {
-              dispatch(addCustomer(newCustomer));
-              setValue("customerId", String(newCustomer.id));
-            }}
-          />
-        </div>
+        <label className="font-medium mb-2 block">Customer</label>
         <Controller
           control={control}
           name="customerId"
           render={({ field }) => (
             <Select
-              onValueChange={field.onChange}
+              onValueChange={(val) => {
+                if (val === "__add_new__") {
+                  setShowAddCustomer(true);
+                } else {
+                  field.onChange(val);
+                }
+              }}
               value={field.value ?? undefined}
             >
               <SelectTrigger>
@@ -135,6 +150,7 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
                     {c.name}
                   </SelectItem>
                 ))}
+                <SelectItem value="__add_new__">➕ Add New Customer</SelectItem>
               </SelectContent>
             </Select>
           )}
@@ -146,24 +162,18 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
         )}
       </div>
 
+      <AddCustomerSheet
+        open={showAddCustomer}
+        onOpenChange={setShowAddCustomer}
+        onCustomerCreated={(newCustomer) => {
+          dispatch(addCustomer(newCustomer));
+          setValue("customerId", String(newCustomer.id));
+        }}
+      />
+
       {/* Line Items */}
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium">Line Items</h3>
-          <AddProductSheet
-            onProductCreated={(newProduct) => {
-              dispatch(
-                addProduct({
-                  ...newProduct,
-                  price:
-                    typeof newProduct.price === "number"
-                      ? newProduct.price
-                      : parseFloat(newProduct.price.toString()),
-                })
-              );
-            }}
-          />
-        </div>
+        <h3 className="text-lg font-medium">Line Items</h3>
 
         {fields.map((field, idx) => (
           <div key={field.id} className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -172,7 +182,14 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
               name={`lineItems.${idx}.productId`}
               render={({ field }) => (
                 <Select
-                  onValueChange={field.onChange}
+                  onValueChange={(val) => {
+                    if (val === "__add_new__") {
+                      setProductRowIndex(idx);
+                      setShowAddProduct(true);
+                    } else {
+                      field.onChange(val);
+                    }
+                  }}
                   value={field.value ?? undefined}
                 >
                   <SelectTrigger>
@@ -184,6 +201,9 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
                         {p.name}
                       </SelectItem>
                     ))}
+                    <SelectItem value="__add_new__">
+                      ➕ Add New Product
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -229,6 +249,30 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
           + Add Line Item
         </Button>
       </div>
+
+      <AddProductSheet
+        open={showAddProduct}
+        onOpenChange={setShowAddProduct}
+        onProductCreated={(newProduct) => {
+          const parsedProduct = {
+            ...newProduct,
+            price:
+              typeof newProduct.price === "number"
+                ? newProduct.price
+                : parseFloat(newProduct.price.toString()),
+          };
+
+          dispatch(addProduct(parsedProduct));
+
+          if (productRowIndex !== null) {
+            setValue(
+              `lineItems.${productRowIndex}.productId`,
+              String(parsedProduct.id)
+            );
+            setProductRowIndex(null);
+          }
+        }}
+      />
 
       {/* Tax */}
       <div className="pt-4 border-t">
@@ -287,14 +331,26 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                {statuses.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s.replace(/_/g, " ").toLowerCase()}
+                {Object.values(InvoiceStatus).map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status.replace(/_/g, " ").toLowerCase()}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           )}
+        />
+      </div>
+
+      {/* Special Notes */}
+      <div>
+        <label className="font-medium block mb-1">
+          Special Notes & Instructions
+        </label>
+        <Textarea
+          {...register("specialNotes")}
+          placeholder="Write a thank-you note, payment terms, or special instructions..."
+          className="min-h-[100px]"
         />
       </div>
 

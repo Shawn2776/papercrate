@@ -11,26 +11,46 @@ import {
   Settings2,
   ChevronLeft,
   ChevronRight,
+  Banknote,
+  Receipt,
+  Cog,
+  BookOpen,
+  BarChart3,
 } from "lucide-react";
 import clsx from "clsx";
 
 import { useAppSelector } from "@/lib/redux/hooks";
 import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
 import { TenantSwitcherClient } from "./TenantSwitcherClient";
+import { Permission } from "@prisma/client";
 
-const navItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Invoices", href: "/dashboard/invoices", icon: FileText },
-  { label: "Products", href: "/dashboard/products", icon: Package },
-  { label: "Customers", href: "/dashboard/customers", icon: Users },
-  { label: "Settings", href: "/dashboard/settings", icon: Settings2 },
-];
-
-export function AppSidebar() {
+export function AppSidebar({
+  hideCollapseToggleOnMobile = false,
+}: {
+  hideCollapseToggleOnMobile?: boolean;
+}) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const tenant = useAppSelector(selectCurrentTenant);
   const tenantName = tenant?.name || "Tenant";
+  const permissions = useAppSelector((state) => state.auth.permissions);
+
+  const navItems = [
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Invoices", href: "/dashboard/invoices", icon: FileText },
+    { label: "Payments", href: "/dashboard/payments", icon: Banknote },
+    { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
+    { label: "Products", href: "/dashboard/products", icon: Package },
+    { label: "Customers", href: "/dashboard/customers", icon: Users },
+    { label: "Receipts", href: "/dashboard/receipts", icon: Receipt },
+    { label: "Documentation", href: "/dashboard/docs", icon: BookOpen },
+    {
+      label: "Settings",
+      href: "/dashboard/settings",
+      icon: Cog,
+      permission: Permission.MANAGE_BILLING,
+    },
+  ];
 
   useEffect(() => {
     const stored = localStorage.getItem("sidebarCollapsed");
@@ -40,6 +60,9 @@ export function AppSidebar() {
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", String(collapsed));
   }, [collapsed]);
+
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const shouldShowCollapse = !isMobile || !hideCollapseToggleOnMobile;
 
   return (
     <aside
@@ -62,18 +85,21 @@ export function AppSidebar() {
             <span className="text-sm font-bold tracking-tight">PC</span>
           )}
         </div>
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto text-xs"
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
+        {shouldShowCollapse && (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="ml-auto text-xs"
+          >
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        )}
       </div>
 
       <nav className="flex flex-col gap-1 p-2">
-        {navItems.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href;
+        {navItems.map(({ label, href, icon: Icon, permission }) => {
+          if (permission && !permissions.includes(permission)) return null;
 
+          const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
               key={href}

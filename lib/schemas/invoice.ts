@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { InvoiceStatus } from "@prisma/client";
 
 // Reusable line item schema
 export const lineItemSchema = z.object({
@@ -12,11 +13,12 @@ export const lineItemSchema = z.object({
   discountId: z.string().optional().nullable(),
 });
 
-// Main invoice form schema
+// Invoice form schema (frontend)
 export const invoiceFormSchema = z
   .object({
     customerId: z.string().min(1, "Customer is required"),
-    status: z.string().min(1, "Status is required"),
+    status: z.nativeEnum(InvoiceStatus),
+    specialNotes: z.string().optional(),
     lineItems: z
       .array(lineItemSchema)
       .min(1, "At least one line item is required"),
@@ -34,5 +36,6 @@ export const invoiceFormSchema = z
     }
   });
 
-// Inferred types
+// ✅ This is what you're missing:
 export type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
+export type InvoiceInput = InvoiceFormValues;

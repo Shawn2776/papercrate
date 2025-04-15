@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { decrement, increment, reset } from "@/lib/redux/slices/counterSlice";
 import { AppDispatch, RootState } from "@/lib/redux/store";
 import { SignedIn, SignedOut, SignUpButton, UserButton } from "@clerk/nextjs";
 import Image from "next/image";
@@ -61,7 +59,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      <section>
+      {/* <section>
         <h2>Counter Slice</h2>
         <div className="flex gap-4">
           <Button variant="outline" onClick={() => dispatch(increment())}>
@@ -80,7 +78,7 @@ export default function LandingPage() {
             Reset
           </Button>
         </div>
-      </section>
+      </section> */}
     </main>
   );
 }

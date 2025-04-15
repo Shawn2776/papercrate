@@ -6,11 +6,10 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Image from "next/image";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -29,26 +29,11 @@ const productSchema = z.object({
     .string()
     .refine((val) => !isNaN(Number(val)), "Valid price is required."),
   description: z.string().optional(),
-  imageUrl: z
-    .string()
-    .url()
-    .optional()
-    .or(z.literal(""))
-    .transform((val) => (val === "" ? undefined : val)),
   unit: z.string().optional(),
-  category: z.string().optional(),
-  variant: z.string().optional(),
-  tags: z.string().optional(), // comma-separated
-  stockQuantity: z.coerce.number().int().min(0).optional(),
-  metaTitle: z.string().optional(),
-  metaDesc: z.string().optional(),
+  stockQuantity: z.coerce.number().int().min(0, "Must be 0 or more").optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
-
-interface AddProductSheetProps {
-  onProductCreated?: (product: Pick<Product, "id" | "name" | "price">) => void;
-}
 
 interface CreatedProduct {
   id: number;
@@ -59,23 +44,28 @@ interface CreatedProduct {
   qrCodeUrl?: string;
 }
 
+interface AddProductSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onProductCreated?: (product: Pick<Product, "id" | "name" | "price">) => void;
+}
+
 export default function AddProductSheet({
+  open,
+  onOpenChange,
   onProductCreated,
 }: AddProductSheetProps) {
-  const [open, setOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [createdProduct, setCreatedProduct] = useState<CreatedProduct | null>(
     null
   );
-
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
-    // register,
+    register,
     handleSubmit,
     reset,
-    // formState: { errors, isSubmitting },
-    formState: { isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
   });
@@ -99,7 +89,7 @@ export default function AddProductSheet({
       setSuccessModalOpen(true);
       onProductCreated?.(product);
       reset();
-      setOpen(false);
+      onOpenChange(false);
     } catch (err) {
       setFormError(getErrorMessage(err));
     }
@@ -107,12 +97,7 @@ export default function AddProductSheet({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          <Button type="button" variant="outline">
-            + Add Product
-          </Button>
-        </SheetTrigger>
+      <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="right"
           className="w-full max-w-sm p-4 overflow-y-auto max-h-screen"
@@ -122,11 +107,48 @@ export default function AddProductSheet({
           </SheetHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
-            {/* form fields (unchanged) */}
+            <div>
+              <Label htmlFor="name">Product Name</Label>
+              <Input id="name" {...register("name")} />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="price">Price</Label>
+              <Input id="price" {...register("price")} />
+              {errors.price && (
+                <p className="text-sm text-red-500">{errors.price.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input id="description" {...register("description")} />
+            </div>
+
+            <div>
+              <Label htmlFor="unit">Unit</Label>
+              <Input id="unit" {...register("unit")} />
+            </div>
+
+            <div>
+              <Label htmlFor="stockQuantity">Stock Quantity</Label>
+              <Input
+                id="stockQuantity"
+                type="number"
+                {...register("stockQuantity", { valueAsNumber: true })}
+              />
+              {errors.stockQuantity && (
+                <p className="text-sm text-red-500">
+                  {errors.stockQuantity.message}
+                </p>
+              )}
+            </div>
 
             {formError && <p className="text-sm text-red-500">{formError}</p>}
 
-            {/* Sticky Save button */}
             <div className="sticky bottom-0 bg-white pt-4 pb-6 z-10">
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Saving..." : "Save"}
@@ -158,10 +180,11 @@ export default function AddProductSheet({
                   <p>
                     <strong>QR Code:</strong>
                   </p>
-                  <img
+                  <Image
                     src={createdProduct.qrCodeUrl}
                     alt="QR Code"
-                    className="w-32 h-32"
+                    width={32}
+                    height={32}
                   />
                 </div>
               )}

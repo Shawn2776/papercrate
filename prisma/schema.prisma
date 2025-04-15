@@ -139,6 +139,7 @@ model Invoice {
   createdById  String
   updatedById  String
   soldByUserId String?
+  specialNotes String? // Optional notes field
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -480,6 +481,7 @@ model InvoiceSettings {
   tenantId            String  @unique
   layout              String  @default("classic")
   primaryColor        String  @default("#1E3A8A")
+  defaultNotes        String? // Optional field
   includeCustomerInfo Boolean @default(true)
   includePaymentTerms Boolean @default(true)
   includeDueDate      Boolean @default(true)
