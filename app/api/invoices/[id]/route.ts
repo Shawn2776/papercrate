@@ -8,16 +8,19 @@ import { prisma } from "@/lib/prisma";
 import { getDbUserOrThrow } from "@/lib/functions/getDbUser";
 import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 import { InvoiceStatus } from "@prisma/client";
+import { getInvoiceIdFromUrl } from "@/lib/functions/getInvoiceIdFromUrl";
 
 // PATCH /api/invoices/[id]
-export async function PATCH(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
-  const { id } = context.params;
+export async function PATCH(req: NextRequest) {
+  const id = getInvoiceIdFromUrl(req);
+
+  if (!id) {
+    return new NextResponse("Missing or invalid invoice ID", { status: 400 });
+  }
+
   try {
     const dbUser = await getDbUserOrThrow();
-    const invoiceId = context.params.id;
+    const invoiceId = id;
 
     if (!invoiceId) {
       return new NextResponse("Invalid invoice ID", { status: 400 });
@@ -124,14 +127,16 @@ export async function PATCH(
 }
 
 // GET /api/invoices/[id]
-export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
-  const { id } = context.params;
+export async function GET(req: NextRequest) {
+  const id = getInvoiceIdFromUrl(req);
+
+  if (!id) {
+    return new NextResponse("Missing or invalid invoice ID", { status: 400 });
+  }
+
   try {
     const invoice = await prisma.invoice.findUnique({
-      where: { id: context.params.id },
+      where: { id },
       include: {
         customer: true,
         tenant: {
