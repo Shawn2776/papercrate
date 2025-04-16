@@ -46,7 +46,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
         {/* Main Content */}
         <main className="flex-1 p-6">
-          <div>
+          <div className="w-full text-right">
             <UserButton />
           </div>
           {children}
