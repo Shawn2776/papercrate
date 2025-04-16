@@ -1,4 +1,4 @@
-export default function NewUserLayout({
+export default async function NewUserLayout({
   children,
 }: {
   children: React.ReactNode;
