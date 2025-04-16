@@ -42,6 +42,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         name: body.legalBusinessName,
         email: body.businessEmail || null,
         website: body.onlineLink || null,
+        addressLine1: body.addressLine1,
+        addressLine2: body.addressLine2 || null,
+        city: body.city,
+        state: body.businessState,
+        zip: body.zip,
+        isUspsValidated: false, // or use a real flag if validated earlier
         memberships: {
           create: {
             userId: dbUser.id,
