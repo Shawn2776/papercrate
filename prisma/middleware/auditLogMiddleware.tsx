@@ -47,7 +47,10 @@ export function auditLogMiddleware(userId: string): Prisma.Middleware {
       result = await next(params);
 
       const entityId = (result as { id?: string | number })?.id?.toString?.();
-      if (!entityId) return result;
+      if (!entityId) {
+        console.warn(`[AuditLog] No entity ID found for model "${model}"`);
+        return result;
+      }
 
       await prisma.auditLog.create({
         data: {

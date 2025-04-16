@@ -3,14 +3,17 @@ import { z } from "zod";
 export const TenantCreateSchema = z
   .object({
     legalBusinessName: z.string().min(2),
-    businessEmail: z.string().email().optional(),
+    businessEmail: z.string().email().optional().nullable(),
     onlineStatus: z.enum(["online", "notOnline"]),
-    onlineLink: z.string().optional(), // handle conditionally
+    onlineLink: z.string().optional().nullable(), // URL validated below
     businessType: z.string(),
     businessCategory: z.string(),
     businessSubcategory: z.string(),
+    doingBusinessAs: z.string().optional().nullable(), // ✅ NEW
+    ein: z.string().min(2), // ✅ NEW
+    isManualEntry: z.boolean().optional().default(false), // ✅ NEW
     addressLine1: z.string(),
-    addressLine2: z.string().optional(),
+    addressLine2: z.string().optional().nullable(),
     city: z.string(),
     businessState: z.string(),
     zip: z.string(),
@@ -31,7 +34,7 @@ export const TenantCreateSchema = z
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ["onlineLink"],
-            message: "Invalid url",
+            message: "Invalid URL format",
           });
         }
       }

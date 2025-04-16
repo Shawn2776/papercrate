@@ -11,12 +11,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let dbUser = await prisma.user.findUnique({
-    where: { clerkId: clerkUser.id },
-  });
-
-  const email = clerkUser.emailAddresses[0]?.emailAddress;
-
+  const email = clerkUser.emailAddresses[0]?.emailAddress?.toLowerCase();
   if (!email) {
     return NextResponse.json(
       { error: "Clerk user is missing an email address." },
@@ -24,23 +19,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  console.log("not missing an email");
+  let dbUser = await prisma.user.findUnique({
+    where: { clerkId: clerkUser.id },
+  });
 
   if (!dbUser) {
-    // Auto-create DB user from Clerk user
     dbUser = await prisma.user.create({
       data: {
         clerkId: clerkUser.id,
-        email: clerkUser.emailAddresses[0]?.emailAddress || "",
+        email,
         name: clerkUser.firstName || "New User",
       },
     });
   }
 
   const body = await req.json();
-
-  // Use user-aware prisma client with auditing
-  const prismaWithContext = prismaWithUser(dbUser.id);
   const parsed = TenantCreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
@@ -48,21 +41,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       { status: 400 }
     );
   }
+
   const data = parsed.data;
+  const prismaWithContext = prismaWithUser(dbUser.id);
 
   try {
-    // Create Tenant
     const tenant = await prismaWithContext.tenant.create({
       data: {
-        name: body.legalBusinessName,
-        email: body.businessEmail || null,
-        website: body.onlineLink || null,
-        addressLine1: body.addressLine1,
-        addressLine2: body.addressLine2 || null,
-        city: body.city,
-        state: body.businessState,
-        zip: body.zip,
-        isUspsValidated: false, // or use a real flag if validated earlier
+        name: data.legalBusinessName,
+        email: data.businessEmail || null,
+        website: data.onlineLink || null,
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2 || null,
+        city: data.city,
+        state: data.businessState,
+        zip: data.zip,
+        isUspsValidated: false,
         memberships: {
           create: {
             userId: dbUser.id,
@@ -73,24 +67,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       },
     });
 
-    // Create Business and associate to tenant
     const business = await prismaWithContext.business.create({
       data: {
-        businessType: body.businessType,
-        businessCategory: body.businessCategory,
-        businessSubcategory: body.businessSubcategory,
-        legalBusinessName: body.legalBusinessName,
-        doingBusinessAs: body.doingBusinessAs || null,
-        ein: body.ein,
-        businessEmail: body.businessEmail || null,
-        businessState: body.businessState,
-        addressLine1: body.addressLine1,
-        addressLine2: body.addressLine2 || null,
-        zip: body.zip,
-        city: body.city,
-        isManualEntry: body.isManualEntry || false,
-        onlineStatus: body.onlineStatus,
-        onlineLink: body.onlineLink || null,
+        businessType: data.businessType,
+        businessCategory: data.businessCategory,
+        businessSubcategory: data.businessSubcategory,
+        legalBusinessName: data.legalBusinessName,
+        doingBusinessAs: data.doingBusinessAs || null,
+        ein: data.ein,
+        businessEmail: data.businessEmail || null,
+        businessState: data.businessState,
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2 || null,
+        zip: data.zip,
+        city: data.city,
+        isManualEntry: data.isManualEntry || false,
+        onlineStatus: data.onlineStatus,
+        onlineLink: data.onlineLink || null,
         tenantId: tenant.id,
         createdById: dbUser.id,
         updatedById: dbUser.id,
@@ -100,10 +93,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json(business, { status: 201 });
   } catch (err: unknown) {
     console.error("Error creating tenant/business:", err);
-
     const message =
       err instanceof Error ? err.message : "An unknown error occurred";
-
     return NextResponse.json({ error: message }, { status: 500 });
+  } finally {
+    await prismaWithContext.$disconnect(); // ✅ prevents connection leaks
   }
 }
