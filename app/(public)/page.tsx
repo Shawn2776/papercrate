@@ -51,7 +51,7 @@ export default function LandingPage() {
             <Image
               src="/hero.png"
               alt="PaperCrate illustration"
-              width={500} // 👈 Set a fixed width
+              width={500} // 👈
               height={500} // 👈 Set a fixed height (you can adjust this or use `layout="intrinsic"` if needed)
               className="w-[200px] sm:w-[250px] md:w-[300px] lg:w-[400px] xl:w-[500px]"
               priority // 👈 Optional: preload the image for better performance
