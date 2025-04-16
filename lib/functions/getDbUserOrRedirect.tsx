@@ -8,7 +8,7 @@ export async function getDbUserOrRedirect() {
   if (!clerkId) redirect("/sign-in");
 
   const dbUser = await prisma.user.findUnique({ where: { clerkId } });
-  if (!dbUser) redirect("/sign-in");
+  if (!dbUser) redirect("/new-user/1");
 
   return dbUser;
 }
