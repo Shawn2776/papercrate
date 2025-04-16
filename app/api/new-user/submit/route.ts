@@ -36,6 +36,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = await req.json();
   const parsed = TenantCreateSchema.safeParse(body);
   if (!parsed.success) {
+    console.log("parsed error");
+
     return NextResponse.json(
       { error: parsed.error.flatten() },
       { status: 400 }
