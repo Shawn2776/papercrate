@@ -17,6 +17,7 @@ enum Role {
   MARKETING
   BILLING_MANAGER
   NONE
+  OTHER
 }
 
 enum TenantRole {
