@@ -7,13 +7,23 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/(.*)",
 ]);
 
+const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
+
+const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
+
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
 
+  // Redirect unauthenticated users unless the route is public
   if (!userId && !isPublicRoute(req)) {
     const signInUrl = new URL("/sign-in", req.url);
     signInUrl.searchParams.set("redirect_url", req.url);
     return Response.redirect(signInUrl.toString());
+  }
+
+  // Block users who are not the super admin from accessing /admin
+  if (isAdminRoute(req) && userId !== SUPERADMIN_ID) {
+    return new Response("Unauthorized", { status: 403 });
   }
 
   return;
