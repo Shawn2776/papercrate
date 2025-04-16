@@ -38,8 +38,16 @@ export default function StepFiveReviewSubmit() {
       });
 
       if (!res.ok) {
-        const result = await res.json();
-        throw new Error(result.message || "Something went wrong.");
+        let errorMessage = "Something went wrong.";
+        try {
+          const text = await res.text();
+          const result = JSON.parse(text);
+          errorMessage = result.message || errorMessage;
+        } catch (error: unknown) {
+          // Could not parse JSON response
+          console.warn("Non-JSON error response from server");
+        }
+        throw new Error(errorMessage);
       }
 
       dispatch(resetOnboarding());
