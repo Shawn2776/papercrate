@@ -11,15 +11,30 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const dbUser = await prisma.user.findUnique({
+  let dbUser = await prisma.user.findUnique({
     where: { clerkId: clerkUser.id },
   });
 
-  if (!dbUser) {
+  const email = clerkUser.emailAddresses[0]?.emailAddress;
+
+  if (!email) {
     return NextResponse.json(
-      { error: "User not found in DB" },
-      { status: 404 }
+      { error: "Clerk user is missing an email address." },
+      { status: 400 }
     );
+  }
+
+  console.log("not missing an email");
+
+  if (!dbUser) {
+    // Auto-create DB user from Clerk user
+    dbUser = await prisma.user.create({
+      data: {
+        clerkId: clerkUser.id,
+        email: clerkUser.emailAddresses[0]?.emailAddress || "",
+        name: clerkUser.firstName || "New User",
+      },
+    });
   }
 
   const body = await req.json();
