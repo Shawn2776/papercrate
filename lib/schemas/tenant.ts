@@ -10,7 +10,7 @@ export const TenantCreateSchema = z
     businessCategory: z.string(),
     businessSubcategory: z.string(),
     doingBusinessAs: z.string().optional().nullable(), // ✅ NEW
-    ein: z.string().min(2), // ✅ NEW
+    ein: z.string().min(2).optional().nullable(),
     isManualEntry: z.boolean().optional().default(false), // ✅ NEW
     addressLine1: z.string(),
     addressLine2: z.string().optional().nullable(),
