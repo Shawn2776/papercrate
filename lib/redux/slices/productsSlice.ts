@@ -36,7 +36,36 @@ export const fetchProducts = createAsyncThunk<
   try {
     const res = await fetch("/api/products");
     if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-    return await res.json();
+
+    const raw = await res.json();
+
+    // Safely transform to typed Product[]
+    const products: Product[] = raw.map((item: unknown) => {
+      const parsed = item as {
+        id: number;
+        name: string;
+        price: number | { toFixed: (n: number) => string };
+        sku?: string;
+        barcode?: string;
+        imageUrl?: string;
+        description?: string;
+      };
+
+      return {
+        id: parsed.id,
+        name: parsed.name,
+        price:
+          typeof parsed.price === "number"
+            ? parsed.price
+            : Number(parsed.price.toFixed(2)),
+        sku: parsed.sku,
+        barcode: parsed.barcode,
+        imageUrl: parsed.imageUrl,
+        description: parsed.description,
+      };
+    });
+
+    return products;
   } catch (err) {
     return rejectWithValue(getErrorMessage(err));
   }
