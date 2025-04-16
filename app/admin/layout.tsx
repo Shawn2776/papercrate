@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Building2,
   FileText,
+  LetterText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ClerkProvider, UserButton } from "@clerk/nextjs";
@@ -16,6 +17,7 @@ const navItems = [
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Tenants", href: "/admin/tenants", icon: Building2 },
   { label: "Invoices", href: "/admin/invoices", icon: FileText },
+  { label: "Enums", href: "/admin/enums", icon: LetterText },
   { label: "Settings", href: "/admin/settings", icon: Settings2 },
 ];
 

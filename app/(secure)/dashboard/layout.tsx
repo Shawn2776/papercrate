@@ -22,13 +22,20 @@ export default async function DashboardLayout({
 }: {
   children: ReactNode;
 }) {
+  console.log("before getDbUserOrRedirect");
+
   const user = await getDbUserOrRedirect();
+
+  console.log("after getDbUserOrRedirect");
 
   const memberships = await prisma.tenantMembership.findMany({
     where: { userId: user.id },
   });
 
+  console.log("meberships: ", memberships);
+
   const hasTenant = memberships.length > 0;
+  console.log("hasTenant: ", hasTenant);
   if (!hasTenant) redirect("/new-user/1");
 
   const pathname = (await headers()).get("x-pathname") ?? "/dashboard";
