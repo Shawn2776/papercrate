@@ -76,6 +76,18 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
   const taxRates = useAppSelector(selectTaxRates);
 
   useEffect(() => {
+    console.log(
+      "👀 Current tenant in component:",
+      currentTenant?.id,
+      currentTenant?.name
+    );
+    console.log(
+      "📦 Loaded customers:",
+      customers.map((c) => ({ id: c.id, name: c.name }))
+    );
+  }, [currentTenant, customers]);
+
+  useEffect(() => {
     dispatch(fetchCustomers());
     dispatch(fetchProducts());
     dispatch(fetchDiscounts());

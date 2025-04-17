@@ -4,15 +4,22 @@ import { customerSchema } from "@/lib/schemas"; // ✅ import the centralized Zo
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
+  console.log("📥 Customer API hit");
   const user = await currentUser();
-  if (!user) return new Response("Unauthorized", { status: 401 });
+  if (!user) {
+    console.log("❌ No current user");
+    return new Response("Unauthorized", { status: 401 });
+  }
 
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: user.id },
     include: { memberships: true },
   });
 
+  console.log("👤 DB user found:", dbUser?.email);
+
   const tenantId = dbUser?.memberships?.[0]?.tenantId;
+  console.log("🏷️ Tenant ID for fetch:", tenantId);
   if (!tenantId) return new Response("Missing tenant", { status: 400 });
 
   const customers = await prisma.customer.findMany({
