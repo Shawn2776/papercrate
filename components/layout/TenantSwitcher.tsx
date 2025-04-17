@@ -11,6 +11,10 @@ import {
   selectCurrentTenant,
   selectTenantsLoading,
 } from "@/lib/redux/slices/tenantSlice";
+import {
+  resetCustomers,
+  fetchCustomers,
+} from "@/lib/redux/slices/customersSlice";
 
 import {
   Select,
@@ -55,6 +59,10 @@ export const TenantSwitcher = () => {
     if (selected) {
       dispatch(setCurrentTenant(selected));
       localStorage.setItem("activeTenantId", selected.id);
+
+      // 🧹 Reset old customer data and fetch new
+      dispatch(resetCustomers());
+      dispatch(fetchCustomers());
     }
   };
 

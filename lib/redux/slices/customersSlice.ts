@@ -36,6 +36,11 @@ const customersSlice = createSlice({
     addCustomer: (state, action: PayloadAction<Customer>) => {
       state.data.push(action.payload);
     },
+    resetCustomers: (state) => {
+      state.data = [];
+      state.loading = false;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -54,7 +59,7 @@ const customersSlice = createSlice({
   },
 });
 
-export const { addCustomer } = customersSlice.actions;
+export const { addCustomer, resetCustomers } = customersSlice.actions;
 export const selectCustomers = (state: RootState) => state.customers.data;
 export const selectCustomersLoading = (state: RootState) =>
   state.customers.loading;
