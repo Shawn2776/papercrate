@@ -17,13 +17,7 @@ export async function GET() {
 
   const customers = await prisma.customer.findMany({
     where: {
-      createdBy: {
-        memberships: {
-          some: {
-            tenantId,
-          },
-        },
-      },
+      tenantId, // ← this will scope to the current tenant only
     },
   });
 

@@ -78,7 +78,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         businessSubcategory: data.businessSubcategory,
         legalBusinessName: data.legalBusinessName,
         doingBusinessAs: data.doingBusinessAs || null,
-        ein: data.ein?.trim() || null,
+        ein: data.ein.trim(),
         businessEmail: data.businessEmail || null,
         businessState: data.businessState,
         addressLine1: data.addressLine1,
