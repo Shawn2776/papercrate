@@ -64,10 +64,15 @@ export const TenantSwitcher = () => {
       dispatch(setCurrentTenant(selected));
       localStorage.setItem("activeTenantId", selected.id);
 
-      // 🧹 Reset old customer data and fetch new
-      console.log("🧹 Resetting and fetching customers...");
+      // 🧹 Reset old customer data
+      console.log("🧹 Clearing customers...");
       dispatch(clearCustomers());
-      dispatch(fetchCustomers());
+
+      // ⏳ Slight delay to allow Redux store to update before fetching
+      setTimeout(() => {
+        console.log("📦 Fetching customers for new tenant...");
+        dispatch(fetchCustomers());
+      }, 50);
     }
   };
 
