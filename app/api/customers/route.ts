@@ -28,6 +28,15 @@ export async function GET() {
     },
   });
 
+  console.log(
+    "🧾 Customers returned:",
+    customers.map((c) => ({
+      id: c.id,
+      name: c.name,
+      tenantId: c.tenantId,
+    }))
+  );
+
   return NextResponse.json(customers);
 }
 
