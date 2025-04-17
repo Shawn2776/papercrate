@@ -343,7 +343,7 @@ model Business {
   businessSubcategory String
   legalBusinessName   String
   doingBusinessAs     String?
-  ein                 String?
+  ein                 String
   businessState       String
   onlineStatus        String
   onlineLink          String?

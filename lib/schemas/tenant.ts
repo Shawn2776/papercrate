@@ -3,14 +3,14 @@ import { z } from "zod";
 export const TenantCreateSchema = z
   .object({
     legalBusinessName: z.string().min(2),
-    businessEmail: z.string().email().optional().nullable(),
+    businessEmail: z.string().email(),
     onlineStatus: z.enum(["online", "notOnline"]),
     onlineLink: z.string().optional().nullable(), // URL validated below
     businessType: z.string(),
     businessCategory: z.string(),
     businessSubcategory: z.string(),
     doingBusinessAs: z.string().optional().nullable(), // ✅ NEW
-    ein: z.string().min(2).optional().nullable(),
+    ein: z.string().min(9).max(15),
     isManualEntry: z.boolean().optional().default(false), // ✅ NEW
     addressLine1: z.string(),
     addressLine2: z.string().optional().nullable(),

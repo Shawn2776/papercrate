@@ -16,6 +16,11 @@ import {
 } from "../../../lib/redux/slices/onboardingSlice";
 import FormHeader from "../FormHeader";
 import { states } from "@/components/states/States";
+import { TenantCreateSchema } from "@/lib/schemas/tenant";
+
+import type { FormData } from "@/lib/redux/slices/onboardingSlice"; // ✅ use the actual alias or adjust relative path
+import { sanitizeString } from "@/lib/functions/sanitizeString";
+import { normalizeFormData } from "@/lib/functions/normalizeFormData";
 
 const StepFourBusinessDetails = () => {
   const router = useRouter();
@@ -53,25 +58,33 @@ const StepFourBusinessDetails = () => {
   };
 
   const handleNext = () => {
-    if (onlineStatus === "online" && !onlineLink.trim()) return;
+    const formPayload: Partial<FormData> = normalizeFormData({
+      businessType: formData.businessType,
+      businessCategory: formData.businessCategory,
+      businessSubcategory: formData.businessSubcategory,
+      legalBusinessName,
+      businessState: selectedState,
+      addressLine1,
+      addressLine2: sanitizeString(addressLine2),
+      zip,
+      city,
+      isManualEntry,
+      businessEmail: sanitizeString(businessEmail),
+      doingBusinessAs: sanitizeString(formData.doingBusinessAs ?? undefined),
+      ein: sanitizeString(ein), // now required
+      onlineStatus,
+      onlineLink: sanitizeString(onlineLink),
+    });
 
-    dispatch(
-      setFormData({
-        legalBusinessName,
-        doingBusinessAs,
-        ein,
-        addressLine1,
-        addressLine2,
-        zip,
-        city,
-        businessState: selectedState,
-        businessEmail,
-        isManualEntry,
-        onlineStatus,
-        onlineLink,
-      })
-    );
+    const result = TenantCreateSchema.safeParse(formPayload);
 
+    if (!result.success) {
+      console.error("Zod validation error:", result.error.format());
+      alert("Please complete all required fields before continuing.");
+      return;
+    }
+
+    dispatch(setFormData(result.data));
     dispatch(setStep(step + 1));
     router.push(`/new-user/5`);
   };

@@ -15,7 +15,7 @@ import {
 } from "../../../lib/redux/slices/onboardingSlice";
 import FormHeader from "../FormHeader";
 
-const subcategories: Record<string, string[]> = {
+export const subcategories: Record<string, string[]> = {
   "retail-misc": ["Electronics", "Books", "Toys", "Home Decor"],
   "food-hospitality": ["Restaurant", "Cafe", "Catering", "Bar"],
   professional: ["Consulting", "Legal Services", "Finance", "Education"],

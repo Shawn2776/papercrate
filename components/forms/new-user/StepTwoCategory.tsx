@@ -33,7 +33,7 @@ interface BusinessCategory {
   icon: React.ElementType;
 }
 
-const businessCategories: BusinessCategory[] = [
+export const businessCategories: BusinessCategory[] = [
   { id: "retail-misc", name: "Retail - Miscellaneous", icon: ShoppingBag },
   {
     id: "food-hospitality",
