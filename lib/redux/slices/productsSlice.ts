@@ -12,6 +12,7 @@ export interface Product {
   barcode?: string;
   imageUrl?: string;
   description?: string;
+  createdAt?: string | Date;
 }
 
 // Define the state

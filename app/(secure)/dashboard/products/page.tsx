@@ -30,11 +30,7 @@ export default function ProductsPage() {
       {loading && <p className="text-muted">Loading...</p>}
       {error && <p className="text-destructive">Error: {error}</p>}
 
-      <ProductDataTable
-        columns={columns}
-        data={products}
-        userPermissions={userPermissions ?? []}
-      />
+      <ProductDataTable data={products} userPermissions={userPermissions} />
     </div>
   );
 }
