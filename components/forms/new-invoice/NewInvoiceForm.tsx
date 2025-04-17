@@ -47,6 +47,7 @@ import { fetchStatuses } from "@/lib/redux/slices/statusesSlice";
 
 import { invoiceFormSchema, InvoiceFormValues } from "@/lib/schemas/invoice";
 import { InvoiceStatus } from "@prisma/client";
+import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
 
 interface Props {
   onSubmit: (data: InvoiceFormValues) => void;
@@ -74,6 +75,8 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
   const products = useAppSelector(selectProducts);
   const discounts = useAppSelector(selectDiscounts);
   const taxRates = useAppSelector(selectTaxRates);
+
+  const currentTenant = useAppSelector(selectCurrentTenant);
 
   useEffect(() => {
     console.log(
