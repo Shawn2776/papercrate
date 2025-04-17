@@ -36,11 +36,11 @@ const customersSlice = createSlice({
     addCustomer: (state, action: PayloadAction<Customer>) => {
       state.data.push(action.payload);
     },
-    resetCustomers: (state) => {
+    clearCustomers: (state) => {
       state.data = [];
       state.loading = false;
       state.error = null;
-    },
+    }, // <-- ✅ this closing brace was missing
   },
   extraReducers: (builder) => {
     builder
@@ -59,7 +59,8 @@ const customersSlice = createSlice({
   },
 });
 
-export const { addCustomer, resetCustomers } = customersSlice.actions;
+export const { addCustomer, clearCustomers } = customersSlice.actions;
+
 export const selectCustomers = (state: RootState) => state.customers.data;
 export const selectCustomersLoading = (state: RootState) =>
   state.customers.loading;

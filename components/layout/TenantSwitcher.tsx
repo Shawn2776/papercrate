@@ -12,7 +12,7 @@ import {
   selectTenantsLoading,
 } from "@/lib/redux/slices/tenantSlice";
 import {
-  resetCustomers,
+  clearCustomers,
   fetchCustomers,
 } from "@/lib/redux/slices/customersSlice";
 
@@ -66,7 +66,7 @@ export const TenantSwitcher = () => {
 
       // 🧹 Reset old customer data and fetch new
       console.log("🧹 Resetting and fetching customers...");
-      dispatch(resetCustomers());
+      dispatch(clearCustomers());
       dispatch(fetchCustomers());
     }
   };
