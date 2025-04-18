@@ -2,6 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { customerSchema } from "@/lib/schemas"; // ✅ import the centralized Zod schema
 import { prisma } from "@/lib/prisma";
+import { recordAuditLog } from "@/lib/functions/recordAuditLog";
 
 export async function GET() {
   console.log("📥 Customer API hit");
@@ -71,6 +72,14 @@ export async function POST(req: NextRequest) {
       createdById: dbUser.id,
       updatedById: dbUser.id,
     },
+  });
+
+  await recordAuditLog({
+    action: "CREATE",
+    entityType: "Customer",
+    entityId: customer.id.toString(),
+    userId: dbUser.id,
+    after: customer,
   });
 
   return NextResponse.json(

@@ -9,6 +9,7 @@ import {
 import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 
 import { NextRequest } from "next/server";
+import { recordAuditLog } from "@/lib/functions/recordAuditLog";
 
 export async function GET(req: NextRequest): Promise<Response> {
   const user = await currentUser();
@@ -148,6 +149,17 @@ export async function POST(req: Request): Promise<Response> {
           customer: { connect: { id: Number(customerId) } },
           tenant: { connect: { id: tenantId } },
           InvoiceDetail: { create: details },
+        },
+      });
+
+      await recordAuditLog({
+        action: "CREATE",
+        entityType: "Invoice",
+        entityId: invoice.id,
+        userId: dbUser.id,
+        after: {
+          ...invoice,
+          InvoiceDetail: details,
         },
       });
 

@@ -295,6 +295,7 @@ model AuditLog {
   entityId    String
   before      Json?
   after       Json?
+  diff        Json?
   payload     Json?
   userId      String
   performedAt DateTime @default(now())

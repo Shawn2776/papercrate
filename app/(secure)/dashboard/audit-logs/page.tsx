@@ -3,15 +3,6 @@
 import { useEffect, useState } from "react";
 import { AuditLog, User, Permission } from "@prisma/client";
 import { PermissionGuard } from "@/components/auth/PermissionGuard";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectItem,
-  SelectTrigger,
-  SelectContent,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { AuditLogDataTable } from "@/components/tables/audit-log-table/AuditLogDataTable";
 
 type AuditLogWithUser = AuditLog & {
@@ -68,56 +59,6 @@ export default function AuditLogsPage() {
       <div className="p-4 space-y-4">
         <h1 className="text-2xl font-bold">Audit Logs</h1>
         {error && <p className="text-destructive text-sm">{error}</p>}
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 items-end">
-          <Input
-            placeholder="Search logs..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="max-w-sm"
-          />
-
-          <Select onValueChange={setAction} value={action}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Action" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="CREATE">CREATE</SelectItem>
-              <SelectItem value="UPDATE">UPDATE</SelectItem>
-              <SelectItem value="DELETE">DELETE</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select onValueChange={setEntityType} value={entityType}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Entity" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Product">Product</SelectItem>
-              <SelectItem value="Invoice">Invoice</SelectItem>
-              <SelectItem value="Customer">Customer</SelectItem>
-              {/* Add more as needed */}
-            </SelectContent>
-          </Select>
-
-          <Select onValueChange={setUserId} value={userId}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="User" />
-            </SelectTrigger>
-            <SelectContent>
-              {users.map((u) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button variant="outline" onClick={resetFilters}>
-            Reset
-          </Button>
-        </div>
 
         <AuditLogDataTable data={logs} />
       </div>

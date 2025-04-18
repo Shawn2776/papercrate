@@ -9,6 +9,7 @@ import { getDbUserOrThrow } from "@/lib/functions/getDbUser";
 import { getErrorMessage } from "@/lib/functions/getErrorMessage";
 import { InvoiceStatus } from "@prisma/client";
 import { getInvoiceIdFromUrl } from "@/lib/functions/getInvoiceIdFromUrl";
+import { recordAuditLog } from "@/lib/functions/recordAuditLog";
 
 // PATCH /api/invoices/[id]
 export async function PATCH(req: NextRequest) {
@@ -116,6 +117,21 @@ export async function PATCH(req: NextRequest) {
         specialNotes,
         updatedById: dbUser.id,
         InvoiceDetail: { create: details },
+      },
+    });
+
+    await recordAuditLog({
+      action: "UPDATE",
+      entityType: "Invoice",
+      entityId: updated.id,
+      userId: dbUser.id,
+      before: {
+        ...existing,
+        InvoiceDetail: existing.InvoiceDetail,
+      },
+      after: {
+        ...updated,
+        InvoiceDetail: details,
       },
     });
 
