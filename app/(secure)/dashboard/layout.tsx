@@ -7,6 +7,7 @@ import { UserButton } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import { headers } from "next/headers";
 import { PageBreadcrumbs } from "@/components/layout/PageBreadcrumbs";
+import { AuthInitializer } from "@/components/auth/AuthInitializer";
 
 export default async function DashboardLayout({
   children,
@@ -36,7 +37,10 @@ export default async function DashboardLayout({
         </div>
 
         {/* Main content */}
-        <main className="flex-1 p-4 w-full">{children}</main>
+        <main className="flex-1 p-4 w-full">
+          <AuthInitializer />
+          {children}
+        </main>
         <Toaster richColors position="top-center" />
       </div>
     </div>

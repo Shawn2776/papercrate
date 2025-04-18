@@ -8,7 +8,16 @@ export async function getDbUserOrThrow() {
   const { userId: clerkId } = await auth();
   if (!clerkId) throw new Error("Not authenticated");
 
-  const dbUser = await prisma.user.findUnique({ where: { clerkId } });
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkId },
+    include: {
+      memberships: {
+        select: {
+          permissions: true,
+        },
+      },
+    },
+  });
   if (!dbUser) throw new Error("User not found");
 
   return dbUser;
