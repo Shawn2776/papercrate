@@ -4,13 +4,11 @@ import { useState, useMemo, useRef } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { AuditLog, User } from "@prisma/client";
 import { DataTable } from "@/components/ui/data-table";
-
 import { ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FilterBar } from "../filterBar";
 import { Button } from "@/components/ui/button";
 
-// Augmented AuditLog with related user
 type AuditLogWithUser = AuditLog & {
   user: Pick<User, "name" | "email">;
 };
@@ -26,7 +24,6 @@ export function AuditLogDataTable({ data }: Props) {
   const [user, setUser] = useState("");
   const [field, setField] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
 
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -112,24 +109,19 @@ export function AuditLogDataTable({ data }: Props) {
     },
   ];
 
-  const handleExportPDF = async () => {
+  const handlePrint = () => {
     if (!printRef.current) return;
-    setExporting(true);
-    try {
-      const html2pdf = (await import("html2pdf.js")).default;
+    const win = window.open("", "_blank");
+    if (!win) return;
 
-      await new Promise<void>((resolve) => {
-        html2pdf()
-          .from(printRef.current!)
-
-          .set({ filename: "audit-logs.pdf" })
-          .save();
-        // Delay to let save() finish — crude but effective
-        setTimeout(resolve, 500); // you can adjust timing
-      });
-    } finally {
-      setExporting(false);
-    }
+    win.document.write(`
+      <html>
+        <head><title>Print Audit Logs</title></head>
+        <body>${printRef.current.innerHTML}</body>
+      </html>
+    `);
+    win.document.close();
+    win.print();
   };
 
   return (
@@ -167,7 +159,7 @@ export function AuditLogDataTable({ data }: Props) {
             link.download = "audit-logs.json";
             link.click();
             URL.revokeObjectURL(url);
-          } else if (type === "csv") {
+          } else {
             const header = Object.keys(filteredData[0] || {}).join(",");
             const rows = filteredData.map((log) =>
               Object.values(log)
@@ -175,7 +167,6 @@ export function AuditLogDataTable({ data }: Props) {
                 .join(",")
             );
             const csv = [header, ...rows].join("\n");
-
             const blob = new Blob([csv], { type: "text/csv" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
@@ -185,40 +176,8 @@ export function AuditLogDataTable({ data }: Props) {
             URL.revokeObjectURL(url);
           }
         }}
-        onSave={async (type) => {
-          if (!printRef.current) return;
-
-          if (type === "print") {
-            const printContents = printRef.current.innerHTML;
-            const printWindow = window.open("", "", "width=1024,height=768");
-            if (!printWindow) return;
-            printWindow.document.write(`
-        <html>
-          <head><title>Print Audit Logs</title></head>
-          <body>${printContents}</body>
-        </html>
-      `);
-            printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
-          }
-
-          if (type === "pdf") {
-            setExporting(true);
-            try {
-              const html2pdf = (await import("html2pdf.js")).default;
-              await new Promise<void>((resolve) => {
-                html2pdf()
-                  .from(printRef.current!)
-                  .set({ filename: "audit-logs.pdf" })
-                  .save();
-                setTimeout(resolve, 500);
-              });
-            } finally {
-              setExporting(false);
-            }
-          }
+        onSave={(type) => {
+          if (type === "print") handlePrint();
         }}
       />
 
@@ -228,9 +187,7 @@ export function AuditLogDataTable({ data }: Props) {
 
       {expandedId &&
         (() => {
-          const selected: AuditLogWithUser | undefined = data.find(
-            (log) => log.id === expandedId
-          );
+          const selected = data.find((log) => log.id === expandedId);
           if (!selected) return null;
 
           return (
@@ -253,7 +210,7 @@ export function AuditLogDataTable({ data }: Props) {
                           <span className="text-red-600 line-through">
                             {JSON.stringify(from)}
                           </span>{" "}
-                          →
+                          →{" "}
                           <span className="text-green-600 font-semibold ml-1">
                             {JSON.stringify(to)}
                           </span>
@@ -279,15 +236,6 @@ export function AuditLogDataTable({ data }: Props) {
             </div>
           );
         })()}
-
-      {exporting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-md p-6 flex items-center gap-3 shadow-lg">
-            <span className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500" />
-            <span className="text-sm font-medium">Generating PDF…</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

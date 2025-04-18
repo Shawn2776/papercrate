@@ -126,21 +126,9 @@ export function FilterBar({
         </DropdownMenu>
 
         {/* Save */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              Save
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onSave("pdf")}>
-              Download PDF
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onSave("print")}>
-              Print Table
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button variant="outline" size="sm" onClick={() => onSave("print")}>
+          Print
+        </Button>
       </div>
     </div>
   );
