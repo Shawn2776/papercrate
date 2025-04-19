@@ -55,17 +55,20 @@ export function InvoiceDataTable({
   const [filter, setFilter] = React.useState("");
   const [expandedRowId, setExpandedRowId] = React.useState<string | null>(null);
 
-  const handleEdit = (id: string) => {
-    router.push(`/dashboard/invoices/${id}?edit=true`);
-  };
+  const handleEdit = React.useCallback(
+    (id: string) => {
+      router.push(`/dashboard/invoices/${id}?edit=true`);
+    },
+    [router]
+  );
 
-  const handleDelete = (id: string) => {
+  const handleDelete = React.useCallback((id: string) => {
     if (confirm("Delete this invoice?")) {
       alert(`Delete invoice ${id}`);
     }
-  };
+  }, []);
 
-  const columns = React.useMemo<ColumnDef<InvoiceRow>[]>(
+  const columns = React.useMemo(
     () =>
       getInvoiceColumns({
         expandedRowId,
@@ -74,7 +77,7 @@ export function InvoiceDataTable({
         onEdit: handleEdit,
         onDelete: handleDelete,
       }),
-    [expandedRowId, userPermissions]
+    [expandedRowId, userPermissions, handleEdit, handleDelete]
   );
 
   const table = useReactTable({
