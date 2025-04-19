@@ -1,4 +1,5 @@
-// NewInvoiceForm.tsx
+// Full file: NewInvoiceForm.tsx
+
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -55,20 +56,9 @@ import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
 interface Props {
   onSubmit: (data: InvoiceFormValues) => void;
   loading?: boolean;
-  tenant?: {
-    companyName?: string;
-    addressLine1?: string;
-    addressLine2?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-    email?: string;
-    website?: string;
-    InvoiceSettings?: { primaryColor?: string }[];
-  };
 }
 
-export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
+export default function NewInvoiceForm({ onSubmit, loading }: Props) {
   const dispatch = useAppDispatch();
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -78,20 +68,7 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
   const products = useAppSelector(selectProducts);
   const discounts = useAppSelector(selectDiscounts);
   const taxRates = useAppSelector(selectTaxRates);
-
   const currentTenant = useAppSelector(selectCurrentTenant);
-
-  useEffect(() => {
-    console.log(
-      "👀 Current tenant in component:",
-      currentTenant?.id,
-      currentTenant?.name
-    );
-    console.log(
-      "📦 Loaded customers:",
-      customers.map((c) => ({ id: c.id, name: c.name }))
-    );
-  }, [currentTenant, customers]);
 
   useEffect(() => {
     dispatch(fetchCustomers());
@@ -151,7 +128,8 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
   const tax = (subtotal * taxRate) / 100;
   const balanceDue = subtotal + tax;
 
-  const primaryColor = tenant?.InvoiceSettings?.[0]?.primaryColor ?? "#1E3A8A";
+  const primaryColor =
+    currentTenant?.InvoiceSettings?.[0]?.primaryColor ?? "#1E3A8A";
 
   const submitForm: SubmitHandler<InvoiceFormValues> = (data) => {
     onSubmit(data);
@@ -162,7 +140,6 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
       onSubmit={handleSubmit(submitForm)}
       className="bg-white text-black max-w-3xl mx-auto p-10 rounded-md shadow-md print:bg-transparent print:shadow-none print:p-0"
     >
-      {/* Invoice Header */}
       <div className="flex justify-between border-b pb-6">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold">
@@ -178,7 +155,6 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
           {currentTenant?.email && <p>{currentTenant.email}</p>}
           {currentTenant?.website && <p>{currentTenant.website}</p>}
         </div>
-
         <div className="text-right space-y-1">
           <p className="text-lg font-semibold" style={{ color: primaryColor }}>
             INVOICE
@@ -208,46 +184,6 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
         </div>
       </div>
 
-      {/* Customer Selection */}
-      <div className="my-6 border-b pb-6">
-        <h3 className="font-medium text-muted-foreground mb-1">Bill To:</h3>
-        <Controller
-          control={control}
-          name="customerId"
-          render={({ field }) => (
-            <Select
-              onValueChange={(val) => {
-                if (val === "__add_new__") setShowAddCustomer(true);
-                else field.onChange(val);
-              }}
-              value={field.value ?? undefined}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select customer" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-                <SelectItem value="__add_new__">➕ Add Customer</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </div>
-
-      <AddCustomerSheet
-        open={showAddCustomer}
-        onOpenChange={setShowAddCustomer}
-        onCustomerCreated={(newCustomer) => {
-          dispatch(addCustomer(newCustomer));
-          setValue("customerId", String(newCustomer.id));
-        }}
-      />
-
-      {/* Line Items Table */}
       <table className="w-full text-sm border-t mb-6">
         <thead>
           <tr
@@ -263,11 +199,9 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
         </thead>
         <tbody>
           {fields.map((field, idx) => {
-            const prod = productMap[+field.productId];
-            const total =
-              prod && typeof prod.price === "number"
-                ? prod.price * field.quantity
-                : 0;
+            const prod = productMap[String(field.productId)];
+            const unitPrice = typeof prod?.price === "number" ? prod.price : 0;
+            const total = unitPrice * field.quantity;
 
             return (
               <tr key={field.id}>
@@ -311,7 +245,7 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
                     min={1}
                   />
                 </td>
-                <td className="p-2">${prod?.price.toFixed(2) ?? "--"}</td>
+                <td className="p-2">${unitPrice.toFixed(2)}</td>
                 <td className="p-2">--</td>
                 <td className="p-2 text-right">${total.toFixed(2)}</td>
               </tr>
@@ -320,38 +254,7 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
         </tbody>
       </table>
 
-      <AddProductSheet
-        open={showAddProduct}
-        onOpenChange={setShowAddProduct}
-        onProductCreated={(newProduct) => {
-          dispatch(
-            addProduct({
-              ...newProduct,
-              price:
-                typeof newProduct.price === "number"
-                  ? newProduct.price
-                  : Number(newProduct.price),
-            })
-          );
-          if (productRowIndex !== null) {
-            setValue(
-              `lineItems.${productRowIndex}.productId`,
-              String(newProduct.id)
-            );
-            setProductRowIndex(null);
-          }
-        }}
-      />
-
-      <Button
-        type="button"
-        onClick={() => append({ productId: "", quantity: 1, discountId: "" })}
-      >
-        + Add Line Item
-      </Button>
-
-      {/* Totals */}
-      <div className="flex justify-end w-full sm:w-1/2 ml-auto text-sm space-y-2 mt-6">
+      <div className="flex justify-end text-sm space-y-2 mt-6">
         <div className="space-y-1">
           <div className="flex justify-between">
             <span>Subtotal:</span>
@@ -370,7 +273,6 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
         </div>
       </div>
 
-      {/* Notes */}
       <div className="mt-6">
         <h3 className="text-sm font-semibold mb-2 text-muted-foreground">
           Special Notes & Instructions
@@ -380,12 +282,6 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
           placeholder="Write a thank-you note, payment terms, or special instructions..."
           className="min-h-[100px]"
         />
-      </div>
-
-      {/* Footer */}
-      <div className="text-center text-muted-foreground text-sm mt-4">
-        <p>Thank you for your business!</p>
-        <p className="italic">Payment is due upon receipt.</p>
       </div>
 
       <Button type="submit" disabled={loading} className="w-full mt-6">
