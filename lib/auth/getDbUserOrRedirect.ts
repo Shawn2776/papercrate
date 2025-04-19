@@ -6,7 +6,10 @@ import { prisma } from "../db/prisma";
 export async function getDbUserOrRedirect() {
   const { userId: clerkId } = await auth();
   if (!clerkId) redirect("/sign-in");
-  const dbUser = await prisma.user.findUnique({ where: { clerkId } });
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkId },
+    include: { memberships: true },
+  });
   if (!dbUser) redirect("/new-user/1");
 
   return dbUser;

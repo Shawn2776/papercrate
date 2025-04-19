@@ -1,14 +1,11 @@
-// app > api > invoices > route.ts
+import { NextRequest } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db/prisma";
+import { getDbUserOrRedirect } from "@/lib/auth/getDbUserOrRedirect";
 import { invoiceFormSchema, InvoiceInput } from "@/lib/schemas/invoiceSchema";
-import {
-  generateInvoiceNumber,
-  getUpdatedTenantCounter,
-} from "@/lib/utils/invoice";
+import { generateInvoiceNumber } from "@/lib/utils/invoice";
+import { isDuplicateInvoiceError } from "@/lib/utils/prismaErrors";
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
-
-import { NextRequest } from "next/server";
 import { recordAuditLog } from "@/lib/audit/recordAuditLog";
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -31,7 +28,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const invoices = await prisma.invoice.findMany({
     where: {
       tenantId,
-      deleted: false, // ✅ optional: skip soft-deleted
+      deleted: false,
     },
     include: {
       customer: true,
@@ -51,158 +48,146 @@ export async function GET(req: NextRequest): Promise<Response> {
 }
 
 export async function POST(req: Request): Promise<Response> {
-  const user = await currentUser();
-  if (!user) return new Response("Unauthorized", { status: 401 });
+  try {
+    const user = await currentUser();
+    if (!user) return new Response("Unauthorized", { status: 401 });
 
-  const dbUser = await prisma.user.findUnique({
-    where: { clerkId: user.id },
-    include: { memberships: true },
-  });
+    const dbUser = await getDbUserOrRedirect();
+    const tenantId = dbUser.memberships?.[0]?.tenantId;
+    if (!tenantId) return new Response("Missing tenant", { status: 400 });
 
-  if (!dbUser || !dbUser.memberships.length) {
-    return new Response("User not found or not a member of any tenant", {
-      status: 404,
-    });
-  }
+    const json = await req.json();
+    const result = invoiceFormSchema.safeParse(json);
 
-  const tenantId = dbUser.memberships[0].tenantId;
-  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!result.success) {
+      const error = result.error.flatten();
+      return Response.json(
+        { message: "Validation failed", errors: error },
+        { status: 400 }
+      );
+    }
 
-  if (!tenant) return new Response("Tenant not found", { status: 404 });
+    const {
+      customerId,
+      status,
+      lineItems,
+      taxRateId,
+      taxExempt,
+      specialNotes,
+    }: InvoiceInput = result.data;
 
-  const json = await req.json();
-  const result = invoiceFormSchema.safeParse(json);
+    const taxRate = taxRateId
+      ? await prisma.taxRate.findUnique({ where: { id: Number(taxRateId) } })
+      : null;
 
-  if (!result.success) {
-    const error = result.error.flatten();
-    return Response.json(
-      { message: "Validation failed", errors: error },
-      { status: 400 }
-    );
-  }
+    if (taxRateId && !taxRate) {
+      return new Response("Tax rate not found", { status: 400 });
+    }
 
-  const { customerId, status, lineItems, taxRateId, taxExempt }: InvoiceInput =
-    result.data;
-
-  const taxRate = taxRateId
-    ? await prisma.taxRate.findUnique({ where: { id: Number(taxRateId) } })
-    : null;
-
-  if (taxRateId && !taxRate) {
-    return new Response("Tax rate not found", { status: 400 });
-  }
-
-  tenant.invoiceCounter = await getUpdatedTenantCounter(tenant);
-
-  const details = await Promise.all(
-    lineItems.map(async (item) => {
-      const product = await prisma.product.findUnique({
-        where: { id: Number(item.productId) },
-      });
-
-      if (!product) {
-        throw new Error(`Product with ID ${item.productId} not found`);
-      }
-
-      let lineTotal = product.price.toNumber() * item.quantity;
-
-      if (item.discountId) {
-        const discount = await prisma.discount.findUnique({
-          where: { id: Number(item.discountId) },
+    const details = await Promise.all(
+      lineItems.map(async (item) => {
+        const product = await prisma.product.findUnique({
+          where: { id: Number(item.productId) },
         });
-        if (discount) {
-          lineTotal *= (100 - discount.discountValue.toNumber()) / 100;
+
+        if (!product) {
+          throw new Error(`Product with ID ${item.productId} not found`);
         }
-      }
 
-      if (!taxExempt && taxRate) {
-        lineTotal *= (100 + taxRate.rate.toNumber()) / 100;
-      }
+        let lineTotal = product.price.toNumber() * item.quantity;
 
-      return {
-        productId: Number(item.productId),
-        quantity: item.quantity,
-        discountId: item.discountId ? Number(item.discountId) : null,
-        taxId: taxRate ? taxRate.id : null,
-        lineTotal: Number(lineTotal.toFixed(2)),
-      };
-    })
-  );
+        if (item.discountId) {
+          const discount = await prisma.discount.findUnique({
+            where: { id: Number(item.discountId) },
+          });
+          if (discount) {
+            lineTotal *= (100 - discount.discountValue.toNumber()) / 100;
+          }
+        }
 
-  const totalAmount = details.reduce((sum, item) => sum + item.lineTotal, 0);
+        if (!taxExempt && taxRate) {
+          lineTotal *= (100 + taxRate.rate.toNumber()) / 100;
+        }
 
-  let invoice = null;
-  let attempt = 0;
-  const maxAttempts = 5;
+        return {
+          productId: Number(item.productId),
+          quantity: item.quantity,
+          discountId: item.discountId ? Number(item.discountId) : null,
+          taxId: taxRate ? taxRate.id : null,
+          lineTotal: Number(lineTotal.toFixed(2)),
+        };
+      })
+    );
 
-  while (attempt < maxAttempts) {
-    const invoiceNumber = generateInvoiceNumber(tenant);
+    const totalAmount = details.reduce((sum, item) => sum + item.lineTotal, 0);
 
-    try {
-      invoice = await prisma.invoice.create({
-        data: {
-          number: invoiceNumber,
-          amount: totalAmount,
-          status,
-          createdBy: { connect: { id: dbUser.id } },
-          updatedBy: { connect: { id: dbUser.id } },
-          customer: { connect: { id: Number(customerId) } },
-          tenant: { connect: { id: tenantId } },
-          InvoiceDetail: { create: details },
-        },
-      });
+    // ✅ Retry-safe invoice creation
+    const maxAttempts = 5;
+    let invoice = null;
+    let attempt = 0;
 
-      await recordAuditLog({
-        action: "CREATE",
-        entityType: "Invoice",
-        entityId: invoice.id,
-        userId: dbUser.id,
-        after: {
-          ...invoice,
-          InvoiceDetail: details,
-        },
-      });
-
-      await prisma.tenant.update({
+    while (attempt < maxAttempts) {
+      const tenant = await prisma.tenant.update({
         where: { id: tenantId },
         data: { invoiceCounter: { increment: 1 } },
       });
 
-      break;
-    } catch (err: unknown) {
-      const message = getErrorMessage(err);
+      const invoiceNumber = generateInvoiceNumber(tenant);
 
-      if (typeof err === "object" && err !== null && "code" in err) {
-        const code = (err as { code: string }).code;
+      try {
+        invoice = await prisma.invoice.create({
+          data: {
+            number: invoiceNumber,
+            amount: totalAmount,
+            status,
+            specialNotes,
+            createdBy: { connect: { id: dbUser.id } },
+            updatedBy: { connect: { id: dbUser.id } },
+            customer: { connect: { id: Number(customerId) } },
+            tenant: { connect: { id: tenantId } },
+            InvoiceDetail: { create: details },
+          },
+        });
 
-        if (code === "P2002") {
-          tenant.invoiceCounter++;
+        await recordAuditLog({
+          action: "CREATE",
+          entityType: "Invoice",
+          entityId: invoice.id,
+          userId: dbUser.id,
+          after: { ...invoice, InvoiceDetail: details },
+        });
+
+        break;
+      } catch (err) {
+        if (isDuplicateInvoiceError(err)) {
           attempt++;
-          continue; // retry loop
+          continue;
         }
+
+        throw err;
       }
-
-      console.error("Invoice creation failed:", message);
-      return new Response("Server error", { status: 500 });
     }
-  }
 
-  if (!invoice) {
-    return new Response("Failed to generate a unique invoice number", {
-      status: 500,
-    });
-  }
+    if (!invoice) {
+      return new Response("Unable to generate a unique invoice number", {
+        status: 500,
+      });
+    }
 
-  return Response.json(
-    {
-      message: "Invoice created successfully",
-      invoice: {
-        id: invoice.id,
-        number: invoice.number,
-        amount: invoice.amount,
-        status: invoice.status,
+    return Response.json(
+      {
+        message: "Invoice created successfully",
+        invoice: {
+          id: invoice.id,
+          number: invoice.number,
+          amount: invoice.amount,
+          status: invoice.status,
+        },
       },
-    },
-    { status: 201 }
-  );
+      { status: 201 }
+    );
+  } catch (err) {
+    console.error("❌ Invoice creation error:", err);
+    return new Response(getErrorMessage(err), { status: 500 });
+  }
 }
