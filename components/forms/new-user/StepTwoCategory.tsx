@@ -24,8 +24,8 @@ import {
   setFormData,
   setStep,
 } from "../../../lib/redux/slices/onboardingSlice";
-import { businessCategorySchema } from "../../../lib/schemas/validation";
 import FormHeader from "../FormHeader";
+import { businessCategorySchema } from "@/lib/schemas";
 
 interface BusinessCategory {
   id: string;
