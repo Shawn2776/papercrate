@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { getDbUserOrRedirect } from "@/lib/functions/getDbUserOrRedirect";
+import { prisma } from "@/lib/db/prisma";
+import { getDbUserOrRedirect } from "@/lib/auth/getDbUserOrRedirect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function DashboardPage() {

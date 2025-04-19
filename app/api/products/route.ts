@@ -1,10 +1,10 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { customAlphabet } from "nanoid";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 
 import { z } from "zod";
-import { recordAuditLog } from "@/lib/functions/recordAuditLog";
+import { recordAuditLog } from "@/lib/audit/recordAuditLog";
 
 // Nano ID generators
 const generateSku = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8);

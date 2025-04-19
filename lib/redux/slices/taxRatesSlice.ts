@@ -1,7 +1,7 @@
 // lib/redux/slices/taxRatesSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { getErrorMessage } from "@/lib/functions/getErrorMessage";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 
 // Define the TaxRate interface
 export interface TaxRate {

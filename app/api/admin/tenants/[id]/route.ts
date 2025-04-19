@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { softDeleteTenant } from "@/lib/functions/softDeleteTenant";
+import { softDeleteTenant } from "@/lib/db/softDeleteTenant";
 
 export const runtime = "nodejs";
 

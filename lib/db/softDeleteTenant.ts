@@ -1,5 +1,5 @@
 // lib/utils/softDeleteTenant.ts
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 
 export async function softDeleteTenant(tenantId: string) {
   const activeUserIds = (

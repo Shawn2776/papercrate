@@ -14,12 +14,12 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { useHasPermission } from "@/lib/functions/userHasPermission";
+import { useHasPermission } from "@/lib/auth/userHasPermission";
 import { Permission } from "@prisma/client";
 import { toast } from "sonner";
 import { useAppSelector } from "@/lib/redux/hooks";
 import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
-import { getErrorMessage } from "@/lib/functions/getErrorMessage";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 
 interface Settings {
   layout: "modern" | "classic" | "minimal";

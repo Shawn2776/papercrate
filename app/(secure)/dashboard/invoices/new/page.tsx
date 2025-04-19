@@ -11,7 +11,7 @@ import { fetchTaxRates } from "@/lib/redux/slices/taxRatesSlice";
 import { fetchStatuses } from "@/lib/redux/slices/statusesSlice";
 
 import NewInvoiceForm from "@/components/forms/new-invoice/NewInvoiceForm";
-import { InvoiceFormValues } from "@/lib/schemas";
+import { InvoiceFormValues } from "@/lib/types";
 
 export default function NewInvoicePage() {
   const dispatch = useAppDispatch();

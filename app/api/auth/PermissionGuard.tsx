@@ -1,6 +1,6 @@
 "use client";
 
-import { useHasPermission } from "@/lib/functions/userHasPermission";
+import { useHasPermission } from "@/lib/auth/userHasPermission";
 import { Permission } from "@prisma/client";
 
 type PermissionGuardProps = {

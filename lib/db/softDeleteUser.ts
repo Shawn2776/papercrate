@@ -1,5 +1,5 @@
 // lib/utils/softDeleteUser.ts
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 
 export async function softDeleteUser(userId: string, includeOwned = false) {
   await prisma.user.update({

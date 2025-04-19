@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { AppDispatch } from "@/lib/redux/store";
 import { setAuth } from "@/lib/redux/slices/authSlice";
 

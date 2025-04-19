@@ -4,12 +4,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getDbUserOrThrow } from "@/lib/functions/getDbUser";
-import { getErrorMessage } from "@/lib/functions/getErrorMessage";
+import { prisma } from "@/lib/db/prisma";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 import { InvoiceStatus } from "@prisma/client";
-import { getInvoiceIdFromUrl } from "@/lib/functions/getInvoiceIdFromUrl";
-import { recordAuditLog } from "@/lib/functions/recordAuditLog";
+import { getInvoiceIdFromUrl } from "@/lib/url/getInvoiceIdFromUrl";
+import { recordAuditLog } from "@/lib/audit/recordAuditLog";
+import { getDbUserOrThrow } from "@/lib/db/getDbUser";
 
 // PATCH /api/invoices/[id]
 export async function PATCH(req: NextRequest) {

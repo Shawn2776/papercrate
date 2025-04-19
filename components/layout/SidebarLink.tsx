@@ -15,7 +15,9 @@ export function SidebarLink({
   label: string;
 }) {
   const pathname = usePathname();
-  const isActive = pathname === href || pathname.startsWith(`${href}/`);
+  const basePath = pathname.split("/").slice(0, 3).join("/"); // e.g. /dashboard/invoices
+
+  const isActive = basePath === href;
 
   return (
     <Link

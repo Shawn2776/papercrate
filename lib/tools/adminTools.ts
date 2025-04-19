@@ -1,5 +1,5 @@
 // lib/utils/adminTools.ts
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { Prisma, Permission } from "@prisma/client";
 
 export async function softDeleteTenant(tenantId: string) {

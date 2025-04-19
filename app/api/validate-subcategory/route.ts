@@ -1,4 +1,4 @@
-import { businessSubcategorySchema } from "@/lib/validation";
+import { businessSubcategorySchema } from "@/lib/schemas";
 
 export async function POST(request: Request) {
   try {

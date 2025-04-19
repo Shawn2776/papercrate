@@ -16,11 +16,11 @@ import {
 } from "../../../lib/redux/slices/onboardingSlice";
 import FormHeader from "../FormHeader";
 import { states } from "@/components/states/States";
-import { TenantCreateSchema } from "@/lib/schemas/tenant";
+import { TenantCreateSchema } from "@/lib/schemas/tenantSchema";
 
 import type { FormData } from "@/lib/redux/slices/onboardingSlice"; // ✅ use the actual alias or adjust relative path
-import { sanitizeString } from "@/lib/functions/sanitizeString";
-import { normalizeFormData } from "@/lib/functions/normalizeFormData";
+import { sanitizeString } from "@/lib/utils/sanitizeString";
+import { normalizeFormData } from "@/lib/utils/normalizeFormData";
 
 const StepFourBusinessDetails = () => {
   const router = useRouter();

@@ -1,3 +1,4 @@
+// lib > constants > permissions.ts
 import { Permission, TenantRole } from "@prisma/client";
 
 export const defaultPermissionsByRole: Record<TenantRole, Permission[]> = {

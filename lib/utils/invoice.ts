@@ -1,5 +1,5 @@
 import { Tenant } from "@prisma/client";
-import { prisma } from "../prisma";
+import { prisma } from "../db/prisma";
 
 /**
  * Resets tenant invoiceCounter if `autoResetYearly` is enabled and it's a new year.

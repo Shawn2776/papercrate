@@ -1,15 +1,15 @@
 // app > api > invoices > route.ts
 import { currentUser } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
-import { invoiceFormSchema, InvoiceInput } from "@/lib/schemas/invoice";
+import { prisma } from "@/lib/db/prisma";
+import { invoiceFormSchema, InvoiceInput } from "@/lib/schemas/invoiceSchema";
 import {
   generateInvoiceNumber,
   getUpdatedTenantCounter,
 } from "@/lib/utils/invoice";
-import { getErrorMessage } from "@/lib/functions/getErrorMessage";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 
 import { NextRequest } from "next/server";
-import { recordAuditLog } from "@/lib/functions/recordAuditLog";
+import { recordAuditLog } from "@/lib/audit/recordAuditLog";
 
 export async function GET(req: NextRequest): Promise<Response> {
   const user = await currentUser();

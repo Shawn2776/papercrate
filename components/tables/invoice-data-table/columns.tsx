@@ -20,6 +20,7 @@ import {
 import "react-swipeable-list/dist/styles.css";
 
 import { Permission } from "@prisma/client";
+import { InvoiceMobileRow } from "./InvoiceMobileRow";
 
 export interface InvoiceRow {
   id: string;
@@ -64,69 +65,21 @@ export const getInvoiceColumns = ({
     meta: { className: "sm:hidden" },
     cell: ({ row }) => {
       const invoice = row.original;
-      const isOpen = row.id === expandedRowId;
-      const canEdit = userPermissions.includes(Permission.EDIT_INVOICE);
-      const canDelete = userPermissions.includes(Permission.DELETE_INVOICE);
-
-      const trailingActions = (
-        <TrailingActions>
-          {canEdit && (
-            <SwipeAction destructive={false} onClick={() => onEdit(invoice.id)}>
-              <div className="flex items-center justify-center h-full px-4 bg-blue-600 text-white font-medium rounded-none">
-                Edit
-              </div>
-            </SwipeAction>
-          )}
-          {canDelete && (
-            <SwipeAction
-              destructive
-              onClick={() => {
-                if (confirm("Delete this invoice?")) onDelete(invoice.id);
-              }}
-            >
-              <div className="flex items-center justify-center h-full px-4 bg-red-600 text-white font-medium rounded-none">
-                Delete
-              </div>
-            </SwipeAction>
-          )}
-        </TrailingActions>
-      );
-
       return (
-        <div className="w-full space-y-8 mb-2 px-2">
-          <SwipeableList
-            type={SwipeListType.IOS}
-            threshold={0.25}
-            fullSwipe={false}
-            className="w-full"
-          >
-            <SwipeableListItem trailingActions={trailingActions}>
-              <div
-                className="w-full flex items-center justify-between my-3"
-                onClick={() => setExpandedRowId(isOpen ? null : row.id)}
-                data-mobile-summary
-              >
-                <div className="w-full flex flex-col">
-                  <Badge
-                    variant="outline"
-                    className={`capitalize text-lg px-2 py-0.5 ${getStatusColor(
-                      invoice.status
-                    )}`}
-                  >
-                    {invoice.status}
-                  </Badge>
-                  <div className="text-muted-foreground text-lg font-medium truncate w-full">
-                    {invoice.customer}
-                  </div>
-                </div>
-                <div className="w-full text-right text-xl">
-                  <span className="text-right font-semibold align-middle w-full p-4">
-                    {invoice.amount}
-                  </span>
-                </div>
-              </div>
-            </SwipeableListItem>
-          </SwipeableList>
+        <div className="w-full sm:hidden">
+          <InvoiceMobileRow
+            id={invoice.id}
+            status={invoice.status}
+            amount={invoice.amount}
+            customer={invoice.customer}
+            userPermissions={userPermissions}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            expanded={row.id === expandedRowId}
+            toggleExpand={() =>
+              setExpandedRowId(row.id === expandedRowId ? null : row.id)
+            }
+          />
         </div>
       );
     },

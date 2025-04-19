@@ -1,3 +1,5 @@
+// lib > types > admin.ts
+
 import { User } from "@prisma/client";
 
 export interface AdminUserState {

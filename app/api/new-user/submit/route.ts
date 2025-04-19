@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { prismaWithUser } from "@/prisma/withAudit";
-import { TenantCreateSchema } from "@/lib/schemas/tenant";
 import { defaultPermissionsByRole } from "@/lib/constants/permissions";
+import { TenantSchema } from "@/lib/schemas";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const clerkUser = await currentUser();
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const body = await req.json();
-  const parsed = TenantCreateSchema.safeParse(body);
+  const parsed = TenantSchema.safeParse(body);
   if (!parsed.success) {
     console.log("🧨 Zod validation failed:");
     console.log("Raw body:", body);

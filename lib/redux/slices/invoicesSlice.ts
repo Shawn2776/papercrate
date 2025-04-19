@@ -1,8 +1,8 @@
 // lib/redux/slices/invoicesSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { formatCurrency } from "@/lib/functions/formatCurrency";
-import { getErrorMessage } from "@/lib/functions/getErrorMessage";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 
 // Raw data returned from the API
 interface InvoiceApiResponse {

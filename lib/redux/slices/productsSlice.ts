@@ -1,7 +1,7 @@
 // lib/redux/slices/productsSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { getErrorMessage } from "@/lib/functions/getErrorMessage";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 
 // Define the product type
 export interface Product {

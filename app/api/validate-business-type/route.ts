@@ -1,4 +1,4 @@
-import { businessTypeSchema } from "@/lib/validation";
+import { businessTypeSchema } from "@/lib/schemas";
 
 export async function POST(req: Request) {
   try {

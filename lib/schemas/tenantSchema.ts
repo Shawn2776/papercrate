@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const TenantCreateSchema = z
+export const TenantSchema = z
   .object({
     legalBusinessName: z.string().min(2),
     businessEmail: z.string().email(),

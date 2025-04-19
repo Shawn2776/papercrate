@@ -1,7 +1,7 @@
 // lib/getDbUser.ts
 
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "../prisma";
+import { prisma } from "../db/prisma";
 import { redirect } from "next/navigation";
 
 export async function getDbUserOrThrow() {

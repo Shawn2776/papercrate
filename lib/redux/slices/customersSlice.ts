@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Customer } from "@/lib/schemas";
+import { Customer } from "@/lib/types";
 import { RootState } from "../store";
-import { getErrorMessage } from "@/lib/functions/getErrorMessage";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 
 interface CustomersState {
   data: Customer[];

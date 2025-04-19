@@ -1,13 +1,18 @@
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { getDbUserOrRedirect } from "@/lib/functions/getDbUserOrRedirect";
-import { prisma } from "@/lib/prisma";
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import { UserButton } from "@clerk/nextjs";
-import { Toaster } from "@/components/ui/sonner";
 import { headers } from "next/headers";
+import { UserButton } from "@clerk/nextjs";
+
+import { getDbUserOrRedirect } from "@/lib/auth/getDbUserOrRedirect";
+import { requireTenant } from "@/lib/auth/requireTenant";
+
+import { AppSidebar } from "@/components/layout/AppSidebar";
 import { PageBreadcrumbs } from "@/components/layout/PageBreadcrumbs";
+import { Toaster } from "@/components/ui/sonner";
 import { AuthInitializer } from "@/components/auth/AuthInitializer";
+
+import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -15,32 +20,46 @@ export default async function DashboardLayout({
   children: ReactNode;
 }) {
   const user = await getDbUserOrRedirect();
-  const memberships = await prisma.tenantMembership.findMany({
-    where: { userId: user.id },
-  });
-
-  const hasTenant = memberships.length > 0;
-  if (!hasTenant) redirect("/new-user/1");
-
-  const pathname = (await headers()).get("x-pathname") ?? "/dashboard";
-  const pathSegments = pathname.split("/").filter(Boolean).slice(1); // removes 'dashboard'
+  await requireTenant(user.id); // 🔐 Ensures valid tenant or redirects
 
   return (
     <div className="flex min-h-screen">
-      <AppSidebar />
+      {/* Sidebar (desktop only) */}
+      <aside className="hidden md:flex w-64 flex-col border-r bg-white">
+        <AppSidebar />
+      </aside>
 
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
-          <PageBreadcrumbs />
-          <UserButton />
-        </div>
+        <header className="flex items-center justify-between px-4 py-3 border-b bg-white">
+          <div className="flex items-center gap-2">
+            {/* Mobile Sidebar Trigger */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger className="p-2 rounded hover:bg-muted/50">
+                  <Menu className="w-5 h-5" />
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-64">
+                  <AppSidebar />
+                </SheetContent>
+              </Sheet>
+            </div>
 
-        {/* Main content */}
+            {/* Breadcrumbs */}
+            <PageBreadcrumbs />
+          </div>
+
+          {/* User menu */}
+          <UserButton />
+        </header>
+
+        {/* Main */}
         <main className="flex-1 p-4 w-full">
           <AuthInitializer />
           {children}
         </main>
+
+        {/* Notifications */}
         <Toaster richColors position="top-center" />
       </div>
     </div>

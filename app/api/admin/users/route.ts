@@ -1,6 +1,6 @@
 // app/api/admin/users/route.ts
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;

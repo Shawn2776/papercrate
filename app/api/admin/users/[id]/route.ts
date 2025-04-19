@@ -1,7 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { getUserIdFromUrl } from "@/lib/functions/getUserIdFromUrl";
+import { getUserIdFromUrl } from "@/lib/url/getUserIdFromUrl";
 
 const SUPERADMIN_ID = process.env.SUPERADMIN_ID;
 

@@ -9,7 +9,9 @@ import {
   getSortedRowModel,
   useReactTable,
   type Row,
+  type ColumnDef,
 } from "@tanstack/react-table";
+
 import {
   Table,
   TableBody,
@@ -18,14 +20,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 import { getInvoiceColumns, InvoiceRow } from "./columns";
 import { cn } from "@/lib/utils";
 import { Permission } from "@prisma/client";
+import { InvoiceMobileRow } from "./InvoiceMobileRow";
 
 type InvoiceDataTableProps = {
   data: InvoiceRow[];
@@ -45,18 +51,21 @@ export function InvoiceDataTable({
   data,
   userPermissions,
 }: InvoiceDataTableProps) {
+  const router = useRouter();
   const [filter, setFilter] = React.useState("");
   const [expandedRowId, setExpandedRowId] = React.useState<string | null>(null);
 
   const handleEdit = (id: string) => {
-    alert(`Edit invoice ${id}`);
+    router.push(`/dashboard/invoices/${id}?edit=true`);
   };
 
   const handleDelete = (id: string) => {
-    alert(`Delete invoice ${id}`);
+    if (confirm("Delete this invoice?")) {
+      alert(`Delete invoice ${id}`);
+    }
   };
 
-  const columns = React.useMemo(
+  const columns = React.useMemo<ColumnDef<InvoiceRow>[]>(
     () =>
       getInvoiceColumns({
         expandedRowId,
@@ -82,6 +91,7 @@ export function InvoiceDataTable({
 
   return (
     <div>
+      {/* 🔍 Filter + Create */}
       <div className="flex items-center justify-between mb-4">
         <Input
           placeholder="Search..."
@@ -94,7 +104,28 @@ export function InvoiceDataTable({
         </Link>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* ✅ Mobile (hidden on sm+) */}
+      <div className="block sm:hidden space-y-4 mb-4">
+        {table.getRowModel().rows.map((row) => (
+          <InvoiceMobileRow
+            key={`mobile-${row.original.id}`}
+            id={row.original.id}
+            status={row.original.status}
+            amount={row.original.amount}
+            customer={row.original.customer}
+            userPermissions={userPermissions}
+            expanded={row.id === expandedRowId}
+            toggleExpand={() =>
+              setExpandedRowId(row.id === expandedRowId ? null : row.id)
+            }
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        ))}
+      </div>
+
+      {/* 🖥️ Desktop (hidden on mobile) */}
+      <div className="overflow-x-auto hidden sm:block">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -112,12 +143,13 @@ export function InvoiceDataTable({
                       header.column.columnDef.header,
                       header.getContext()
                     )}
-                    {header.column.getCanSort() &&
+                    {
                       {
                         asc: " 🔼",
                         desc: " 🔽",
                         false: " ⬍",
-                      }[(header.column.getIsSorted() as string) || "false"]}
+                      }[(header.column.getIsSorted() as string) || "false"]
+                    }
                   </TableHead>
                 ))}
               </TableRow>
@@ -129,15 +161,12 @@ export function InvoiceDataTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  onClick={(e) => {
-                    const clickedInMobile = (e.target as HTMLElement)?.closest(
-                      "[data-mobile-summary]"
-                    );
-                    if (clickedInMobile) return;
-
-                    window.location.href = `/dashboard/invoices/${row.original.id}`;
+                  onClick={() => {
+                    const invoiceId = row.original.id;
+                    if (invoiceId)
+                      router.push(`/dashboard/invoices/${invoiceId}`);
                   }}
-                  className="cursor-pointer hover:bg-muted/40 m-1 p-1"
+                  className="cursor-pointer hover:bg-muted/40"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -163,14 +192,16 @@ export function InvoiceDataTable({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
+      {/* Pagination */}
+      <div className="flex items-center justify-between mt-4">
         <Button
           variant="outline"
           size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          <ChevronLeftIcon className="mr-2 h-4 w-4" /> Previous
+          <ChevronLeftIcon className="mr-2 h-4 w-4" />
+          Previous
         </Button>
         <span className="text-sm text-muted-foreground">
           Page {table.getState().pagination.pageIndex + 1} of{" "}
@@ -182,7 +213,8 @@ export function InvoiceDataTable({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next <ChevronRightIcon className="ml-2 h-4 w-4" />
+          Next
+          <ChevronRightIcon className="ml-2 h-4 w-4" />
         </Button>
       </div>
     </div>

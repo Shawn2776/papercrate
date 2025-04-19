@@ -1,8 +1,9 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { customerSchema } from "@/lib/schemas"; // ✅ import the centralized Zod schema
-import { prisma } from "@/lib/prisma";
-import { recordAuditLog } from "@/lib/functions/recordAuditLog";
+
+import { prisma } from "@/lib/db/prisma";
+import { recordAuditLog } from "@/lib/audit/recordAuditLog";
+import { customerSchema } from "@/lib/schemas";
 
 export async function GET() {
   console.log("📥 Customer API hit");

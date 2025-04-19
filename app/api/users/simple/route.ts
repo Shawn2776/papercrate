@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getDbUserOrThrow } from "@/lib/functions/getDbUser";
+import { prisma } from "@/lib/db/prisma";
 import { hasPermission } from "@/lib/utils/permissions";
 import { Permission, TenantRole } from "@prisma/client";
+import { getDbUserOrThrow } from "@/lib/db/getDbUser";
 
 export async function GET() {
   const user = await getDbUserOrThrow();

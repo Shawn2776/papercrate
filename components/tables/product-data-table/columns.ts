@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { ColumnDef } from "@tanstack/react-table";
-import { formatCurrency } from "@/lib/functions/formatCurrency";
+import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 type Product = {
   name: string;

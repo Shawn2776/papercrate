@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 import { Prisma } from "@prisma/client";
 
 type AuditAction = "CREATE" | "UPDATE" | "DELETE";

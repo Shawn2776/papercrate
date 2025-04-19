@@ -45,7 +45,10 @@ import {
 } from "@/lib/redux/slices/taxRatesSlice";
 import { fetchStatuses } from "@/lib/redux/slices/statusesSlice";
 
-import { invoiceFormSchema, InvoiceFormValues } from "@/lib/schemas/invoice";
+import {
+  invoiceFormSchema,
+  InvoiceFormValues,
+} from "@/lib/schemas/invoiceSchema";
 import { InvoiceStatus } from "@prisma/client";
 import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
 

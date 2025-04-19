@@ -1,5 +1,5 @@
 // lib/utils/checkTenantIsSafeToDelete.ts
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db/prisma";
 
 export async function checkTenantIsSafeToDelete(
   tenantId: string

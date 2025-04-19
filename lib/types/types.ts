@@ -1,4 +1,4 @@
-// lib/schemas/types.ts
+// lib/types/types.ts
 
 export interface Customer {
   id: number;
