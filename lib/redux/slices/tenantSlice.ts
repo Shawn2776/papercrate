@@ -7,6 +7,24 @@ export type Tenant = {
   id: string;
   name: string;
   plan: PlanTier;
+  addressLine1?: string;
+  addressLine2?: string | null;
+  city?: string;
+  state?: string;
+  zip?: string;
+  email?: string;
+  website?: string;
+  invoicePrefix?: string;
+  invoiceCounter?: number;
+  InvoiceSettings?: {
+    primaryColor?: string;
+    layout?: string;
+    includeCustomerInfo?: boolean;
+    includePaymentTerms?: boolean;
+    includeDueDate?: boolean;
+    includeNotes?: boolean;
+    defaultNotes?: string;
+  }[];
 };
 
 interface TenantState {

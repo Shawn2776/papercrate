@@ -129,14 +129,14 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
   const productMap = useMemo(
     () =>
       Object.fromEntries(
-        products.map((p) => [p.id, { ...p, price: Number(p.price) }])
+        products.map((p) => [String(p.id), { ...p, price: Number(p.price) }])
       ),
     [products]
   );
 
   const subtotal = useMemo(() => {
     return lineItems.reduce((sum, item) => {
-      const prod = productMap[+item.productId];
+      const prod = productMap[String(item.productId)];
       const price = typeof prod?.price === "number" ? prod.price : 0;
       return sum + price * item.quantity;
     }, 0);
@@ -166,18 +166,19 @@ export default function NewInvoiceForm({ onSubmit, loading, tenant }: Props) {
       <div className="flex justify-between border-b pb-6">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold">
-            {tenant?.companyName ?? "Your Company"}
+            {currentTenant?.name ?? "Your Company"}
           </h1>
-          {tenant?.addressLine1 && <p>{tenant.addressLine1}</p>}
-          {tenant?.addressLine2 && <p>{tenant.addressLine2}</p>}
-          {tenant?.city && (
+          {currentTenant?.addressLine1 && <p>{currentTenant.addressLine1}</p>}
+          {currentTenant?.addressLine2 && <p>{currentTenant.addressLine2}</p>}
+          {currentTenant?.city && (
             <p>
-              {tenant.city}, {tenant.state} {tenant.zip}
+              {currentTenant.city}, {currentTenant.state} {currentTenant.zip}
             </p>
           )}
-          {tenant?.email && <p>{tenant.email}</p>}
-          {tenant?.website && <p>{tenant.website}</p>}
+          {currentTenant?.email && <p>{currentTenant.email}</p>}
+          {currentTenant?.website && <p>{currentTenant.website}</p>}
         </div>
+
         <div className="text-right space-y-1">
           <p className="text-lg font-semibold" style={{ color: primaryColor }}>
             INVOICE

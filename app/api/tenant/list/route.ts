@@ -10,7 +10,11 @@ export async function GET() {
     include: {
       memberships: {
         include: {
-          tenant: true,
+          tenant: {
+            include: {
+              InvoiceSettings: true, // ✅ add this
+            },
+          },
         },
       },
     },
@@ -23,7 +27,17 @@ export async function GET() {
   const tenants = dbUser.memberships.map((m) => ({
     id: m.tenant.id,
     name: m.tenant.name,
-    plan: m.tenant.plan, // ✅ add this
+    plan: m.tenant.plan,
+    addressLine1: m.tenant.addressLine1,
+    addressLine2: m.tenant.addressLine2,
+    city: m.tenant.city,
+    state: m.tenant.state,
+    zip: m.tenant.zip,
+    email: m.tenant.email,
+    website: m.tenant.website,
+    invoicePrefix: m.tenant.invoicePrefix,
+    invoiceCounter: m.tenant.invoiceCounter,
+    InvoiceSettings: m.tenant.InvoiceSettings ?? [],
   }));
 
   return Response.json(tenants);
