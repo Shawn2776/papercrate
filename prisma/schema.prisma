@@ -125,7 +125,7 @@ enum PlanTier {
 
 model Invoice {
   id              String        @id @default(cuid())
-  number          String?       @unique
+  number          String?
   amount          Decimal       @db.Decimal(10, 2)
   status          InvoiceStatus @default(DRAFT)
   paymentType     PaymentType?
@@ -160,6 +160,8 @@ model Invoice {
   order         Order?    @relation(fields: [orderId], references: [id])
   parentInvoice Invoice?  @relation("GroupedInvoices", fields: [parentInvoiceId], references: [id])
   childInvoices Invoice[] @relation("GroupedInvoices")
+
+  @@unique([tenantId, number])
 }
 
 model Product {
