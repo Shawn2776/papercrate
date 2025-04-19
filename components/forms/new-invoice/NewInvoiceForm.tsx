@@ -184,6 +184,44 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
         </div>
       </div>
 
+      <div className="my-6 border-b pb-6">
+        <h3 className="font-medium text-muted-foreground mb-1">Bill To:</h3>
+        <Controller
+          control={control}
+          name="customerId"
+          render={({ field }) => (
+            <Select
+              onValueChange={(val) => {
+                if (val === "__add_new__") setShowAddCustomer(true);
+                else field.onChange(val);
+              }}
+              value={field.value ?? undefined}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select customer" />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+                <SelectItem value="__add_new__">➕ Add Customer</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
+
+      <AddCustomerSheet
+        open={showAddCustomer}
+        onOpenChange={setShowAddCustomer}
+        onCustomerCreated={(newCustomer) => {
+          dispatch(addCustomer(newCustomer));
+          setValue("customerId", String(newCustomer.id));
+        }}
+      />
+
       <table className="w-full text-sm border-t mb-6">
         <thead>
           <tr
@@ -253,6 +291,36 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
           })}
         </tbody>
       </table>
+
+      <AddProductSheet
+        open={showAddProduct}
+        onOpenChange={setShowAddProduct}
+        onProductCreated={(newProduct) => {
+          dispatch(
+            addProduct({
+              ...newProduct,
+              price:
+                typeof newProduct.price === "number"
+                  ? newProduct.price
+                  : Number(newProduct.price),
+            })
+          );
+          if (productRowIndex !== null) {
+            setValue(
+              `lineItems.${productRowIndex}.productId`,
+              String(newProduct.id)
+            );
+            setProductRowIndex(null);
+          }
+        }}
+      />
+
+      <Button
+        type="button"
+        onClick={() => append({ productId: "", quantity: 1, discountId: "" })}
+      >
+        + Add Line Item
+      </Button>
 
       <div className="flex justify-end text-sm space-y-2 mt-6">
         <div className="space-y-1">
