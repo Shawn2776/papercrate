@@ -1,7 +1,27 @@
+// lib/redux/slices/customersSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Customer } from "@/lib/types";
 import { RootState } from "../store";
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
+
+export interface Customer {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  billingAddressLine1?: string;
+  billingAddressLine2?: string;
+  billingCity?: string;
+  billingState?: string;
+  billingZip?: string;
+  shippingAddressLine1?: string;
+  shippingAddressLine2?: string;
+  shippingCity?: string;
+  shippingState?: string;
+  shippingZip?: string;
+  notes?: string;
+  tenantId: string;
+  deleted: boolean;
+}
 
 interface CustomersState {
   data: Customer[];
@@ -40,7 +60,7 @@ const customersSlice = createSlice({
       state.data = [];
       state.loading = false;
       state.error = null;
-    }, // <-- ✅ this closing brace was missing
+    },
   },
   extraReducers: (builder) => {
     builder

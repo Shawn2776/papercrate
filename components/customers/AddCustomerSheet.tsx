@@ -1,3 +1,4 @@
+// components/customers/AddCustomerSheet.tsx
 "use client";
 
 import { useState } from "react";
@@ -11,30 +12,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  customerSchema,
+  CustomerFormValues,
+} from "@/lib/schemas/customerSchema";
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 
-const customerSchema = z.object({
-  name: z.string().min(1, "Name is required."),
-  email: z.string().email("Valid email is required."),
-  phone: z.string().min(1, "Phone is required."),
-  address: z.string().optional(),
-});
-
-type CustomerFormData = z.infer<typeof customerSchema>;
-
-export interface AddCustomerSheetProps {
+interface AddCustomerSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCustomerCreated: (newCustomer: { id: number; name: string }) => void;
+  onCustomerCreated: (newCustomer: CustomerFormValues & { id: number }) => void;
 }
 
 export default function AddCustomerSheet({
+  open,
+  onOpenChange,
   onCustomerCreated,
 }: AddCustomerSheetProps) {
-  const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -42,11 +39,11 @@ export default function AddCustomerSheet({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<CustomerFormData>({
+  } = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
   });
 
-  const onSubmit = async (data: CustomerFormData) => {
+  const onSubmit = async (data: CustomerFormValues) => {
     setFormError(null);
     try {
       const res = await fetch("/api/customers", {
@@ -55,56 +52,93 @@ export default function AddCustomerSheet({
         body: JSON.stringify(data),
       });
 
-      if (!res.ok) {
-        const errText = await res.text();
-        throw new Error(errText || "Failed to create customer.");
-      }
+      if (!res.ok) throw new Error(await res.text());
 
-      const customer = await res.json();
-      onCustomerCreated?.(customer);
+      const newCustomer = await res.json();
+      onCustomerCreated(newCustomer);
       reset();
-      setOpen(false);
+      onOpenChange(false);
     } catch (err) {
       setFormError(getErrorMessage(err));
     }
   };
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button type="button" variant="outline">
-          + Add Customer
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-[400px]">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-[500px] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Add New Customer</SheetTitle>
         </SheetHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
-          <div>
-            <Label htmlFor="name">Name</Label>
-            <Input {...register("name")} />
-            {errors.name && (
-              <p className="text-sm text-red-500">{errors.name.message}</p>
-            )}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Name</Label>
+              <Input {...register("name")} />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name.message}</p>
+              )}
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input type="email" {...register("email")} />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
+            </div>
+            <div className="col-span-2">
+              <Label>Phone</Label>
+              <Input type="tel" {...register("phone")} />
+              {errors.phone && (
+                <p className="text-sm text-red-500">{errors.phone.message}</p>
+              )}
+            </div>
           </div>
+
           <div>
-            <Label htmlFor="email">Email</Label>
-            <Input type="email" {...register("email")} />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
+            <Label className="text-muted-foreground text-sm">
+              Billing Address
+            </Label>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <Input
+                {...register("billingAddressLine1")}
+                placeholder="Address Line 1"
+              />
+              <Input
+                {...register("billingAddressLine2")}
+                placeholder="Address Line 2"
+              />
+              <Input {...register("billingCity")} placeholder="City" />
+              <Input {...register("billingState")} placeholder="State" />
+              <Input {...register("billingZip")} placeholder="ZIP" />
+            </div>
           </div>
+
           <div>
-            <Label htmlFor="phone">Phone</Label>
-            <Input type="tel" {...register("phone")} />
-            {errors.phone && (
-              <p className="text-sm text-red-500">{errors.phone.message}</p>
-            )}
+            <Label className="text-muted-foreground text-sm">
+              Shipping Address
+            </Label>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <Input
+                {...register("shippingAddressLine1")}
+                placeholder="Address Line 1"
+              />
+              <Input
+                {...register("shippingAddressLine2")}
+                placeholder="Address Line 2"
+              />
+              <Input {...register("shippingCity")} placeholder="City" />
+              <Input {...register("shippingState")} placeholder="State" />
+              <Input {...register("shippingZip")} placeholder="ZIP" />
+            </div>
           </div>
+
           <div>
-            <Label htmlFor="address">Address</Label>
-            <Input {...register("address")} />
+            <Label>Notes</Label>
+            <Textarea
+              {...register("notes")}
+              placeholder="Additional info, comments, etc."
+              rows={3}
+            />
           </div>
 
           {formError && <p className="text-sm text-red-500">{formError}</p>}

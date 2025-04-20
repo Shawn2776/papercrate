@@ -10,8 +10,8 @@ import { fetchDiscounts } from "@/lib/redux/slices/discountsSlice";
 import { fetchTaxRates } from "@/lib/redux/slices/taxRatesSlice";
 import { fetchStatuses } from "@/lib/redux/slices/statusesSlice";
 
-import NewInvoiceForm from "@/components/forms/new-invoice/NewInvoiceForm";
 import { InvoiceFormValues } from "@/lib/schemas";
+import UpdatedNewInvoiceForm from "@/components/forms/new-invoice/UpdatedNewInvoiceForm";
 
 export default function NewInvoicePage() {
   const dispatch = useAppDispatch();
@@ -40,6 +40,8 @@ export default function NewInvoicePage() {
     }
   };
 
-  // return <NewInvoiceForm onSubmit={handleCreateInvoice} loading={false} />;
-  return <NewInvoiceForm onSubmit={handleCreateInvoice} loading={false} />;
+  return (
+    <UpdatedNewInvoiceForm onSubmit={handleCreateInvoice} loading={false} />
+  );
+  // return <NewInvoiceForm />;
 }

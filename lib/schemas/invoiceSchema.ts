@@ -18,7 +18,7 @@ export const invoiceFormSchema = z
   .object({
     customerId: z.string().min(1, "Customer is required"),
     status: z.nativeEnum(InvoiceStatus),
-    specialNotes: z.string().optional(),
+    notes: z.string().optional(),
     lineItems: z
       .array(lineItemSchema)
       .min(1, "At least one line item is required"),
