@@ -4,3 +4,4 @@ export * from "./invoice"; // InvoiceWithRelations
 export * from "./product"; // ExtendedProduct
 export * from "./tenant"; // Tenant
 export * from "./table"; // ColumnMeta extension
+export * from "./customer";

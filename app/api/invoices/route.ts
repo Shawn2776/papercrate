@@ -73,7 +73,7 @@ export async function POST(req: Request): Promise<Response> {
       lineItems,
       taxRateId,
       taxExempt,
-      specialNotes,
+      notes,
     }: InvoiceInput = result.data;
 
     const taxRate = taxRateId
@@ -140,7 +140,6 @@ export async function POST(req: Request): Promise<Response> {
             number: invoiceNumber,
             amount: totalAmount,
             status,
-            specialNotes,
             createdBy: { connect: { id: dbUser.id } },
             updatedBy: { connect: { id: dbUser.id } },
             customer: { connect: { id: Number(customerId) } },

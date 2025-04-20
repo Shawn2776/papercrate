@@ -46,18 +46,6 @@ interface Props {
   loading?: boolean;
 }
 
-function normalizeNullableFields<T extends Record<string, unknown>>(obj: T): T {
-  const result = { ...obj };
-
-  for (const key in result) {
-    if (result[key] === null) {
-      result[key] = undefined as T[Extract<keyof T, string>]; // 👈 explicit cast
-    }
-  }
-
-  return result;
-}
-
 export default function UpdatedNewInvoiceForm({ onSubmit, loading }: Props) {
   const dispatch = useAppDispatch();
   const customers = useAppSelector(selectCustomers);
@@ -344,7 +332,7 @@ export default function UpdatedNewInvoiceForm({ onSubmit, loading }: Props) {
         open={showAddCustomer}
         onOpenChange={setShowAddCustomer}
         onCustomerCreated={(newCustomer) => {
-          dispatch(addCustomer(normalizeNullableFields(newCustomer)));
+          dispatch(addCustomer(newCustomer));
           setValue("customerId", String(newCustomer.id));
         }}
       />

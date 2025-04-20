@@ -26,6 +26,7 @@ export default function NewInvoicePage() {
   }, [dispatch]);
 
   const handleCreateInvoice = async (data: InvoiceFormValues) => {
+    console.log("Submitting invoice:", data);
     const res = await fetch("/api/invoices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

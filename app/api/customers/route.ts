@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { recordAuditLog } from "@/lib/audit/recordAuditLog";
 import { customerSchema } from "@/lib/schemas";
+import { NormalizedCustomer } from "@/lib/types";
 
 export async function GET() {
   const user = await currentUser();
@@ -19,6 +20,29 @@ export async function GET() {
 
   const customers = await prisma.customer.findMany({
     where: { tenantId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      billingAddressLine1: true,
+      billingAddressLine2: true,
+      billingCity: true,
+      billingState: true,
+      billingZip: true,
+      shippingAddressLine1: true,
+      shippingAddressLine2: true,
+      shippingCity: true,
+      shippingState: true,
+      shippingZip: true,
+      notes: true,
+      tenantId: true,
+      deleted: true,
+      createdAt: true,
+      updatedAt: true,
+      createdById: true,
+      updatedById: true,
+    },
   });
 
   return NextResponse.json(customers);
@@ -38,30 +62,13 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const parsed = customerSchema.safeParse(body);
-
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.format() }, { status: 400 });
   }
 
-  // Auto-fill empty strings to avoid nulls (optional, if no @default in Prisma)
-  const safeData = {
-    ...parsed.data,
-    billingAddressLine1: parsed.data.billingAddressLine1 ?? "",
-    billingAddressLine2: parsed.data.billingAddressLine2 ?? "",
-    billingCity: parsed.data.billingCity ?? "",
-    billingState: parsed.data.billingState ?? "",
-    billingZip: parsed.data.billingZip ?? "",
-    shippingAddressLine1: parsed.data.shippingAddressLine1 ?? "",
-    shippingAddressLine2: parsed.data.shippingAddressLine2 ?? "",
-    shippingCity: parsed.data.shippingCity ?? "",
-    shippingState: parsed.data.shippingState ?? "",
-    shippingZip: parsed.data.shippingZip ?? "",
-    notes: parsed.data.notes ?? "",
-  };
-
   const customer = await prisma.customer.create({
     data: {
-      ...safeData,
+      ...parsed.data,
       tenantId,
       createdById: dbUser.id,
       updatedById: dbUser.id,
@@ -88,16 +95,42 @@ export async function POST(req: NextRequest) {
       notes: true,
       tenantId: true,
       deleted: true,
+      createdAt: true,
+      updatedAt: true,
+      createdById: true,
+      updatedById: true,
     },
   });
+
+  if (!fullCustomer) {
+    return new NextResponse("Customer not found after creation", {
+      status: 500,
+    });
+  }
 
   await recordAuditLog({
     action: "CREATE",
     entityType: "Customer",
     entityId: customer.id.toString(),
     userId: dbUser.id,
-    after: customer,
+    after: fullCustomer,
   });
 
-  return NextResponse.json(fullCustomer, { status: 201 });
+  return NextResponse.json(
+    {
+      ...fullCustomer,
+      billingAddressLine1: fullCustomer.billingAddressLine1 ?? "",
+      billingAddressLine2: fullCustomer.billingAddressLine2 ?? "",
+      billingCity: fullCustomer.billingCity ?? "",
+      billingState: fullCustomer.billingState ?? "",
+      billingZip: fullCustomer.billingZip ?? "",
+      shippingAddressLine1: fullCustomer.shippingAddressLine1 ?? "",
+      shippingAddressLine2: fullCustomer.shippingAddressLine2 ?? "",
+      shippingCity: fullCustomer.shippingCity ?? "",
+      shippingState: fullCustomer.shippingState ?? "",
+      shippingZip: fullCustomer.shippingZip ?? "",
+      notes: fullCustomer.notes ?? "",
+    },
+    { status: 201 }
+  );
 }

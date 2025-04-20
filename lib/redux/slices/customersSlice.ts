@@ -2,29 +2,10 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
-
-export interface Customer {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  billingAddressLine1?: string;
-  billingAddressLine2?: string;
-  billingCity?: string;
-  billingState?: string;
-  billingZip?: string;
-  shippingAddressLine1?: string;
-  shippingAddressLine2?: string;
-  shippingCity?: string;
-  shippingState?: string;
-  shippingZip?: string;
-  notes?: string;
-  tenantId: string;
-  deleted: boolean;
-}
+import { NormalizedCustomer } from "@/lib/types";
 
 interface CustomersState {
-  data: Customer[];
+  data: NormalizedCustomer[];
   loading: boolean;
   error: string | null;
 }
@@ -36,7 +17,7 @@ const initialState: CustomersState = {
 };
 
 export const fetchCustomers = createAsyncThunk<
-  Customer[],
+  NormalizedCustomer[],
   void,
   { rejectValue: string }
 >("customers/fetch", async (_, { rejectWithValue }) => {
@@ -53,7 +34,7 @@ const customersSlice = createSlice({
   name: "customers",
   initialState,
   reducers: {
-    addCustomer: (state, action: PayloadAction<Customer>) => {
+    addCustomer: (state, action: PayloadAction<NormalizedCustomer>) => {
       state.data.push(action.payload);
     },
     clearCustomers: (state) => {

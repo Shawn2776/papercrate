@@ -20,11 +20,12 @@ import {
   CustomerFormValues,
 } from "@/lib/schemas/customerSchema";
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
+import { NormalizedCustomer } from "@/lib/types";
 
-interface AddCustomerSheetProps {
+export interface AddCustomerSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCustomerCreated: (newCustomer: CustomerFormValues & { id: number }) => void;
+  onCustomerCreated: (customer: NormalizedCustomer) => void;
 }
 
 export default function AddCustomerSheet({
@@ -44,6 +45,7 @@ export default function AddCustomerSheet({
   });
 
   const onSubmit = async (data: CustomerFormValues) => {
+    console.log("Submitting invoice:", data);
     setFormError(null);
     try {
       const res = await fetch("/api/customers", {
@@ -54,8 +56,8 @@ export default function AddCustomerSheet({
 
       if (!res.ok) throw new Error(await res.text());
 
-      const newCustomer = await res.json();
-      onCustomerCreated(newCustomer);
+      const customer: NormalizedCustomer = await res.json();
+      onCustomerCreated(customer);
       reset();
       onOpenChange(false);
     } catch (err) {
