@@ -1,5 +1,4 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -121,7 +120,14 @@ export const getInvoiceColumns = ({
     header: "Created",
     meta: { className: "hidden sm:table-cell" },
     accessorFn: (row) => new Date(row.createdAt),
-    cell: ({ row }) => format(new Date(row.original.createdAt), "PPP"),
+    cell: ({ row }) => {
+      const date = new Date(row.original.createdAt);
+      return new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+      }).format(date);
+    },
   },
   {
     id: "actions",

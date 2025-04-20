@@ -1,6 +1,18 @@
-import { format } from "date-fns";
+// Updated Product table columns without date-fns
 import { ColumnDef } from "@tanstack/react-table";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
+
+const formatDate = (value?: string | Date) =>
+  value
+    ? new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }).format(new Date(value))
+    : "—";
 
 type Product = {
   name: string;
@@ -39,9 +51,6 @@ export const columns: ColumnDef<Product>[] = [
     accessorKey: "createdAt",
     header: "Created",
     meta: { className: "hidden sm:table-cell" },
-    cell: ({ row }) =>
-      row.original.createdAt
-        ? format(new Date(row.original.createdAt), "yyyy-MM-dd hh:mm a")
-        : "—",
+    cell: ({ row }) => formatDate(row.original.createdAt),
   },
 ];
