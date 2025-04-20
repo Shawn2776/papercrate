@@ -128,22 +128,14 @@ export default function UpdatedNewInvoiceForm({ onSubmit, loading }: Props) {
               control={control}
               name="invoiceDate"
               render={({ field }) => (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-fit justify-start">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {new Date(field.value).toLocaleDateString()}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={new Date(field.value)}
-                      onSelect={(date) => field.onChange(date?.toISOString())}
-                      disabled={(date) => date < new Date()}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  type="date"
+                  value={field.value?.split("T")[0] ?? ""}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) =>
+                    field.onChange(new Date(e.target.value).toISOString())
+                  }
+                />
               )}
             />
             <Controller
