@@ -40,5 +40,6 @@ export default function NewInvoicePage() {
     }
   };
 
+  // return <NewInvoiceForm onSubmit={handleCreateInvoice} loading={false} />;
   return <NewInvoiceForm onSubmit={handleCreateInvoice} loading={false} />;
 }

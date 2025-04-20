@@ -23,6 +23,7 @@ export const invoiceFormSchema = z
       .array(lineItemSchema)
       .min(1, "At least one line item is required"),
     taxRateId: z.string().optional().nullable(),
+    invoiceDate: z.string().min(1, "Date is required"),
     taxExempt: z.boolean().optional(),
     taxExemptId: z.string().optional().nullable(),
   })

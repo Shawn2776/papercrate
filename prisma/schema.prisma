@@ -407,11 +407,25 @@ model BankDetail {
 }
 
 model Customer {
-  id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(100)
-  email       String    @db.VarChar(100)
-  phone       String    @db.VarChar(15)
-  address     String    @db.VarChar(255)
+  id                  Int     @id @default(autoincrement())
+  name                String  @db.VarChar(100)
+  email               String  @db.VarChar(100)
+  phone               String  @db.VarChar(15)
+  address             String?
+  // Billing address
+  billingAddressLine1 String?
+  billingAddressLine2 String?
+  billingCity         String?
+  billingState        String?
+  billingZip          String?
+
+  // Shipping address
+  shippingAddressLine1 String?
+  shippingAddressLine2 String?
+  shippingCity         String?
+  shippingState        String?
+  shippingZip          String?
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   createdById String

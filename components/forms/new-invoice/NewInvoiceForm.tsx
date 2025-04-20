@@ -94,7 +94,7 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
     },
   });
 
-  const { fields, append } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: "lineItems",
   });
@@ -285,6 +285,17 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
                 <td className="p-2">${unitPrice.toFixed(2)}</td>
                 <td className="p-2">--</td>
                 <td className="p-2 text-right">${lineTotal.toFixed(2)}</td>
+                <td className="p-2 text-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => remove(idx)}
+                    className="text-red-500"
+                  >
+                    ✕
+                  </Button>
+                </td>
               </tr>
             );
           })}
