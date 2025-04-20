@@ -36,14 +36,12 @@ export const TenantSwitcher = () => {
   }, [dispatch]);
 
   const handleSwitch = (value: string) => {
-    console.log("🔁 Switching tenant to:", value);
     if (value === "__create__") {
       const currentPlan = currentTenant?.plan ?? "FREE";
       const isLimited = currentPlan === "FREE" || currentPlan === "BASIC";
       const alreadyHasOne = tenants.length >= 1;
 
       if (isLimited && alreadyHasOne) {
-        console.log("🚫 Tenant limit hit for plan:", currentPlan);
         toast.error("Your plan doesn't allow multiple tenants.", {
           action: {
             label: "Upgrade Plan",
@@ -54,23 +52,19 @@ export const TenantSwitcher = () => {
       }
 
       router.push("/dashboard/new-user/1");
-      console.log("✨ Navigating to create new tenant form");
       return;
     }
 
     const selected = tenants.find((t) => t.id === value);
     if (selected) {
-      console.log("✅ Found tenant:", selected.name);
       dispatch(setCurrentTenant(selected));
       localStorage.setItem("activeTenantId", selected.id);
 
       // 🧹 Reset old customer data
-      console.log("🧹 Clearing customers...");
       dispatch(clearCustomers());
 
       // ⏳ Slight delay to allow Redux store to update before fetching
       setTimeout(() => {
-        console.log("📦 Fetching customers for new tenant...");
         dispatch(fetchCustomers());
       }, 50);
     }

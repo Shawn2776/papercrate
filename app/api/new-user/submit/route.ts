@@ -36,8 +36,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = await req.json();
   const parsed = TenantSchema.safeParse(body);
   if (!parsed.success) {
-    console.log("🧨 Zod validation failed:");
-    console.log("Raw body:", body);
     console.dir(parsed.error.format(), { depth: null });
 
     return NextResponse.json(

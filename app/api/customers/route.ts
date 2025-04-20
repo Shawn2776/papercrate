@@ -6,10 +6,8 @@ import { recordAuditLog } from "@/lib/audit/recordAuditLog";
 import { customerSchema } from "@/lib/schemas";
 
 export async function GET() {
-  console.log("📥 Customer API hit");
   const user = await currentUser();
   if (!user) {
-    console.log("❌ No current user");
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -18,10 +16,7 @@ export async function GET() {
     include: { memberships: true },
   });
 
-  console.log("👤 DB user found:", dbUser?.email);
-
   const tenantId = dbUser?.memberships?.[0]?.tenantId;
-  console.log("🏷️ Tenant ID for fetch:", tenantId);
   if (!tenantId) return new Response("Missing tenant", { status: 400 });
 
   const customers = await prisma.customer.findMany({
@@ -29,15 +24,6 @@ export async function GET() {
       tenantId, // ← this will scope to the current tenant only
     },
   });
-
-  console.log(
-    "🧾 Customers returned:",
-    customers.map((c) => ({
-      id: c.id,
-      name: c.name,
-      tenantId: c.tenantId,
-    }))
-  );
 
   return NextResponse.json(customers);
 }

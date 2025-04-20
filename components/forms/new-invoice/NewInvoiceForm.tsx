@@ -1,29 +1,24 @@
-// Full file: NewInvoiceForm.tsx
-
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
 import {
   useForm,
   useFieldArray,
   Controller,
   SubmitHandler,
 } from "react-hook-form";
+import { useMemo, useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectTrigger,
-  SelectContent,
-  SelectItem,
   SelectValue,
+  SelectItem,
+  SelectContent,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-
-import AddCustomerSheet from "@/components/customers/AddCustomerSheet";
-import AddProductSheet from "@/components/products/AddProductSheet";
 
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import {
@@ -37,21 +32,24 @@ import {
   addProduct,
 } from "@/lib/redux/slices/productsSlice";
 import {
+  selectTaxRates,
+  fetchTaxRates,
+} from "@/lib/redux/slices/taxRatesSlice";
+import {
   fetchDiscounts,
   selectDiscounts,
 } from "@/lib/redux/slices/discountsSlice";
-import {
-  fetchTaxRates,
-  selectTaxRates,
-} from "@/lib/redux/slices/taxRatesSlice";
 import { fetchStatuses } from "@/lib/redux/slices/statusesSlice";
+import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
+
+import AddCustomerSheet from "@/components/customers/AddCustomerSheet";
+import AddProductSheet from "@/components/products/AddProductSheet";
 
 import {
-  invoiceFormSchema,
   InvoiceFormValues,
+  invoiceFormSchema,
 } from "@/lib/schemas/invoiceSchema";
 import { InvoiceStatus } from "@prisma/client";
-import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
 
 interface Props {
   onSubmit: (data: InvoiceFormValues) => void;
@@ -66,9 +64,9 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
 
   const customers = useAppSelector(selectCustomers);
   const products = useAppSelector(selectProducts);
-  const discounts = useAppSelector(selectDiscounts);
   const taxRates = useAppSelector(selectTaxRates);
-  const currentTenant = useAppSelector(selectCurrentTenant);
+  const discounts = useAppSelector(selectDiscounts);
+  const tenant = useAppSelector(selectCurrentTenant);
 
   useEffect(() => {
     dispatch(fetchCustomers());
@@ -80,56 +78,57 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
 
   const {
     control,
-    handleSubmit,
     register,
-    setValue,
+    handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
       customerId: "",
       status: InvoiceStatus.PENDING,
-      lineItems: [{ productId: "", quantity: 1, discountId: "" }],
       taxRateId: "",
       taxExempt: false,
-      taxExemptId: "",
+      lineItems: [{ productId: "", quantity: 1 }],
     },
   });
 
-  const { fields, append } = useFieldArray({ control, name: "lineItems" });
+  const { fields, append } = useFieldArray({
+    control,
+    name: "lineItems",
+  });
 
-  const isTaxExempt = watch("taxExempt");
-  const selectedTaxRateId = watch("taxRateId") ?? "";
-  const lineItems = watch("lineItems");
+  const watchLineItems = watch("lineItems");
+  const taxExempt = watch("taxExempt");
+  const selectedTaxRateId = watch("taxRateId");
 
-  const productMap = useMemo(
-    () =>
-      Object.fromEntries(
-        products.map((p) => [String(p.id), { ...p, price: Number(p.price) }])
-      ),
-    [products]
-  );
+  const productMap = useMemo(() => {
+    const mapped = Object.fromEntries(
+      products.map((p) => [String(p.id), { ...p, price: Number(p.price) }])
+    );
+    console.log("📦 Full productMap:", mapped);
+    return mapped;
+  }, [products]);
 
-  const subtotal = useMemo(() => {
-    return lineItems.reduce((sum, item) => {
-      const prod = productMap[String(item.productId)];
+  const subtotal: number = useMemo(() => {
+    return watchLineItems.reduce((sum: number, item, idx) => {
+      const prod = productMap[item.productId];
       const price = typeof prod?.price === "number" ? prod.price : 0;
       return sum + price * item.quantity;
     }, 0);
-  }, [lineItems, productMap]);
+  }, [watchLineItems, productMap]);
 
   const taxRate = useMemo(() => {
-    if (isTaxExempt) return 0;
-    const rate = taxRates.find((t) => t.id === +selectedTaxRateId);
-    return rate ? Number(rate.rate) : 0;
-  }, [selectedTaxRateId, isTaxExempt, taxRates]);
+    if (taxExempt) return 0;
+    const rate = taxRates.find((t) => t.id === Number(selectedTaxRateId));
+    return rate?.rate ?? 0;
+  }, [selectedTaxRateId, taxExempt, taxRates]);
 
   const tax = (subtotal * taxRate) / 100;
   const balanceDue = subtotal + tax;
 
-  const primaryColor =
-    currentTenant?.InvoiceSettings?.[0]?.primaryColor ?? "#1E3A8A";
+  const primaryColor = tenant?.InvoiceSettings?.[0]?.primaryColor ?? "#1E3A8A";
 
   const submitForm: SubmitHandler<InvoiceFormValues> = (data) => {
     onSubmit(data);
@@ -138,22 +137,22 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
   return (
     <form
       onSubmit={handleSubmit(submitForm)}
-      className="bg-white text-black max-w-3xl mx-auto p-10 rounded-md shadow-md print:bg-transparent print:shadow-none print:p-0"
+      className="bg-white text-black max-w-3xl mx-auto p-10 rounded-md shadow-md"
     >
       <div className="flex justify-between border-b pb-6">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold">
-            {currentTenant?.name ?? "Your Company"}
+            {tenant?.name ?? "Your Company"}
           </h1>
-          {currentTenant?.addressLine1 && <p>{currentTenant.addressLine1}</p>}
-          {currentTenant?.addressLine2 && <p>{currentTenant.addressLine2}</p>}
-          {currentTenant?.city && (
+          {tenant?.addressLine1 && <p>{tenant.addressLine1}</p>}
+          {tenant?.addressLine2 && <p>{tenant.addressLine2}</p>}
+          {tenant?.city && (
             <p>
-              {currentTenant.city}, {currentTenant.state} {currentTenant.zip}
+              {tenant.city}, {tenant.state} {tenant.zip}
             </p>
           )}
-          {currentTenant?.email && <p>{currentTenant.email}</p>}
-          {currentTenant?.website && <p>{currentTenant.website}</p>}
+          {tenant?.email && <p>{tenant.email}</p>}
+          {tenant?.website && <p>{tenant.website}</p>}
         </div>
         <div className="text-right space-y-1">
           <p className="text-lg font-semibold" style={{ color: primaryColor }}>
@@ -164,17 +163,14 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
             control={control}
             name="status"
             render={({ field }) => (
-              <Select
-                onValueChange={field.onChange}
-                value={field.value ?? undefined}
-              >
+              <Select onValueChange={field.onChange} value={field.value}>
                 <SelectTrigger>
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.values(InvoiceStatus).map((status) => (
                     <SelectItem key={status} value={status}>
-                      {status.replace(/_/g, " ").toLowerCase()}
+                      {status}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -195,7 +191,7 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
                 if (val === "__add_new__") setShowAddCustomer(true);
                 else field.onChange(val);
               }}
-              value={field.value ?? undefined}
+              value={field.value}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select customer" />
@@ -237,9 +233,12 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
         </thead>
         <tbody>
           {fields.map((field, idx) => {
-            const prod = productMap[String(field.productId)];
-            const unitPrice = typeof prod?.price === "number" ? prod.price : 0;
-            const total = unitPrice * field.quantity;
+            const watchedProductId = watch(`lineItems.${idx}.productId`);
+            const quantity = watch(`lineItems.${idx}.quantity`);
+            const product = productMap[watchedProductId];
+            const unitPrice =
+              typeof product?.price === "number" ? product.price : 0;
+            const lineTotal = unitPrice * (quantity ?? 0);
 
             return (
               <tr key={field.id}>
@@ -255,7 +254,7 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
                             setShowAddProduct(true);
                           } else field.onChange(val);
                         }}
-                        value={field.value ?? undefined}
+                        value={field.value}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select product" />
@@ -285,7 +284,7 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
                 </td>
                 <td className="p-2">${unitPrice.toFixed(2)}</td>
                 <td className="p-2">--</td>
-                <td className="p-2 text-right">${total.toFixed(2)}</td>
+                <td className="p-2 text-right">${lineTotal.toFixed(2)}</td>
               </tr>
             );
           })}
@@ -305,30 +304,24 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
                   : Number(newProduct.price),
             })
           );
-          if (productRowIndex !== null) {
-            setValue(
-              `lineItems.${productRowIndex}.productId`,
-              String(newProduct.id)
-            );
-            setProductRowIndex(null);
-          }
         }}
       />
 
       <Button
         type="button"
-        onClick={() => append({ productId: "", quantity: 1, discountId: "" })}
+        onClick={() => append({ productId: "", quantity: 1 })}
+        className="mb-4"
       >
         + Add Line Item
       </Button>
 
-      <div className="flex justify-end text-sm space-y-2 mt-6">
+      <div className="flex justify-end w-full sm:w-1/2 ml-auto text-sm space-y-2 mt-6">
         <div className="space-y-1">
           <div className="flex justify-between">
             <span>Subtotal:</span>
             <span>${subtotal.toFixed(2)}</span>
           </div>
-          {!isTaxExempt && (
+          {!taxExempt && (
             <div className="flex justify-between">
               <span>Tax:</span>
               <span>${tax.toFixed(2)}</span>
@@ -350,6 +343,11 @@ export default function NewInvoiceForm({ onSubmit, loading }: Props) {
           placeholder="Write a thank-you note, payment terms, or special instructions..."
           className="min-h-[100px]"
         />
+      </div>
+
+      <div className="text-center text-muted-foreground text-sm mt-4">
+        <p>Thank you for your business!</p>
+        <p className="italic">Payment is due upon receipt.</p>
       </div>
 
       <Button type="submit" disabled={loading} className="w-full mt-6">
