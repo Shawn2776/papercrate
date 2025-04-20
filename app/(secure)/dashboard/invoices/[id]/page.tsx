@@ -85,7 +85,14 @@ export default function InvoiceDetailPage() {
             Bill To:
           </h3>
           <p>{invoice.customer.name}</p>
-          <p>{invoice.customer.address}</p>
+          <p>{invoice.customer.billingAddressLine1}</p>
+          {invoice.customer.billingAddressLine2 && (
+            <p>{invoice.customer.billingAddressLine2}</p>
+          )}
+          <p>
+            {invoice.customer.billingCity}, {invoice.customer.billingState}{" "}
+            {invoice.customer.billingZip}
+          </p>
           <p>{invoice.customer.phone}</p>
           <p>{invoice.customer.email}</p>
         </div>
@@ -94,7 +101,14 @@ export default function InvoiceDetailPage() {
             Ship To:
           </h3>
           <p>{invoice.customer.name}</p>
-          <p>{invoice.customer.address}</p>
+          <p>{invoice.customer.shippingAddressLine1}</p>
+          {invoice.customer.shippingAddressLine2 && (
+            <p>{invoice.customer.shippingAddressLine2}</p>
+          )}
+          <p>
+            {invoice.customer.shippingCity}, {invoice.customer.shippingState}{" "}
+            {invoice.customer.shippingZip}
+          </p>
           <p>{invoice.customer.phone}</p>
         </div>
       </div>
