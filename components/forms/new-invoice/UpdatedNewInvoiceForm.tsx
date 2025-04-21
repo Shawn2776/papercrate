@@ -1,9 +1,9 @@
 "use client";
 
 import { useForm, useFieldArray, Controller } from "react-hook-form";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarIcon, TrashIcon } from "lucide-react";
+import { TrashIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,21 +15,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
-import { Customer, InvoiceStatus } from "@prisma/client";
-import { cn } from "@/lib/utils";
+import { InvoiceStatus } from "@prisma/client";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import {
   selectCustomers,
   addCustomer,
+  fetchInvoiceCustomers,
 } from "@/lib/redux/slices/customersSlice";
-import { selectProducts, addProduct } from "@/lib/redux/slices/productsSlice";
+import {
+  selectProducts,
+  addProduct,
+  fetchInvoiceProducts,
+} from "@/lib/redux/slices/productsSlice";
 import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
 
 import AddCustomerSheet from "@/components/customers/AddCustomerSheet";
@@ -54,6 +52,12 @@ export default function UpdatedNewInvoiceForm({ onSubmit, loading }: Props) {
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [productRowIndex, setProductRowIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    dispatch(fetchInvoiceCustomers(tenant.id));
+    dispatch(fetchInvoiceProducts(tenant.id));
+  }, [dispatch, tenant?.id]);
 
   const {
     control,

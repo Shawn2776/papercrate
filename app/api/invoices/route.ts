@@ -17,17 +17,18 @@ export async function GET(req: NextRequest): Promise<Response> {
     include: { memberships: true },
   });
 
+  const url = new URL(req.url);
+  const tenantId = url.searchParams.get("tenantId");
+
   if (!dbUser || !dbUser.memberships.length) {
     return new Response("User not found or not a member of any tenant", {
       status: 404,
     });
   }
 
-  const tenantId = dbUser.memberships[0].tenantId;
-
   const invoices = await prisma.invoice.findMany({
     where: {
-      tenantId,
+      tenantId: tenantId ?? undefined,
       deleted: false,
     },
     include: {
@@ -39,9 +40,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         },
       },
     },
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: { createdAt: "desc" },
   });
 
   return Response.json(invoices);
@@ -53,12 +52,11 @@ export async function POST(req: Request): Promise<Response> {
     if (!user) return new Response("Unauthorized", { status: 401 });
 
     const dbUser = await getDbUserOrRedirect();
-    const tenantId = dbUser.memberships?.[0]?.tenantId;
+    const json = await req.json(); // 👈 move this above
+    const tenantId = json.tenantId || dbUser.memberships?.[0]?.tenantId;
     if (!tenantId) return new Response("Missing tenant", { status: 400 });
 
-    const json = await req.json();
     const result = invoiceFormSchema.safeParse(json);
-
     if (!result.success) {
       const error = result.error.flatten();
       return Response.json(

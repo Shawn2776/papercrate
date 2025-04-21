@@ -22,6 +22,9 @@ import {
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 import { NormalizedCustomer } from "@/lib/types";
 
+import { useAppSelector } from "@/lib/redux/hooks";
+import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
+
 export interface AddCustomerSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,6 +37,7 @@ export default function AddCustomerSheet({
   onCustomerCreated,
 }: AddCustomerSheetProps) {
   const [formError, setFormError] = useState<string | null>(null);
+  const tenant = useAppSelector(selectCurrentTenant);
 
   const {
     register,
@@ -51,7 +55,10 @@ export default function AddCustomerSheet({
       const res = await fetch("/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          tenantId: tenant?.id,
+        }),
       });
 
       if (!res.ok) throw new Error(await res.text());

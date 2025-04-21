@@ -72,6 +72,21 @@ export const fetchProducts = createAsyncThunk<
   }
 });
 
+export const fetchInvoiceProducts = createAsyncThunk<
+  Product[], // return type
+  string, // tenantId argument type
+  { rejectValue: string }
+>("products/fetchInvoiceProducts", async (tenantId, { rejectWithValue }) => {
+  try {
+    const res = await fetch(`/api/products?tenantId=${tenantId}`);
+    if (!res.ok) throw new Error(await res.text());
+    const data: Product[] = await res.json();
+    return data;
+  } catch (err) {
+    return rejectWithValue(getErrorMessage(err));
+  }
+});
+
 const productsSlice = createSlice({
   name: "products",
   initialState,
@@ -91,6 +106,18 @@ const productsSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch products";
+      })
+      .addCase(fetchInvoiceProducts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchInvoiceProducts.fulfilled, (state, action) => {
+        state.products = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchInvoiceProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to fetch products";
       });

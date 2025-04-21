@@ -39,12 +39,12 @@ const initialState: InvoicesState = {
 };
 
 export const fetchInvoices = createAsyncThunk<
-  Invoice[], // return type
-  void, // argument
+  Invoice[], // Return type
+  string, // Argument (tenantId)
   { rejectValue: string }
->("invoices/fetchInvoices", async (_, { rejectWithValue }) => {
+>("invoices/fetchInvoices", async (tenantId, { rejectWithValue }) => {
   try {
-    const res = await fetch("/api/invoices");
+    const res = await fetch(`/api/invoices?tenantId=${tenantId}`);
     if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
     const data: InvoiceApiResponse[] = await res.json();
 

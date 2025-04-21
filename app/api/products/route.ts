@@ -1,43 +1,41 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { customAlphabet } from "nanoid";
 import { prisma } from "@/lib/db/prisma";
 
 import { z } from "zod";
 import { recordAuditLog } from "@/lib/audit/recordAuditLog";
+import { productRequestSchema } from "@/lib/schemas/productRequestSchema";
 
 // Nano ID generators
 const generateSku = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8);
 const generateBarcode = customAlphabet("0123456789", 12);
 
-const productRequestSchema = z.object({
-  name: z.string(),
-  price: z.union([z.number(), z.string()]),
-  sku: z.string().optional(),
-  barcode: z.string().optional(),
-  qrCodeUrl: z.string().optional(),
-  imageUrl: z
-    .string()
-    .url()
-    .optional()
-    .or(z.literal(""))
-    .transform((val) => (val === "" ? undefined : val)),
-  description: z.string().optional(),
-  variant: z.string().optional(),
-  category: z.string().optional(),
-});
-
-export async function GET() {
+export async function GET(req: NextRequest) {
   const user = await currentUser();
-  if (!user) return new Response("Unauthorized", { status: 401 });
+  if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: user.id },
     include: { memberships: true },
   });
 
-  const tenantId = dbUser?.memberships?.[0]?.tenantId;
-  if (!tenantId) return new Response("Missing tenant", { status: 400 });
+  if (!dbUser || dbUser.memberships.length === 0) {
+    return new NextResponse("User not found or has no memberships", {
+      status: 403,
+    });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const tenantIdFromQuery = searchParams.get("tenantId");
+  const userTenantIds = dbUser.memberships.map((m) => m.tenantId);
+
+  // ✅ Determine effective tenantId
+  const tenantId = tenantIdFromQuery || userTenantIds[0];
+
+  if (!tenantId || !userTenantIds.includes(tenantId)) {
+    return new NextResponse("Unauthorized tenant access", { status: 403 });
+  }
 
   const products = await prisma.product.findMany({
     where: { tenantId },
@@ -68,11 +66,11 @@ export async function POST(req: Request) {
     include: { memberships: true },
   });
 
-  const tenantId = dbUser?.memberships?.[0]?.tenantId;
-  if (!tenantId) return new Response("Missing tenant", { status: 400 });
+  if (!dbUser) return new Response("User not found", { status: 404 });
 
-  const json = await req.json();
-  const parsed = productRequestSchema.safeParse(json);
+  const body = await req.json();
+  const parsed = productRequestSchema.safeParse(body);
+
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.format() }, { status: 400 });
   }
@@ -87,7 +85,13 @@ export async function POST(req: Request) {
     description,
     variant,
     category,
+    tenantId: tenantFromClient,
   } = parsed.data;
+
+  const tenantId =
+    tenantFromClient || dbUser?.memberships?.[0]?.tenantId || null;
+
+  if (!tenantId) return new Response("Missing tenant", { status: 400 });
 
   const generatedSku = sku || generateSku();
   const generatedBarcode = barcode || generateBarcode();

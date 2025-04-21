@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/lib/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 
 import { fetchCustomers } from "@/lib/redux/slices/customersSlice";
 import { fetchProducts } from "@/lib/redux/slices/productsSlice";
@@ -12,6 +12,7 @@ import { fetchStatuses } from "@/lib/redux/slices/statusesSlice";
 
 import { InvoiceFormValues } from "@/lib/schemas";
 import UpdatedNewInvoiceForm from "@/components/forms/new-invoice/UpdatedNewInvoiceForm";
+import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
 
 export default function NewInvoicePage() {
   const dispatch = useAppDispatch();
@@ -25,12 +26,20 @@ export default function NewInvoicePage() {
     dispatch(fetchStatuses());
   }, [dispatch]);
 
+  const tenant = useAppSelector(selectCurrentTenant);
+
   const handleCreateInvoice = async (data: InvoiceFormValues) => {
-    console.log("Submitting invoice:", data);
+    if (!tenant?.id) {
+      alert("Missing tenant context");
+      return;
+    }
+
+    const payload = { ...data, tenantId: tenant.id };
+
     const res = await fetch("/api/invoices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
 
     if (res.ok) {

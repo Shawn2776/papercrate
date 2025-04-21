@@ -22,6 +22,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import Image from "next/image";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -60,6 +62,7 @@ export default function AddProductSheet({
     null
   );
   const [formError, setFormError] = useState<string | null>(null);
+  const tenant = useAppSelector(selectCurrentTenant);
 
   const {
     register,
@@ -76,7 +79,11 @@ export default function AddProductSheet({
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, price: parseFloat(data.price) }),
+        body: JSON.stringify({
+          ...data,
+          price: parseFloat(data.price),
+          tenantId: tenant?.id,
+        }),
       });
 
       if (!res.ok) {

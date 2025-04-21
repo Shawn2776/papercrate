@@ -3,25 +3,27 @@
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import {
+  fetchInvoiceProducts,
   fetchProducts,
   selectProducts,
-  selectProductsLoading,
   selectProductsError,
+  selectProductsLoading,
 } from "@/lib/redux/slices/productsSlice";
+import { selectCurrentTenant } from "@/lib/redux/slices/tenantSlice";
 import { ProductDataTable } from "@/components/tables/product-data-table/ProductDataTable";
 import { selectUserPermissions } from "@/lib/redux/slices/authSlice";
-import { columns } from "@/components/tables/product-data-table/columns";
 
 export default function ProductsPage() {
   const dispatch = useAppDispatch();
   const products = useAppSelector(selectProducts);
+  const tenant = useAppSelector(selectCurrentTenant);
   const loading = useAppSelector(selectProductsLoading);
   const error = useAppSelector(selectProductsError);
   const userPermissions = useAppSelector(selectUserPermissions);
 
   useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
+    if (tenant?.id) dispatch(fetchInvoiceProducts(tenant.id));
+  }, [dispatch, tenant?.id]);
 
   return (
     <div className="p-4 space-y-4">

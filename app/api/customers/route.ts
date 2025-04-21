@@ -6,17 +6,30 @@ import { recordAuditLog } from "@/lib/audit/recordAuditLog";
 import { customerSchema } from "@/lib/schemas";
 import { NormalizedCustomer } from "@/lib/types";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const user = await currentUser();
-  if (!user) return new Response("Unauthorized", { status: 401 });
+  if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: user.id },
     include: { memberships: true },
   });
 
-  const tenantId = dbUser?.memberships?.[0]?.tenantId;
-  if (!tenantId) return new Response("Missing tenant", { status: 400 });
+  if (!dbUser || dbUser.memberships.length === 0) {
+    return new NextResponse("User not found or has no memberships", {
+      status: 403,
+    });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const tenantIdFromQuery = searchParams.get("tenantId");
+  const userTenantIds = dbUser.memberships.map((m) => m.tenantId);
+
+  const tenantId = tenantIdFromQuery || userTenantIds[0];
+
+  if (!tenantId || !userTenantIds.includes(tenantId)) {
+    return new NextResponse("Unauthorized tenant access", { status: 403 });
+  }
 
   const customers = await prisma.customer.findMany({
     where: { tenantId },
@@ -57,14 +70,17 @@ export async function POST(req: NextRequest) {
     include: { memberships: true },
   });
 
-  const tenantId = dbUser?.memberships?.[0]?.tenantId;
-  if (!tenantId) return new NextResponse("Missing tenant", { status: 400 });
+  if (!dbUser) return new NextResponse("User not found", { status: 404 });
 
   const body = await req.json();
   const parsed = customerSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.format() }, { status: 400 });
   }
+
+  const tenantId = body.tenantId || dbUser?.memberships?.[0]?.tenantId || null;
+
+  if (!tenantId) return new NextResponse("Missing tenant", { status: 400 });
 
   const customer = await prisma.customer.create({
     data: {
@@ -116,21 +132,5 @@ export async function POST(req: NextRequest) {
     after: fullCustomer,
   });
 
-  return NextResponse.json(
-    {
-      ...fullCustomer,
-      billingAddressLine1: fullCustomer.billingAddressLine1 ?? "",
-      billingAddressLine2: fullCustomer.billingAddressLine2 ?? "",
-      billingCity: fullCustomer.billingCity ?? "",
-      billingState: fullCustomer.billingState ?? "",
-      billingZip: fullCustomer.billingZip ?? "",
-      shippingAddressLine1: fullCustomer.shippingAddressLine1 ?? "",
-      shippingAddressLine2: fullCustomer.shippingAddressLine2 ?? "",
-      shippingCity: fullCustomer.shippingCity ?? "",
-      shippingState: fullCustomer.shippingState ?? "",
-      shippingZip: fullCustomer.shippingZip ?? "",
-      notes: fullCustomer.notes ?? "",
-    },
-    { status: 201 }
-  );
+  return NextResponse.json(fullCustomer, { status: 201 });
 }

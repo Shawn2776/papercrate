@@ -30,6 +30,21 @@ export const fetchCustomers = createAsyncThunk<
   }
 });
 
+export const fetchInvoiceCustomers = createAsyncThunk<
+  NormalizedCustomer[], // return type
+  string, // tenantId argument type
+  { rejectValue: string }
+>("customers/fetchCustomers", async (tenantId, { rejectWithValue }) => {
+  try {
+    const res = await fetch(`/api/customers?tenantId=${tenantId}`);
+    if (!res.ok) throw new Error(await res.text());
+    const data: NormalizedCustomer[] = await res.json();
+    return data;
+  } catch (err) {
+    return rejectWithValue(getErrorMessage(err));
+  }
+});
+
 const customersSlice = createSlice({
   name: "customers",
   initialState,
@@ -54,6 +69,18 @@ const customersSlice = createSlice({
         state.data = action.payload;
       })
       .addCase(fetchCustomers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to load customers";
+      })
+      .addCase(fetchInvoiceCustomers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchInvoiceCustomers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+      })
+      .addCase(fetchInvoiceCustomers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "Failed to load customers";
       });
