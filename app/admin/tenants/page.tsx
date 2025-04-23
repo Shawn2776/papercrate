@@ -1,8 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Tenant } from "@prisma/client";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/lib/redux/store";
+import {
+  fetchAdminTenants,
+  selectAdminTenants,
+  setFilter,
+} from "@/lib/redux/slices/adminTenantsSlice";
+import { Trash } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -12,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -20,23 +28,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Trash } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 function ShowDeletedToggle({
   showDeleted,
-  setShowDeleted,
+  onToggle,
 }: {
   showDeleted: boolean;
-  setShowDeleted: (val: boolean) => void;
+  onToggle: (val: boolean) => void;
 }) {
   return (
     <div className="flex items-center space-x-2 mb-4">
       <Switch
         id="show-deleted"
         checked={showDeleted}
-        onCheckedChange={setShowDeleted}
+        onCheckedChange={onToggle}
       />
       <Label htmlFor="show-deleted">Show Deleted</Label>
     </div>
@@ -44,25 +50,27 @@ function ShowDeletedToggle({
 }
 
 export default function AdminTenantsPage() {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showDeleted, setShowDeleted] = useState(false); // 👈 Add toggle state
+  const dispatch = useDispatch<AppDispatch>();
+  const { tenants, loading, filter } = useSelector(selectAdminTenants);
 
   useEffect(() => {
-    setLoading(true);
-    fetch(`/api/admin/tenants?deleted=${showDeleted}`) // 👈 Use query param
-      .then((res) => res.json())
-      .then((data) => setTenants(data))
-      .finally(() => setLoading(false));
-  }, [showDeleted]); // 👈 Refetch when toggled
+    dispatch(fetchAdminTenants());
+  }, [dispatch, filter]);
+
+  const handleDelete = async (tenantId: string) => {
+    await fetch(`/api/admin/tenants/${tenantId}`, {
+      method: "DELETE",
+    });
+    dispatch(fetchAdminTenants()); // Refresh after delete
+  };
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold">All Tenants</h2>
 
       <ShowDeletedToggle
-        showDeleted={showDeleted}
-        setShowDeleted={setShowDeleted}
+        showDeleted={filter === "deleted"}
+        onToggle={(val) => dispatch(setFilter(val ? "deleted" : "active"))}
       />
 
       <Card>
@@ -106,14 +114,7 @@ export default function AdminTenantsPage() {
                             </p>
                             <Button
                               variant="destructive"
-                              onClick={async () => {
-                                await fetch(`/api/admin/tenants/${tenant.id}`, {
-                                  method: "DELETE",
-                                });
-                                setTenants((prev) =>
-                                  prev.filter((t) => t.id !== tenant.id)
-                                );
-                              }}
+                              onClick={() => handleDelete(tenant.id)}
                             >
                               Confirm Delete
                             </Button>

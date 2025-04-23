@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
     role: user.role,
     deleted: user.deleted,
     isTenantOwner: user.memberships.some((m) => m.role === "OWNER"),
+    hasNoTenants: user.memberships.length === 0,
     memberships: user.memberships.map((m) => ({
       tenantName: m.tenant.name,
       role: m.role,

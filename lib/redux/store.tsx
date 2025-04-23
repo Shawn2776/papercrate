@@ -11,6 +11,7 @@ import tenantReducer from "./slices/tenantSlice";
 import counterReducer from "./slices/counterSlice";
 import adminUsersReducer from "./slices/adminUsersSlice";
 import adminEnumsReducer from "./slices/adminEnumsSlice";
+import adminTenantsReducer from "./slices/adminTenantsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +27,7 @@ export const store = configureStore({
     counter: counterReducer,
     adminUsers: adminUsersReducer,
     adminEnums: adminEnumsReducer,
+    adminTenants: adminTenantsReducer,
   },
 });
 

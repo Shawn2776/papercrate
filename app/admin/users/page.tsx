@@ -1,7 +1,7 @@
 // app/admin/users/page.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/redux/hooks";
 import {
   fetchAdminUsers,
@@ -13,8 +13,7 @@ import {
   setPage,
   updateUser,
 } from "@/lib/redux/slices/adminUsersSlice";
-import { useState } from "react";
-import { ClipboardCopy, Slash, Trash2 } from "lucide-react";
+import { ClipboardCopy, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Tooltip,
@@ -22,14 +21,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function AdminUsersPage() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [showUserIds, setShowUserIds] = useState<Record<string, boolean>>({});
-
   const [editValues, setEditValues] = useState<{ name: string; role: string }>({
     name: "",
     role: "SUPPORT",
@@ -74,28 +70,22 @@ export default function AdminUsersPage() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left border-b text-sm font-medium text-muted-foreground">
-                  <th className="p-2 w-[4%]">ID</th>
-                  <th className="p-2 w-[20%]">Name</th>
-                  <th className="p-2 w-[25%]">Email</th>
-                  <th className="p-2 w-[10%]">Role</th>
-                  <th className="p-2 w-[25%]">Tenants</th>
-                  <th className="p-2 w-[10%]">Status</th>
-                  <th className="p-2 text-right w-[10%]">Actions</th>
+                  <th className="p-2">ID</th>
+                  <th className="p-2">Name</th>
+                  <th className="p-2">Email</th>
+                  <th className="p-2">Role</th>
+                  <th className="p-2">Tenants</th>
+                  <th className="p-2">Status</th>
+                  <th className="p-2 text-right">Actions</th>
                 </tr>
               </thead>
-
               <tbody>
                 {users.map((user) => {
                   const isEditing = editingUserId === user.id;
+                  const hasNoTenants = user.memberships.length === 0;
 
                   return (
-                    <tr
-                      key={user.id}
-                      className={`border-b transition-colors ${
-                        isEditing ? "bg-muted/30" : "hover:bg-muted/10"
-                      }`}
-                    >
-                      {/* ID */}
+                    <tr key={user.id} className="border-b">
                       <td className="p-2">
                         <TooltipProvider>
                           <Tooltip>
@@ -116,8 +106,6 @@ export default function AdminUsersPage() {
                           </Tooltip>
                         </TooltipProvider>
                       </td>
-
-                      {/* Name */}
                       <td className="p-2">
                         {isEditing ? (
                           <input
@@ -134,11 +122,7 @@ export default function AdminUsersPage() {
                           user.name || "—"
                         )}
                       </td>
-
-                      {/* Email */}
                       <td className="p-2">{user.email}</td>
-
-                      {/* Role */}
                       <td className="p-2">
                         {isEditing ? (
                           <select
@@ -159,8 +143,6 @@ export default function AdminUsersPage() {
                           user.role
                         )}
                       </td>
-
-                      {/* Tenant memberships */}
                       <td className="p-2 text-sm leading-5">
                         <div className="flex flex-wrap gap-2">
                           {user.memberships.length === 0 ? (
@@ -182,8 +164,6 @@ export default function AdminUsersPage() {
                           )}
                         </div>
                       </td>
-
-                      {/* Status */}
                       <td className="p-2">
                         <span
                           className={`font-medium ${
@@ -193,8 +173,6 @@ export default function AdminUsersPage() {
                           {user.deleted ? "Deleted" : "Active"}
                         </span>
                       </td>
-
-                      {/* Actions */}
                       <td className="p-2 text-right">
                         <div className="flex items-center justify-end space-x-2">
                           {isEditing ? (
@@ -236,35 +214,21 @@ export default function AdminUsersPage() {
                               >
                                 Edit
                               </Button>
-
-                              {user.isTenantOwner ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="relative group inline-flex hover:cursor-pointer">
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        disabled
-                                        className="p-2 group-hover:ring-2 group-hover:ring-red-500 group-hover:ring-offset-2 cursor-not-allowed"
-                                      >
-                                        <Trash2 className="text-muted-foreground" />
-                                      </Button>
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">
-                                    Tenant owners cannot be deleted
-                                  </TooltipContent>
-                                </Tooltip>
-                              ) : (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => setDeletingUser(user)}
-                                  className="hover:cursor-pointer"
-                                >
-                                  <Trash2 />
-                                </Button>
-                              )}
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => setDeletingUser(user)}
+                                className="hover:cursor-pointer"
+                                disabled={user.isTenantOwner && !hasNoTenants}
+                              >
+                                <Trash2
+                                  className={
+                                    user.isTenantOwner && !hasNoTenants
+                                      ? "text-muted-foreground"
+                                      : ""
+                                  }
+                                />
+                              </Button>
                             </>
                           )}
                         </div>
@@ -299,6 +263,7 @@ export default function AdminUsersPage() {
           </CardContent>
         </Card>
       )}
+
       {/* Confirmation Modal */}
       {deletingUser && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">

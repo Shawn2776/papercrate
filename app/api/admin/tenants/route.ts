@@ -11,13 +11,26 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const showDeleted = url.searchParams.get("deleted") === "true";
+  const filter = url.searchParams.get("filter") ?? "active";
+  const page = parseInt(url.searchParams.get("page") ?? "1", 10);
+  const pageSize = parseInt(url.searchParams.get("pageSize") ?? "10", 10);
 
-  const tenants = await prisma.tenant.findMany({
-    where: showDeleted ? undefined : { deleted: false }, // avoids `{}` as a "no filter"
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
+  const whereClause =
+    filter === "deleted"
+      ? { deleted: true }
+      : filter === "all"
+      ? undefined
+      : { deleted: false };
 
-  return Response.json(tenants);
+  const [tenants, total] = await Promise.all([
+    prisma.tenant.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.tenant.count({ where: whereClause }),
+  ]);
+
+  return Response.json({ tenants, total });
 }

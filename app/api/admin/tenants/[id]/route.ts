@@ -1,5 +1,6 @@
+// app/api/admin/tenants/[id]/route.ts
 import { currentUser } from "@clerk/nextjs/server";
-import { softDeleteTenant } from "@/lib/db/softDeleteTenant";
+import { prisma } from "@/lib/db/prisma";
 
 export const runtime = "nodejs";
 
@@ -12,7 +13,6 @@ export async function DELETE(request: Request) {
     return new Response("Unauthorized", { status: 403 });
   }
 
-  // ✅ Extract tenant ID from URL manually
   const url = new URL(request.url);
   const segments = url.pathname.split("/");
   const tenantId = segments[segments.indexOf("tenants") + 1];
@@ -22,10 +22,13 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    await softDeleteTenant(tenantId);
-    return new Response("Tenant soft-deleted", { status: 200 });
+    await prisma.tenant.delete({
+      where: { id: tenantId },
+    });
+
+    return new Response("Tenant permanently deleted", { status: 200 });
   } catch (error) {
-    console.error("Soft delete error:", error);
-    return new Response("Failed to delete tenant", { status: 500 });
+    console.error("Hard delete error:", error);
+    return new Response("Failed to hard delete tenant", { status: 500 });
   }
 }
