@@ -50,7 +50,6 @@ export default function PricingPage() {
     "monthly"
   );
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const router = useRouter();
 
   return (
@@ -145,11 +144,7 @@ export default function PricingPage() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  const params = new URLSearchParams({
-                    prefill_email: email,
-                    prefill_first_name: name,
-                    redirect_url: "/new-user/1",
-                  });
+                  const params = new URLSearchParams({ email });
                   router.push(`/sign-up?${params.toString()}`);
                 }}
                 className="flex flex-col sm:flex-row gap-2 w-full md:w-auto justify-end"
@@ -160,13 +155,6 @@ export default function PricingPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="px-4 py-2 border rounded-md text-sm w-full sm:w-56"
-                />
-                <input
-                  type="text"
-                  placeholder="Your first name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="px-4 py-2 border rounded-md text-sm w-full sm:w-44"
                 />
                 <button
                   type="submit"
