@@ -277,6 +277,7 @@ model Tenant {
   defaultTaxRateId Int?
   defaultTaxRate   TaxRate?           @relation("Tenant_defaultTaxRate", fields: [defaultTaxRateId], references: [id])
   deleted          Boolean            @default(false)
+  stripeCustomerId String?
   plan             PlanTier           @default(FREE)
   businesses       Business[]
   Customer         Customer[]
