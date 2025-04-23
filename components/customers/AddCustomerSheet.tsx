@@ -49,7 +49,6 @@ export default function AddCustomerSheet({
   });
 
   const onSubmit = async (data: CustomerFormValues) => {
-    console.log("Submitting invoice:", data);
     setFormError(null);
     try {
       const res = await fetch("/api/customers", {

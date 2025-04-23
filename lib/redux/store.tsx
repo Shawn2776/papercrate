@@ -8,7 +8,6 @@ import taxRatesReducer from "./slices/taxRatesSlice";
 import statusesReducer from "./slices/statusesSlice";
 import authReducer from "./slices/authSlice";
 import tenantReducer from "./slices/tenantSlice";
-import counterReducer from "./slices/counterSlice";
 import adminUsersReducer from "./slices/adminUsersSlice";
 import adminEnumsReducer from "./slices/adminEnumsSlice";
 import adminTenantsReducer from "./slices/adminTenantsSlice";
@@ -24,7 +23,6 @@ export const store = configureStore({
     statuses: statusesReducer,
     auth: authReducer,
     tenant: tenantReducer,
-    counter: counterReducer,
     adminUsers: adminUsersReducer,
     adminEnums: adminEnumsReducer,
     adminTenants: adminTenantsReducer,

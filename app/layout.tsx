@@ -21,10 +21,10 @@ export const metadata: Metadata = {
     template: "%s | PaperCrate.io",
   },
   description:
-    "PaperCrate is a Modern SaaS platform for invoicing, payments, and business onboarding.",
+    "PaperCrate is a modern SaaS platform for invoice management, payments, and streamlined business onboarding.",
   keywords: [
     "SaaS",
-    "invoicing",
+    "invoice management",
     "payments",
     "multi-tenant",
     "Clerk auth",

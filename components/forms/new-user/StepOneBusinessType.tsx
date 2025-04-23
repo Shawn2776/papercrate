@@ -1,6 +1,7 @@
+// components/forms/new-user/StepOneBusinessType.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Briefcase,
@@ -42,7 +43,12 @@ const businessTypes: BusinessType[] = [
   },
 ];
 
-const StepOneBusinessType = () => {
+interface StepOneBusinessTypeProps {
+  name?: string;
+  email?: string;
+}
+
+const StepOneBusinessType = ({ name, email }: StepOneBusinessTypeProps) => {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [selected, setSelected] = useState<string>("");
 
@@ -50,6 +56,15 @@ const StepOneBusinessType = () => {
   const step = useAppSelector((state) => state.onboarding.step);
 
   const router = useRouter();
+
+  useEffect(() => {
+    if (name || email) {
+      const payload: Record<string, string> = {};
+      if (name) payload.firstName = name;
+      if (email) payload.email = email;
+      dispatch(setFormData(payload));
+    }
+  }, [name, email, dispatch]);
 
   const handleSelect = async (type: BusinessType) => {
     setSelected(type.id);

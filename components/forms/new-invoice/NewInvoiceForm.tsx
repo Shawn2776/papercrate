@@ -286,7 +286,6 @@ export default function NewInvoiceFormLayout() {
 //     const mapped = Object.fromEntries(
 //       products.map((p) => [String(p.id), { ...p, price: Number(p.price) }])
 //     );
-//     console.log("📦 Full productMap:", mapped);
 //     return mapped;
 //   }, [products]);
 

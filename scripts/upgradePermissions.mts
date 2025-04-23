@@ -40,8 +40,6 @@ async function main() {
       data: { permissions: Array.from(new Set(newPermissions)) },
     });
   }
-
-  console.log("✅ Permissions updated!");
 }
 
 main().catch((e) => {
