@@ -1,12 +1,14 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { getErrorMessage } from "@/lib/utils/getErrorMessage";
-import { PlanTier } from "@prisma/client";
 
 export type Tenant = {
   id: string;
   name: string;
-  plan: PlanTier;
+  selectedPlan?: string; // Now the main field used for plan tier
+  billingCycle?: string;
+  stripeSubscriptionId?: string;
+  subscriptionStatus?: string;
   addressLine1?: string;
   addressLine2?: string | null;
   city?: string;

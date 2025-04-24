@@ -28,6 +28,10 @@ export async function GET() {
     id: m.tenant.id,
     name: m.tenant.name,
     plan: m.tenant.plan,
+    selectedPlan: m.tenant.selectedPlan, // ✅ add this
+    billingCycle: m.tenant.billingCycle, // ✅ add this
+    stripeSubscriptionId: m.tenant.stripeSubscriptionId, // ✅ add this
+    subscriptionStatus: m.tenant.subscriptionStatus, // ✅ add this
     addressLine1: m.tenant.addressLine1,
     addressLine2: m.tenant.addressLine2,
     city: m.tenant.city,

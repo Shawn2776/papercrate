@@ -38,7 +38,7 @@ export const TenantSwitcher = () => {
   const handleSwitch = (value: string) => {
     if (value === "__create__") {
       const currentPlan = currentTenant?.plan ?? "FREE";
-      const isLimited = currentPlan === "FREE" || currentPlan === "BASIC";
+      const isLimited = currentPlan === "FREE" || currentPlan === "ENHANCED";
       const alreadyHasOne = tenants.length >= 1;
 
       if (isLimited && alreadyHasOne) {
