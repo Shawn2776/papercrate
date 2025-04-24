@@ -73,6 +73,26 @@ export default function StepFiveReviewSubmit() {
       return;
     }
 
+    const data = await res.json();
+    const plan = formData.plan || "free";
+
+    if (plan !== "free") {
+      const stripeRes = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+
+      const stripeData = await stripeRes.json();
+      if (stripeRes.ok && stripeData.url) {
+        window.location.href = stripeData.url;
+        return;
+      }
+
+      console.error("Stripe error:", stripeData);
+      return;
+    }
+
     dispatch(resetOnboarding());
     router.push("/new-user/success");
   };

@@ -69,8 +69,8 @@ export async function POST(req: NextRequest) {
       payment_method_types: ["card"],
       customer: stripeCustomerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing/success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing/cancel`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/new-user/success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/new-user/5`,
       metadata: {
         tenantId,
         userId: user.id,

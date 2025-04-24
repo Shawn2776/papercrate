@@ -87,32 +87,6 @@ const StepOneBusinessType = ({ name, email }: StepOneBusinessTypeProps) => {
       dispatch(setFormData({ businessType: type.id }));
       dispatch(setStep(step + 1));
 
-      if (plan && plan !== "free") {
-        try {
-          const checkoutRes = await fetch(
-            "/api/stripe/create-checkout-session",
-            {
-              method: "POST",
-              body: JSON.stringify({ plan }),
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-
-          const data = await checkoutRes.json();
-          if (checkoutRes.ok && data?.url) {
-            window.location.href = data.url;
-            return;
-          } else {
-            setErrorMessage(data?.error || "Stripe checkout failed");
-            return;
-          }
-        } catch (err) {
-          console.error("Stripe checkout error", err);
-          setErrorMessage("Failed to redirect to Stripe Checkout.");
-          return;
-        }
-      }
-
       router.push(`/new-user/2`);
     } catch (err) {
       setErrorMessage("Server error. Please try again.");
