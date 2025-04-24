@@ -1,0 +1,54 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  VOID
+}
+
+model User {
+  id         String    @id @default(cuid())
+  clerkId    String    @unique
+  email      String    @unique
+  name       String?
+  businessId String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted    Boolean   @default(false)
+  business   Business? @relation(fields: [businessId], references: [id])
+}
+
+model Business {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deleted   Boolean   @default(false)
+  users     User[]
+  invoices  Invoice[]
+}
+
+model Invoice {
+  id         String        @id @default(cuid())
+  number     String
+  amount     Decimal       @db.Decimal(10, 2)
+  dueDate    DateTime
+  businessId String
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deleted    Boolean       @default(false)
+  status     InvoiceStatus @default(DRAFT)
+  business   Business      @relation(fields: [businessId], references: [id])
+}
