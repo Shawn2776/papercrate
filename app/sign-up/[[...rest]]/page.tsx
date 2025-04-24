@@ -8,6 +8,12 @@ import Image from "next/image";
 export default function Page() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
+  const plan = searchParams.get("plan") || "";
+
+  // Persist plan + email in localStorage before Clerk clears app state
+  if (typeof window !== "undefined") {
+    localStorage.setItem("onboarding_prefill", JSON.stringify({ email, plan }));
+  }
 
   return (
     <div className="flex min-h-screen">

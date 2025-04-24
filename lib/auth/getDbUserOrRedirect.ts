@@ -1,16 +1,23 @@
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { prisma } from "../db/prisma";
+import type { User, TenantMembership } from "@prisma/client";
 
-// lib/getDbUser.ts
-export async function getDbUserOrRedirect() {
+export async function getDbUserOrRedirect(): Promise<
+  User & { memberships: TenantMembership[] }
+> {
   const { userId: clerkId } = await auth();
-  if (!clerkId) redirect("/sign-in");
+  if (!clerkId) {
+    throw new Error("UNAUTHORIZED");
+  }
+
   const dbUser = await prisma.user.findUnique({
     where: { clerkId },
     include: { memberships: true },
   });
-  if (!dbUser) redirect("/new-user/1");
+
+  if (!dbUser) {
+    throw new Error("USER_NOT_FOUND");
+  }
 
   return dbUser;
 }

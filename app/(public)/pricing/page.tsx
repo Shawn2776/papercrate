@@ -12,14 +12,16 @@ const plans = [
     annual: "$0/yr",
     features: ["Create invoices", "Track expenses"],
     button: "Start Free",
+    id: "free",
   },
   {
-    title: "Basic",
+    title: "Enhanced",
     desc: "Ideal for small teams or freelancers.",
     monthly: "$5/mo",
     annual: "$50/yr",
     features: ["Single tenant", "Up to 3 users", "Custom Branding"],
-    button: "Choose Basic",
+    button: "Choose Enhanced",
+    id: "enhanced",
   },
   {
     title: "Pro",
@@ -29,6 +31,7 @@ const plans = [
     features: ["Up to 3 tenants", "Up to 10 users", "Audit logs"],
     button: "Go Pro",
     highlight: true,
+    id: "pro",
   },
   {
     title: "Enterprise",
@@ -42,6 +45,7 @@ const plans = [
     ],
     button: "Coming Soon",
     outline: true,
+    id: "enterprise",
   },
 ];
 
@@ -51,6 +55,14 @@ export default function PricingPage() {
   );
   const [email, setEmail] = useState("");
   const router = useRouter();
+
+  const handlePlanSelect = (planId: string) => {
+    const params = new URLSearchParams({
+      email,
+      plan: planId,
+    });
+    router.push(`/sign-up?${params.toString()}`);
+  };
 
   return (
     <div className="">
@@ -118,6 +130,8 @@ export default function PricingPage() {
                     ? "bg-muted text-foreground border border-input hover:bg-accent"
                     : "bg-primary text-primary-foreground hover:opacity-90"
                 }`}
+                disabled={plan.outline}
+                onClick={() => handlePlanSelect(plan.id)}
               >
                 {plan.button}
               </button>
@@ -130,7 +144,7 @@ export default function PricingPage() {
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="md:text-left text-center w-full md:w-auto">
-                <p className="text-lg font-semibold">
+                <p className="text-lg font-semibold flex flex-col">
                   <span className="block md:inline">
                     Send your first invoice today
                   </span>{" "}

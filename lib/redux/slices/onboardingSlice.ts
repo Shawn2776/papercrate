@@ -1,3 +1,4 @@
+// lib/redux/slices/onboardingSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   loadFromLocalStorage,
@@ -22,6 +23,7 @@ export interface FormData {
   onlineStatus?: "online" | "notOnline";
   onlineLink?: string | null;
   tenantId?: string;
+  plan?: "free" | "enhanced" | "pro" | "enterprise"; // ✅ added plan
 }
 
 // This is the shape of the whole Redux slice state.
