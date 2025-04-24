@@ -125,7 +125,18 @@ enum ProductIdentifierType {
 
 enum PlanTier {
   FREE
-  BASIC
+  ENHANCED
+  PRO
+  ENTERPRISE
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+enum SelectedPlan {
+  ENHANCED
   PRO
   ENTERPRISE
 }
@@ -280,6 +291,8 @@ model Tenant {
   stripeCustomerId     String?
   stripeSubscriptionId String?
   subscriptionStatus   String?
+  selectedPlan         SelectedPlan?
+  billingCycle         BillingCycle?
   plan                 PlanTier           @default(FREE)
   businesses           Business[]
   Customer             Customer[]

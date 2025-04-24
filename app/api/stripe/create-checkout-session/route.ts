@@ -11,34 +11,33 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: NextRequest) {
   try {
-    const { plan } = await req.json(); // expects { plan: "basic" | "pro" | ... }
+    const { plan, billingCycle = "monthly" } = await req.json();
 
-    // 🔐 Get DB user (via Clerk ID)
+    if (
+      !["enhanced", "pro"].includes(plan) ||
+      !["monthly", "annual"].includes(billingCycle)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid plan or billing cycle" },
+        { status: 400 }
+      );
+    }
+
     const user = await getDbUserOrRedirect();
-
-    // 🔐 Get their active tenant
     const tenantId = await requireTenant(user.id);
 
-    // 🎯 Get the tenant record
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-    });
-
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
     if (!tenant) {
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
-    // 👤 Ensure Stripe customer exists
+    // 👤 Create Stripe customer if needed
     let stripeCustomerId = tenant.stripeCustomerId;
-
     if (!stripeCustomerId) {
       const customer = await stripe.customers.create({
         email: tenant.email || undefined,
         name: tenant.name,
-        metadata: {
-          tenantId,
-          userId: user.id,
-        },
+        metadata: { tenantId, userId: user.id },
       });
 
       stripeCustomerId = customer.id;
@@ -49,21 +48,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 💵 Map your frontend plan keys to Stripe price IDs
+    // 💵 Plan → Price ID mapping
     const priceMap: Record<string, string> = {
-      free: process.env.STRIPE_PRICE_FREE!,
-      basic: process.env.STRIPE_PRICE_BASIC!,
-      pro: process.env.STRIPE_PRICE_PRO!,
-      enterprise: process.env.STRIPE_PRICE_ENTERPRISE!,
+      enhanced_monthly: process.env.STRIPE_PRICE_ENHANCED_MONTHLY!,
+      enhanced_annual: process.env.STRIPE_PRICE_ENHANCED_ANNUAL!,
+      pro_monthly: process.env.STRIPE_PRICE_PRO_MONTHLY!,
+      pro_annual: process.env.STRIPE_PRICE_PRO_ANNUAL!,
     };
 
-    const priceId = priceMap[plan];
+    const priceKey = `${plan}_${billingCycle}`;
+    const priceId = priceMap[priceKey];
 
     if (!priceId) {
-      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+      return NextResponse.json(
+        { error: `Missing Stripe price for ${priceKey}` },
+        { status: 400 }
+      );
     }
 
-    // 🎟️ Create Stripe Checkout Session
+    // 🧾 Create Checkout session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
@@ -75,6 +78,17 @@ export async function POST(req: NextRequest) {
         tenantId,
         userId: user.id,
         plan,
+        billingCycle,
+        app: "PaperCrate",
+      },
+    });
+
+    // ✅ Persist selected plan and billingCycle on tenant
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: {
+        selectedPlan: plan,
+        billingCycle,
       },
     });
 

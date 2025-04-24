@@ -1,3 +1,4 @@
+// app/new-user/5/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -30,6 +31,7 @@ export default function StepFiveReviewSubmit() {
   const [editMode, setEditMode] = useState(false);
   const [localData, setLocalData] = useState({ ...formData });
   const [subcategories, setSubcategories] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (localData.businessCategory) {
@@ -62,39 +64,50 @@ export default function StepFiveReviewSubmit() {
   };
 
   const handleSubmit = async () => {
-    const res = await fetch("/api/new-user/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-    if (!res.ok) {
-      console.error("Submission failed");
-      return;
-    }
-
-    const data = await res.json();
-    const plan = formData.plan || "free";
-
-    if (plan !== "free") {
-      const stripeRes = await fetch("/api/stripe/create-checkout-session", {
+    try {
+      const res = await fetch("/api/new-user/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify(formData),
       });
 
-      const stripeData = await stripeRes.json();
-      if (stripeRes.ok && stripeData.url) {
-        window.location.href = stripeData.url;
+      if (!res.ok) {
+        console.error("Submission failed");
         return;
       }
 
-      console.error("Stripe error:", stripeData);
-      return;
-    }
+      const { tenantId } = await res.json();
+      dispatch(setFormData({ tenantId }));
 
-    dispatch(resetOnboarding());
-    router.push("/new-user/success");
+      const plan = formData.plan || "free";
+      if (plan !== "free") {
+        const stripeRes = await fetch("/api/stripe/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan,
+            billingCycle: formData.billingCycle || "monthly",
+          }),
+        });
+
+        const stripeData = await stripeRes.json();
+        if (stripeRes.ok && stripeData.url) {
+          window.location.href = stripeData.url;
+          return;
+        }
+
+        console.error("Stripe error:", stripeData);
+        return;
+      }
+
+      dispatch(resetOnboarding());
+      router.push("/new-user/success");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderField = (label: string, field: keyof typeof localData) => (
@@ -129,75 +142,6 @@ export default function StepFiveReviewSubmit() {
           )}
         </div>
         <CardContent className="grid gap-4">
-          {editMode ? (
-            <div className="grid grid-cols-2 items-center gap-4">
-              <Label className="font-semibold text-right pr-2">
-                Business Type
-              </Label>
-              <select
-                value={localData.businessType || ""}
-                onChange={(e) => handleChange("businessType", e.target.value)}
-                className="border rounded p-2"
-              >
-                <option value="">Select one</option>
-                <option value="sole-proprietorship">Sole Proprietorship</option>
-                <option value="partnership">Partnership</option>
-                <option value="llc">LLC</option>
-                <option value="corporation">Corporation</option>
-                <option value="unincorporated">Unincorporated</option>
-                <option value="individual">Individual</option>
-              </select>
-            </div>
-          ) : (
-            renderField("Business Type", "businessType")
-          )}
-
-          {editMode ? (
-            <div className="grid grid-cols-2 items-center gap-4">
-              <Label className="font-semibold text-right pr-2">Category</Label>
-              <select
-                value={localData.businessCategory || ""}
-                onChange={(e) =>
-                  handleChange("businessCategory", e.target.value)
-                }
-                className="border rounded p-2"
-              >
-                <option value="">Select one</option>
-                {Object.entries(businessCategories).map(([key, { name }]) => (
-                  <option key={key} value={key}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : (
-            renderField("Category", "businessCategory")
-          )}
-
-          {editMode && subcategories.length > 0 ? (
-            <div className="grid grid-cols-2 items-center gap-4">
-              <Label className="text-right font-semibold pr-2">
-                Subcategory
-              </Label>
-              <select
-                value={localData.businessSubcategory}
-                onChange={(e) =>
-                  handleChange("businessSubcategory", e.target.value)
-                }
-                className="border rounded p-2"
-              >
-                <option value="">Select one</option>
-                {subcategories.map((sub) => (
-                  <option key={sub} value={sub}>
-                    {sub}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : (
-            renderField("Subcategory", "businessSubcategory")
-          )}
-
           {renderField("Legal Name", "legalBusinessName")}
           {renderField("Doing Business As", "doingBusinessAs")}
           {renderField("EIN", "ein")}
@@ -210,36 +154,31 @@ export default function StepFiveReviewSubmit() {
 
           <div className="grid grid-cols-2 items-center gap-4">
             <Label className="text-right font-semibold pr-2">
-              Online Status
+              Billing Cycle
             </Label>
-            {editMode ? (
-              <div className="flex gap-6">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="online"
-                    checked={localData.onlineStatus === "online"}
-                    onChange={() => handleChange("onlineStatus", "online")}
-                  />
-                  Online
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    value="notOnline"
-                    checked={localData.onlineStatus === "notOnline"}
-                    onChange={() => handleChange("onlineStatus", "notOnline")}
-                  />
-                  Not Online
-                </label>
-              </div>
-            ) : (
-              <p>{localData.onlineStatus}</p>
-            )}
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="billingCycle"
+                  value="monthly"
+                  checked={localData.billingCycle === "monthly"}
+                  onChange={() => handleChange("billingCycle", "monthly")}
+                />
+                Monthly
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="billingCycle"
+                  value="annual"
+                  checked={localData.billingCycle === "annual"}
+                  onChange={() => handleChange("billingCycle", "annual")}
+                />
+                Annual (Save 20%)
+              </label>
+            </div>
           </div>
-
-          {localData.onlineStatus === "online" &&
-            renderField("Online Link", "onlineLink")}
 
           <div className="flex gap-2 mt-6">
             <Button onClick={handleBack} className="w-1/2 rounded-none">
@@ -250,7 +189,11 @@ export default function StepFiveReviewSubmit() {
                 Save
               </Button>
             ) : (
-              <Button onClick={handleSubmit} className="w-1/2 rounded-none">
+              <Button
+                onClick={handleSubmit}
+                className="w-1/2 rounded-none"
+                disabled={isSubmitting}
+              >
                 Submit
               </Button>
             )}

@@ -23,7 +23,8 @@ export interface FormData {
   onlineStatus?: "online" | "notOnline";
   onlineLink?: string | null;
   tenantId?: string;
-  plan?: "free" | "enhanced" | "pro" | "enterprise"; // ✅ added plan
+  plan?: "free" | "enhanced" | "pro" | "enterprise";
+  billingCycle?: "monthly" | "annual";
 }
 
 // This is the shape of the whole Redux slice state.

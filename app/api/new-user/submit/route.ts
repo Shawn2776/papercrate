@@ -19,6 +19,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // 🔍 Ensure user exists
   let dbUser = await prisma.user.findUnique({
     where: { clerkId: clerkUser.id },
   });
@@ -36,8 +37,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = await req.json();
   const parsed = TenantSchema.safeParse(body);
   if (!parsed.success) {
-    console.dir(parsed.error.format(), { depth: null });
-
     return NextResponse.json(
       { error: parsed.error.flatten() },
       { status: 400 }
@@ -48,6 +47,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const prismaWithContext = prismaWithUser(dbUser.id);
 
   try {
+    // 🛑 Prevent duplicate tenant if already exists for user + name
+    const existing = await prisma.tenant.findFirst({
+      where: {
+        name: data.legalBusinessName,
+        memberships: {
+          some: { userId: dbUser.id },
+        },
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json({ tenantId: existing.id }, { status: 200 });
+    }
+
+    // 🏢 Create tenant and membership
     const tenant = await prismaWithContext.tenant.create({
       data: {
         name: data.legalBusinessName,
@@ -69,7 +83,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       },
     });
 
-    const business = await prismaWithContext.business.create({
+    // 🧾 Create business record
+    await prismaWithContext.business.create({
       data: {
         businessType: data.businessType,
         businessCategory: data.businessCategory,
@@ -92,13 +107,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       },
     });
 
-    return NextResponse.json(business, { status: 201 });
+    // ✅ Return tenantId explicitly so Stripe checkout can use it
+    return NextResponse.json({ tenantId: tenant.id }, { status: 201 });
   } catch (err: unknown) {
     console.error("Error creating tenant/business:", err);
     const message =
       err instanceof Error ? err.message : "An unknown error occurred";
     return NextResponse.json({ error: message }, { status: 500 });
   } finally {
-    await prismaWithContext.$disconnect(); // ✅ prevents connection leaks
+    await prismaWithContext.$disconnect();
   }
 }
