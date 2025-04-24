@@ -255,37 +255,39 @@ model TenantMembership {
 }
 
 model Tenant {
-  id               String             @id @default(cuid())
-  name             String
-  companyName      String?
-  addressLine1     String?
-  addressLine2     String?
-  city             String?
-  state            String?
-  zip              String?
-  zipPlus4         String?
-  email            String?
-  website          String?
-  isUspsValidated  Boolean            @default(false)
-  createdAt        DateTime           @default(now())
-  invoiceCounter   Int                @default(1)
-  invoiceFormat    String?
-  invoicePrefix    String?
-  isInvoiceSetup   Boolean            @default(false)
-  autoResetYearly  Boolean            @default(false)
-  lastResetYear    Int?
-  defaultTaxRateId Int?
-  defaultTaxRate   TaxRate?           @relation("Tenant_defaultTaxRate", fields: [defaultTaxRateId], references: [id])
-  deleted          Boolean            @default(false)
-  stripeCustomerId String?
-  plan             PlanTier           @default(FREE)
-  businesses       Business[]
-  Customer         Customer[]
-  products         Product[]
-  memberships      TenantMembership[]
-  Invoice          Invoice[]
-  Order            Order[]
-  InvoiceSettings  InvoiceSettings[]
+  id                   String             @id @default(cuid())
+  name                 String
+  companyName          String?
+  addressLine1         String?
+  addressLine2         String?
+  city                 String?
+  state                String?
+  zip                  String?
+  zipPlus4             String?
+  email                String?
+  website              String?
+  isUspsValidated      Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  invoiceCounter       Int                @default(1)
+  invoiceFormat        String?
+  invoicePrefix        String?
+  isInvoiceSetup       Boolean            @default(false)
+  autoResetYearly      Boolean            @default(false)
+  lastResetYear        Int?
+  defaultTaxRateId     Int?
+  defaultTaxRate       TaxRate?           @relation("Tenant_defaultTaxRate", fields: [defaultTaxRateId], references: [id])
+  deleted              Boolean            @default(false)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  subscriptionStatus   String?
+  plan                 PlanTier           @default(FREE)
+  businesses           Business[]
+  Customer             Customer[]
+  products             Product[]
+  memberships          TenantMembership[]
+  Invoice              Invoice[]
+  Order                Order[]
+  InvoiceSettings      InvoiceSettings[]
 }
 
 model InvoiceVersion {
