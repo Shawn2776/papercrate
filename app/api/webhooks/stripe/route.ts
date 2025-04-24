@@ -1,60 +1,124 @@
 // app/api/webhooks/stripe/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { headers as nextHeaders } from "next/headers";
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/db/prisma";
-import { SelectedPlan } from "@prisma/client";
+import { BillingCycle, SelectedPlan } from "@prisma/client";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-03-31.basil", // match your dashboard version
+  apiVersion: "2025-03-31.basil",
 });
 
-export async function POST(req: NextRequest) {
-  const rawBody = await req.text();
-  const sig = req.headers.get("stripe-signature");
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+
+export async function POST(req: Request) {
+  const body = await req.text();
+  const headers = req.headers;
+  const sig = headers.get("stripe-signature");
 
   if (!sig) {
-    return new NextResponse("Missing signature", { status: 400 });
+    return new NextResponse("Missing Stripe signature", { status: 400 });
   }
 
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      rawBody,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
   } catch (err) {
-    console.error("Webhook signature verification failed.", err);
-    return new NextResponse("Webhook Error", { status: 400 });
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    console.error("⚠️ Webhook signature verification failed:", errorMessage);
+    return new NextResponse(`Webhook Error: ${errorMessage}`, { status: 400 });
   }
 
-  const data = event.data.object as Stripe.Subscription;
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const subscriptionId = session.subscription as string;
+      const customerId = session.customer as string;
+      const metadata = session.metadata;
 
-  if (event.type.startsWith("customer.subscription.")) {
-    const tenantId = data.metadata?.tenantId;
-    const selectedPlan = data.metadata?.plan?.toUpperCase();
-    const subscriptionStatus = data.status;
-    const stripeSubscriptionId = data.id;
+      if (!metadata?.tenantId || !metadata?.plan || !metadata?.billingCycle) {
+        console.warn("Missing metadata on checkout.session.completed");
+        break;
+      }
 
-    if (!tenantId) {
-      console.warn("No tenantId in subscription metadata");
-      return NextResponse.json({ received: true });
+      const selectedPlanString = metadata.plan.toUpperCase();
+      const billingCycleString = metadata.billingCycle.toUpperCase();
+
+      if (
+        !Object.values(SelectedPlan).includes(
+          selectedPlanString as SelectedPlan
+        ) ||
+        !Object.values(BillingCycle).includes(
+          billingCycleString as BillingCycle
+        )
+      ) {
+        console.warn("Invalid SelectedPlan or BillingCycle");
+        break;
+      }
+
+      await prisma.tenant.update({
+        where: { id: metadata.tenantId },
+        data: {
+          stripeCustomerId: customerId,
+          stripeSubscriptionId: subscriptionId,
+          selectedPlan: selectedPlanString as SelectedPlan,
+          billingCycle: billingCycleString as BillingCycle,
+          subscriptionStatus: "active",
+        },
+      });
+
+      break;
     }
 
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: {
-        selectedPlan: {
-          set: data.metadata?.plan?.toUpperCase() as SelectedPlan,
-        },
-        subscriptionStatus,
-        stripeSubscriptionId,
-      },
-    });
+    case "invoice.paid": {
+      const invoice = event.data.object as Stripe.Invoice;
+      const customerId = invoice.customer as string;
+      const subscriptionId = invoice.subscription as string;
 
-    console.log(`✅ Updated tenant ${tenantId} with Stripe info.`);
+      const tenant = await prisma.tenant.findFirst({
+        where: { stripeCustomerId: customerId },
+      });
+
+      if (tenant) {
+        await prisma.tenant.update({
+          where: { id: tenant.id },
+          data: {
+            stripeSubscriptionId: subscriptionId,
+            subscriptionStatus: "active",
+          },
+        });
+      }
+
+      break;
+    }
+
+    case "customer.subscription.deleted": {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+
+      const tenant = await prisma.tenant.findFirst({
+        where: { stripeCustomerId: customerId },
+      });
+
+      if (tenant) {
+        await prisma.tenant.update({
+          where: { id: tenant.id },
+          data: {
+            stripeSubscriptionId: null,
+            selectedPlan: null,
+            billingCycle: null,
+            subscriptionStatus: "cancelled",
+          },
+        });
+      }
+
+      break;
+    }
+
+    default:
+      console.log(`Unhandled event type ${event.type}`);
   }
 
-  return NextResponse.json({ received: true });
+  return new NextResponse(null, { status: 200 });
 }
