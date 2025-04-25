@@ -11,6 +11,8 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -59,6 +61,11 @@ export default function ProductPage() {
 
   return (
     <div className="max-w-xl mx-auto p-6 space-y-4">
+      <Link href="/dashboard/products" className="inline-block mb-4">
+        <Button variant="ghost" className="rounded-none">
+          <ChevronLeft /> Back to Products
+        </Button>
+      </Link>
       <Card className="rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden">
         {/* Header image / emoji */}
         <div className="relative h-36 bg-muted flex items-center justify-center text-6xl">

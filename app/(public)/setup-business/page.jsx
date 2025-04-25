@@ -7,7 +7,7 @@ import { useUser } from "@clerk/nextjs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { businessSchema } from "@/lib/schemas/business";
+import { initialBusinessSchema } from "@/lib/schemas/business";
 
 export default function SetupBusinessPage() {
   const { user } = useUser();
@@ -29,7 +29,7 @@ export default function SetupBusinessPage() {
     setLoading(true);
     setErrors([]);
 
-    const parsed = businessSchema.safeParse({ name, email });
+    const parsed = initialBusinessSchema.safeParse({ name, email });
 
     if (!parsed.success) {
       setErrors(parsed.error.errors.map((err) => err.message));
@@ -37,7 +37,7 @@ export default function SetupBusinessPage() {
       return;
     }
 
-    const res = await fetch("/api/business/create", {
+    const res = await fetch("/api/business", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parsed.data),

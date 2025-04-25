@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { MapPin, Mail, Building, Phone, Globe } from "lucide-react";
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -32,7 +33,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    fetch("/api/business/me")
+    fetch("/api/business")
       .then((res) => {
         if (res.status === 404) {
           router.push("/setup-business");
@@ -41,31 +42,17 @@ export default function DashboardPage() {
         }
       })
       .then((data) => {
-        if (data) setBusiness(data);
+        if (data) {
+          console.log("📦 Business data from API:", data); // 🔍 ADD THIS
+          setBusiness(data);
+        }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Error fetching business:", error);
         router.push("/setup-business");
       })
       .finally(() => {
         setLoading(false);
-      });
-
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching products:", error);
-      });
-
-    fetch("/api/customers")
-      .then((res) => res.json())
-      .then((data) => {
-        setCustomers(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching customers:", error);
       });
   }, [router]);
 
@@ -82,24 +69,71 @@ export default function DashboardPage() {
         {/* Business Info */}
         <Card>
           <CardHeader>
-            <CardTitle>Your Business</CardTitle>
+            <CardTitle className="text-lg">Your Business</CardTitle>
           </CardHeader>
-          <CardContent>
-            {business ? (
-              <>
+          <CardContent className="space-y-3 text-sm">
+            {/* Name & Email */}
+            <div className="flex items-start gap-2">
+              <Building className="w-4 h-4 mt-1 text-muted-foreground" />
+              <div>
+                <p className="font-medium">{business.name}</p>
+                <p className="text-muted-foreground">{business.email}</p>
+              </div>
+            </div>
+
+            {/* Phone */}
+            {business.phone && (
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-muted-foreground" />
                 <p>
-                  <strong>Name:</strong> {business.name}
+                  {business.phone
+                    .replace(/\D/g, "")
+                    .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
                 </p>
-                <p>
-                  <strong>Email:</strong> {business.email}
-                </p>
-                <Button className="mt-4" variant="outline">
-                  Edit Business
-                </Button>
-              </>
-            ) : (
-              <p>Loading business info...</p>
+              </div>
             )}
+
+            {/* Address */}
+            {(business.addressLine1 || business.city || business.state) && (
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
+                <div>
+                  <p>
+                    {business.addressLine1}
+                    {business.addressLine2 ? `, ${business.addressLine2}` : ""}
+                  </p>
+                  <p>
+                    {business.city}, {business.state} {business.postalCode}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Website */}
+            {business.website && (
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-muted-foreground" />
+                <a
+                  href={business.website}
+                  className="text-blue-600 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {business.website.replace(/^https?:\/\//, "")}
+                </a>
+              </div>
+            )}
+
+            {/* Edit Button */}
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => router.push("/dashboard/business/edit")}
+              >
+                Edit Business
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -145,9 +179,9 @@ export default function DashboardPage() {
                 <TableCaption>A list of your recent products.</TableCaption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[100px]">Invoice</TableHead>
+                    <TableHead>Invoice</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead>unit</TableHead>
+                    <TableHead>Unit</TableHead>
                     <TableHead className="text-right">Amount</TableHead>
                     <TableHead className="text-right">Stock</TableHead>
                     <TableHead className="text-right">Total</TableHead>
@@ -208,7 +242,7 @@ export default function DashboardPage() {
                 <TableCaption>A list of your recent customers.</TableCaption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[100px]">Customer Name</TableHead>
+                    <TableHead>Customer Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead className="text-right">Address</TableHead>
@@ -227,7 +261,7 @@ export default function DashboardPage() {
                           .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
                       </TableCell>
                       <TableCell className="text-right">
-                        {customer.address.split("\n").map((line, i) => (
+                        {customer.address?.split("\n").map((line, i) => (
                           <p key={i}>{line}</p>
                         ))}
                       </TableCell>
