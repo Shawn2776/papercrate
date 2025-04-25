@@ -5,6 +5,15 @@ import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -15,7 +24,11 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push("/customers/new");
+    router.push("/dashboard/products/new");
+  };
+
+  const handleNewCustomer = () => {
+    router.push("/dashboard/customers/new");
   };
 
   useEffect(() => {
@@ -113,19 +126,54 @@ export default function DashboardPage() {
         </Card>
 
         {/* Product List */}
-        <Card className="sm:col-span-2">
+        <Card className="sm:col-span-3">
           <CardHeader>
-            <CardTitle>Products</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Products</CardTitle>
+              <Button
+                variant="outline"
+                className="rounded-none hover:cursor-pointer hover:bg-gray-100"
+                onClick={handleClick}
+              >
+                Add Product
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {products.length > 0 ? (
-              <ul className="space-y-2">
-                {products.map((product) => (
-                  <li key={product.id}>
-                    <strong>{product.name}</strong> – ${product.price}
-                  </li>
-                ))}
-              </ul>
+              <Table>
+                <TableCaption>A list of your recent invoices.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">Invoice</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>unit</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead className="text-right">Stock</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="font-medium">
+                        {product.name}
+                      </TableCell>
+                      <TableCell>{product.description}</TableCell>
+                      <TableCell>{product.unit}</TableCell>
+                      <TableCell className="text-right">
+                        ${product.price}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {product.quantity}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        ${(product.price * product.quantity).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
               <p>
                 <Button onClick={handleClick}>Add Product</Button>
@@ -135,23 +183,55 @@ export default function DashboardPage() {
         </Card>
 
         {/* Customer List */}
-        <Card className="sm:col-span-2">
+        <Card className="sm:col-span-3">
           <CardHeader>
-            <CardTitle>Customers</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>Customers</CardTitle>
+              <Button
+                variant="outline"
+                className="rounded-none hover:cursor-pointer hover:bg-gray-100"
+                onClick={handleNewCustomer}
+              >
+                Add Customer
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {customers.length > 0 ? (
-              <ul className="space-y-2">
-                {customers.map((customer) => (
-                  <li key={customer.id}>
-                    <strong>{customer.name}</strong> –{" "}
-                    {customer.email || "No email"}
-                  </li>
-                ))}
-              </ul>
+              <Table>
+                <TableCaption>A list of your recent customers.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">Customer Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-right">Address</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customers.map((customer) => (
+                    <TableRow key={customer.id}>
+                      <TableCell className="font-medium">
+                        {customer.name}
+                      </TableCell>
+                      <TableCell>{customer.email}</TableCell>
+                      <TableCell>
+                        {customer.phone
+                          .replace(/\D/g, "")
+                          .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {customer.address.split("\n").map((line, i) => (
+                          <p key={i}>{line}</p>
+                        ))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
               <p>
-                <Button onClick={handleClick}>Add Customer</Button>
+                <Button onClick={handleClick}>Add Product</Button>
               </p>
             )}
           </CardContent>

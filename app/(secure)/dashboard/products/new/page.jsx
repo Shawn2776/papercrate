@@ -1,10 +1,10 @@
-import NewCustomerForm from "@/components/forms/customer/NewCustomerForm";
+import NewProductForm from "@/components/forms/products/NewProductForm";
 import React from "react";
 
 const NewProductPage = () => {
   return (
     <div>
-      <NewCustomerForm />
+      <NewProductForm />
     </div>
   );
 };

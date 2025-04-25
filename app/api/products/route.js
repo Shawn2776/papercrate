@@ -39,20 +39,27 @@ export async function POST(req) {
     return new NextResponse("No business found", { status: 404 });
   }
 
-  const { name, description, price } = await req.json();
+  const { name, description, price, unit, quantity } = await req.json();
 
-  if (!name || !price) {
+  if (!name || !price || !unit || !quantity) {
     return new NextResponse("Missing required fields", { status: 400 });
   }
 
-  const product = await prisma.product.create({
-    data: {
-      name,
-      description,
-      price,
-      businessId: dbUser.businessId,
-    },
-  });
+  try {
+    const product = await prisma.product.create({
+      data: {
+        name,
+        description,
+        price,
+        unit,
+        quantity,
+        businessId: dbUser.businessId,
+      },
+    });
 
-  return NextResponse.json(product, { status: 201 });
+    return NextResponse.json(product, { status: 201 }); // ✅ moved inside
+  } catch (error) {
+    console.error("Error creating product:", error);
+    return new NextResponse("Error creating product", { status: 500 });
+  }
 }
