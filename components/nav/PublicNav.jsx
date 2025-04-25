@@ -11,12 +11,12 @@ const PublicNav = () => {
       <header className="w-full py-4 px-6 border-b flex justify-between items-center">
         <h1 className="text-xl font-bold text-primary">PaperCrate</h1>
         <nav className="space-x-4 flex items-center">
-          <Link href="/features" className="hover:underline">
+          {/* <Link href="/features" className="hover:underline">
             Features
           </Link>
           <Link href="/pricing" className="hover:underline">
             Pricing
-          </Link>
+          </Link> */}
           <SignedOut>
             <SignUpButton />
           </SignedOut>

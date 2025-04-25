@@ -5,6 +5,11 @@ import { prisma } from "@/lib/db";
 const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
 
 export async function POST(req) {
+  if (!webhookSecret) {
+    console.error("Missing CLERK_WEBHOOK_SECRET");
+    return new Response("Server error", { status: 500 });
+  }
+
   const payload = await req.text();
   const headerPayload = await headers();
 
@@ -40,16 +45,18 @@ export async function POST(req) {
     await prisma.user.upsert({
       where: { email },
       update: {
-        name: data.first_name || "Unnamed",
+        name: data.first_name || data.username || "Unnamed",
         clerkId: data.id,
       },
       create: {
         email,
-        name: data.first_name || "Unnamed",
+        name: data.first_name || data.username || "Unnamed",
         clerkId: data.id,
       },
     });
   }
+
+  console.log("Unhandled event type:", type);
 
   return new Response("Webhook received", { status: 200 });
 }
