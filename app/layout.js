@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider, UserButton } from "@clerk/nextjs";
-import PublicNav from "@/components/nav/PublicNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +25,7 @@ export default function RootLayout({ children }) {
           suppressHydrationWarning
           className={`${geistSans.variable} ${geistMono.variable} antialiased w-full min-h-screen`}
         >
-          <PublicNav /> {children}
+          {children}
         </body>
       </html>
     </ClerkProvider>

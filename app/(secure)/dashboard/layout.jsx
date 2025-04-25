@@ -1,7 +1,13 @@
+import PublicNav from "@/components/nav/PublicNav";
 import React from "react";
 
 const DashboardLayout = ({ children }) => {
-  return <div>{children}</div>;
+  return (
+    <div>
+      <PublicNav />
+      {children}
+    </div>
+  );
 };
 
 export default DashboardLayout;

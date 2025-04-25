@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { businessSchema } from "@/lib/schemas/business";
+import { logAudit } from "@/lib/logging/logAudit";
 
 export async function POST(req) {
   const user = await currentUser();
@@ -23,10 +24,6 @@ export async function POST(req) {
   const { name, email } = parsed.data;
 
   try {
-    console.log("🔍 Clerk user ID:", user.id);
-    console.log("📧 Clerk email:", user.primaryEmailAddress?.emailAddress);
-    console.log("📦 Parsed business data:", parsed.data);
-
     // Check for existing user with same email but different Clerk ID
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser && existingUser.clerkId !== user.id) {
@@ -50,6 +47,18 @@ export async function POST(req) {
         email,
         name: user.firstName || "Unnamed",
         businessId: business.id,
+      },
+    });
+
+    await logAudit({
+      userId: user.id,
+      email: user.primaryEmailAddress?.emailAddress || "unknown",
+      action: "Created Business",
+      entity: "Business",
+      entityId: business.id,
+      metadata: {
+        name: business.name,
+        email: business.email,
       },
     });
 

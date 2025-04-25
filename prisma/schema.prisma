@@ -30,14 +30,24 @@ model User {
 }
 
 model Business {
-  id        String    @id @default(cuid())
-  name      String
-  email     String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deleted   Boolean   @default(false)
-  users     User[]
-  invoices  Invoice[]
+  id           String     @id @default(cuid())
+  name         String
+  email        String
+  phone        String?
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  country      String?
+  postalCode   String?
+  website      String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deleted      Boolean    @default(false)
+  customers    Customer[]
+  users        User[]
+  invoices     Invoice[]
+  products     Product[]
 }
 
 model Invoice {
@@ -51,4 +61,40 @@ model Invoice {
   deleted    Boolean       @default(false)
   status     InvoiceStatus @default(DRAFT)
   business   Business      @relation(fields: [businessId], references: [id])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  businessId  String
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deleted     Boolean  @default(false)
+  business    Business @relation(fields: [businessId], references: [id])
+}
+
+model Customer {
+  id         String   @id @default(cuid())
+  businessId String
+  name       String
+  email      String?
+  phone      String?
+  address    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deleted    Boolean  @default(false)
+  business   Business @relation(fields: [businessId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
 }

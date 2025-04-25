@@ -36,16 +36,10 @@ export default function DashboardPage() {
 
   return (
     <main className="max-w-5xl mx-auto py-12 px-4 space-y-6">
-      <header className="flex justify-between items-center mb-6 w-full">
-        <h1 className="text-2xl font-semibold">
-          Welcome,{" "}
-          {user?.firstName ||
-            user?.primaryEmailAddress?.emailAddress ||
-            "there"}
-          !
-        </h1>
-        <UserButton />
-      </header>
+      <h1 className="text-2xl font-semibold">
+        Welcome,{" "}
+        {user?.firstName || user?.primaryEmailAddress?.emailAddress || "there"}!
+      </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Business Info */}
