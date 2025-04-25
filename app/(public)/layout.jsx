@@ -1,3 +1,4 @@
+import PublicNav from "@/components/nav/PublicNav";
 import React from "react";
 
 const PublicLayout = ({ children }) => {

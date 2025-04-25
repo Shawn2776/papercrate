@@ -69,6 +69,8 @@ model Product {
   name        String
   description String?
   price       Decimal  @db.Decimal(10, 2)
+  unit        String
+  quantity    Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deleted     Boolean  @default(false)

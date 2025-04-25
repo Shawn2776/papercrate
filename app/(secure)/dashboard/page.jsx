@@ -9,8 +9,14 @@ import { useRouter } from "next/navigation";
 export default function DashboardPage() {
   const { user } = useUser();
   const [business, setBusiness] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const handleClick = () => {
+    router.push("/customers/new");
+  };
 
   useEffect(() => {
     fetch("/api/business/me")
@@ -29,6 +35,24 @@ export default function DashboardPage() {
       })
       .finally(() => {
         setLoading(false);
+      });
+
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+      });
+
+    fetch("/api/customers")
+      .then((res) => res.json())
+      .then((data) => {
+        setCustomers(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching customers:", error);
       });
   }, [router]);
 
@@ -85,6 +109,51 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p>No invoices yet.</p>
+          </CardContent>
+        </Card>
+
+        {/* Product List */}
+        <Card className="sm:col-span-2">
+          <CardHeader>
+            <CardTitle>Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {products.length > 0 ? (
+              <ul className="space-y-2">
+                {products.map((product) => (
+                  <li key={product.id}>
+                    <strong>{product.name}</strong> – ${product.price}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>
+                <Button onClick={handleClick}>Add Product</Button>
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Customer List */}
+        <Card className="sm:col-span-2">
+          <CardHeader>
+            <CardTitle>Customers</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {customers.length > 0 ? (
+              <ul className="space-y-2">
+                {customers.map((customer) => (
+                  <li key={customer.id}>
+                    <strong>{customer.name}</strong> –{" "}
+                    {customer.email || "No email"}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>
+                <Button onClick={handleClick}>Add Customer</Button>
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
