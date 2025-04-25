@@ -98,5 +98,6 @@ model AuditLog {
   entity    String
   entityId  String?
   metadata  Json?
+  summary   String?
   createdAt DateTime @default(now())
 }

@@ -1,9 +1,9 @@
-// app/api/business/create/route.js
+// app/api/business/route.js
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { businessSchema } from "@/lib/schemas/business";
-import { logAudit } from "@/lib/logging/logAudit";
+import { auditedCreate, auditedUpsert } from "@/lib/db/audited";
+import { initialBusinessSchema } from "@/lib/schemas/business";
 
 export async function POST(req) {
   const user = await currentUser();
@@ -12,7 +12,7 @@ export async function POST(req) {
   }
 
   const body = await req.json();
-  const parsed = businessSchema.safeParse(body);
+  const parsed = initialBusinessSchema.safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json(
@@ -34,12 +34,19 @@ export async function POST(req) {
     }
 
     // Create the business
-    const business = await prisma.business.create({
-      data: { name, email },
+    const business = await auditedCreate({
+      user,
+      model: "Business",
+      data: {
+        name,
+        email,
+      },
     });
 
     // Create or update the user and link to business
-    await prisma.user.upsert({
+    await auditedUpsert({
+      user,
+      model: "user",
       where: { clerkId: user.id },
       update: { businessId: business.id },
       create: {
@@ -47,18 +54,6 @@ export async function POST(req) {
         email,
         name: user.firstName || "Unnamed",
         businessId: business.id,
-      },
-    });
-
-    await logAudit({
-      userId: user.id,
-      email: user.primaryEmailAddress?.emailAddress || "unknown",
-      action: "Created Business",
-      entity: "Business",
-      entityId: business.id,
-      metadata: {
-        name: business.name,
-        email: business.email,
       },
     });
 

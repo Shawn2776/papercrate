@@ -142,7 +142,7 @@ export default function DashboardPage() {
           <CardContent>
             {products.length > 0 ? (
               <Table>
-                <TableCaption>A list of your recent invoices.</TableCaption>
+                <TableCaption>A list of your recent products.</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[100px]">Invoice</TableHead>
@@ -155,7 +155,13 @@ export default function DashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {products.map((product) => (
-                    <TableRow key={product.id}>
+                    <TableRow
+                      key={product.id}
+                      className="cursor-pointer hover:bg-muted/50 transition"
+                      onClick={() =>
+                        router.push(`/dashboard/products/${product.id}`)
+                      }
+                    >
                       <TableCell className="font-medium">
                         {product.name}
                       </TableCell>

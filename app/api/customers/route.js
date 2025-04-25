@@ -1,3 +1,4 @@
+import { metadata } from "@/app/layout";
 import { prisma } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -20,6 +21,18 @@ export async function GET() {
   const customers = await prisma.customer.findMany({
     where: { businessId: dbUser.businessId, deleted: false },
     orderBy: { createdAt: "desc" },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: dbUser.id,
+      email: user.primaryEmailAddress?.emailAddress || "unknown",
+      action: "viewed_customers",
+      entity: "customer",
+      metadata: {
+        message: "User viewed customers",
+      },
+    },
   });
 
   return NextResponse.json(customers);
@@ -55,6 +68,24 @@ export async function POST(req) {
         businessId: dbUser.businessId,
       },
     });
+
+    if (customer) {
+      await prisma.auditLog.create({
+        data: {
+          userId: dbUser.id,
+          email,
+          action: "created_customer",
+          entity: "customer",
+          entityId: customer.id,
+          metadata: {
+            name,
+            email,
+            phone,
+            address,
+          },
+        },
+      });
+    }
 
     return NextResponse.json(customer, { status: 201 }); // ✅ moved inside
   } catch (error) {
