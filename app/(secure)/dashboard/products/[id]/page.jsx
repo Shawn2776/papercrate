@@ -6,17 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
+  CardContent,
 } from "@/components/ui/card";
 
 export default function ProductPage() {
   const { id } = useParams();
   const router = useRouter();
   const [product, setProduct] = useState(null);
-  const [original, setOriginal] = useState(null); // for cancel
+  const [original, setOriginal] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -44,135 +44,148 @@ export default function ProductPage() {
 
     if (res.ok) {
       setIsEditing(false);
-      setOriginal(product); // save the current state
+      setOriginal(product);
     }
   };
 
   const handleCancel = () => {
-    setProduct(original); // revert to saved version
+    setProduct(original);
     setIsEditing(false);
   };
 
   if (!product) return <p className="p-4">Loading product...</p>;
 
+  const inventoryValue = (product.price * product.quantity).toFixed(2);
+
   return (
     <div className="max-w-xl mx-auto p-6 space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <h1>
-              <label className="block text-sm font-medium mb-1 sr-only">
-                Product Name
-              </label>
-              {isEditing ? (
-                <Input
-                  value={product.name}
-                  onChange={(e) =>
-                    setProduct({ ...product, name: e.target.value })
-                  }
-                  required
-                />
-              ) : (
-                <p>{product.name}</p>
-              )}
-            </h1>
+      <Card className="rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden">
+        {/* Header image / emoji */}
+        <div className="relative h-36 bg-muted flex items-center justify-center text-6xl">
+          <span role="img" aria-label="product">
+            {product.emoji || "🥤"}
+          </span>
+          {!isEditing && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute top-3 right-3 text-xs"
+              onClick={() => setIsEditing(true)}
+            >
+              Edit
+            </Button>
+          )}
+        </div>
+
+        <CardHeader className="pb-2">
+          <CardTitle className="text-xl">
+            {isEditing ? (
+              <Input
+                value={product.name}
+                onChange={(e) =>
+                  setProduct({ ...product, name: e.target.value })
+                }
+                required
+              />
+            ) : (
+              product.name
+            )}
           </CardTitle>
           <CardDescription>
-            <div>
-              <label className="block text-sm font-medium mb-1 sr-only">
-                Description
-              </label>
-              {isEditing ? (
-                <Input
-                  value={product.description || ""}
-                  onChange={(e) =>
-                    setProduct({ ...product, description: e.target.value })
-                  }
-                />
-              ) : (
-                <p>{product.description || <em>No description</em>}</p>
-              )}
-            </div>
-          </CardDescription>
-          <CardContent>
-            {/* PRICE */}
-            <div className="flex justify-between items-center">
-              <label className="block text-sm font-medium mb-1">PRICE</label>
-              {isEditing ? (
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={product.price || 0}
-                  onChange={(e) =>
-                    setProduct({
-                      ...product,
-                      price: parseFloat(e.target.value) || 0,
-                    })
-                  }
-                  required
-                />
-              ) : (
-                <p>${product.price}</p>
-              )}
-            </div>
-
-            {/* UNIT */}
-            <div className="flex justify-between items-center">
-              <label className="block text-sm font-medium mb-1">UNIT</label>
-              {isEditing ? (
-                <Input
-                  value={product.unit}
-                  onChange={(e) =>
-                    setProduct({ ...product, unit: e.target.value })
-                  }
-                  required
-                />
-              ) : (
-                <p>{product.unit}</p>
-              )}
-            </div>
-
-            {/* QUANTITY */}
-            <div className="flex justify-between items-center">
-              <label className="block text-sm font-medium mb-1">QUANTITY</label>
-              {isEditing ? (
-                <Input
-                  type="number"
-                  value={product.quantity || 0}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    setProduct({
-                      ...product,
-                      quantity: isNaN(val) ? product.quantity : val,
-                    });
-                  }}
-                  required
-                />
-              ) : (
-                <p>{product.quantity}</p>
-              )}
-            </div>
-
-            {/* ACTION BUTTONS */}
             {isEditing ? (
-              <div className="flex gap-4">
-                <Button type="button" onClick={handleSave}>
-                  Save
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                  className="text-muted-foreground"
-                >
-                  Cancel
-                </Button>
-              </div>
+              <Input
+                value={product.description || ""}
+                onChange={(e) =>
+                  setProduct({ ...product, description: e.target.value })
+                }
+              />
             ) : (
-              <Button onClick={() => setIsEditing(true)}>Edit</Button>
+              product.description || (
+                <em className="text-muted">No description</em>
+              )
             )}
-          </CardContent>
+          </CardDescription>
         </CardHeader>
+
+        <CardContent className="space-y-4">
+          {/* Price */}
+          <div className="flex justify-between">
+            <span className="text-muted-foreground font-medium">Price</span>
+            {isEditing ? (
+              <Input
+                type="number"
+                step="0.01"
+                value={product.price || 0}
+                onChange={(e) =>
+                  setProduct({
+                    ...product,
+                    price: parseFloat(e.target.value) || 0,
+                  })
+                }
+                className="w-24 text-right"
+              />
+            ) : (
+              <span className="text-right font-medium text-green-600">
+                ${Number(product.price).toFixed(2)}
+              </span>
+            )}
+          </div>
+
+          {/* Unit */}
+          <div className="flex justify-between">
+            <span className="text-muted-foreground font-medium">Unit</span>
+            {isEditing ? (
+              <Input
+                value={product.unit}
+                onChange={(e) =>
+                  setProduct({ ...product, unit: e.target.value })
+                }
+                className="w-24 text-right"
+              />
+            ) : (
+              <span className="text-right">{product.unit}</span>
+            )}
+          </div>
+
+          {/* Quantity */}
+          <div className="flex justify-between">
+            <span className="text-muted-foreground font-medium">Quantity</span>
+            {isEditing ? (
+              <Input
+                type="number"
+                value={product.quantity || 0}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setProduct({
+                    ...product,
+                    quantity: isNaN(val) ? product.quantity : val,
+                  });
+                }}
+                className="w-24 text-right"
+              />
+            ) : (
+              <span className="text-right">{product.quantity}</span>
+            )}
+          </div>
+
+          {/* Inventory Value */}
+          <div className="flex justify-between pt-4 border-t mt-4">
+            <span className="font-medium text-muted-foreground">
+              Inventory Value
+            </span>
+            <span className="font-semibold">${inventoryValue}</span>
+          </div>
+
+          {/* Save / Cancel */}
+          {isEditing && (
+            <div className="flex justify-end gap-2 pt-4">
+              <Button onClick={handleSave}>Save</Button>
+              <Button variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
+            </div>
+          )}
+        </CardContent>
       </Card>
     </div>
   );
