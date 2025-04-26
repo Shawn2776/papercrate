@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
@@ -18,11 +18,14 @@ import { MapPin, Mail, Building, Phone, Globe } from "lucide-react";
 
 export default function DashboardPage() {
   const { user } = useUser();
+  const router = useRouter();
+
   const [business, setBusiness] = useState(null);
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+
+  const [loadingBusiness, setLoadingBusiness] = useState(true);
+  const [loadingData, setLoadingData] = useState(true);
 
   const handleClick = () => {
     router.push("/dashboard/products/new");
@@ -32,31 +35,60 @@ export default function DashboardPage() {
     router.push("/dashboard/customers/new");
   };
 
+  // Fetch business info
   useEffect(() => {
-    fetch("/api/business")
-      .then((res) => {
+    async function fetchBusiness() {
+      try {
+        const res = await fetch("/api/business");
         if (res.status === 404) {
           router.push("/setup-business");
-        } else {
-          return res.json();
+          return;
         }
-      })
-      .then((data) => {
-        if (data) {
-          console.log("📦 Business data from API:", data); // 🔍 ADD THIS
-          setBusiness(data);
-        }
-      })
-      .catch((error) => {
+        const data = await res.json();
+        console.log("📦 Business data from API:", data);
+        setBusiness(data);
+      } catch (error) {
         console.error("Error fetching business:", error);
         router.push("/setup-business");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      } finally {
+        setLoadingBusiness(false);
+      }
+    }
+
+    fetchBusiness();
   }, [router]);
 
-  if (loading) return <p className="p-4">Loading dashboard...</p>;
+  // Fetch products and customers
+  useEffect(() => {
+    async function fetchProductsAndCustomers() {
+      try {
+        const [productsRes, customersRes] = await Promise.all([
+          fetch("/api/products"),
+          fetch("/api/customers"),
+        ]);
+
+        if (!productsRes.ok || !customersRes.ok) {
+          throw new Error("Failed to fetch products or customers");
+        }
+
+        const productsData = await productsRes.json();
+        const customersData = await customersRes.json();
+
+        setProducts(productsData);
+        setCustomers(customersData);
+      } catch (error) {
+        console.error("Error fetching products/customers:", error);
+      } finally {
+        setLoadingData(false);
+      }
+    }
+
+    fetchProductsAndCustomers();
+  }, []);
+
+  if (loadingBusiness || loadingData) {
+    return <p className="p-4">Loading dashboard...</p>;
+  }
 
   return (
     <main className="max-w-5xl mx-auto py-12 px-4 space-y-6">
@@ -137,7 +169,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Create Invoice */}
+        {/* Quick Actions */}
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
@@ -261,9 +293,8 @@ export default function DashboardPage() {
                           .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
                       </TableCell>
                       <TableCell className="text-right">
-                        {customer.address?.split("\n").map((line, i) => (
-                          <p key={i}>{line}</p>
-                        ))}
+                        {customer.billingAddressLine1}, {customer.billingCity},{" "}
+                        {customer.billingState}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -271,7 +302,7 @@ export default function DashboardPage() {
               </Table>
             ) : (
               <p>
-                <Button onClick={handleClick}>Add Product</Button>
+                <Button onClick={handleNewCustomer}>Add Customer</Button>
               </p>
             )}
           </CardContent>
