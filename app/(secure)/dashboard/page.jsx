@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
@@ -199,9 +199,9 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 className="rounded-none hover:cursor-pointer hover:bg-gray-100"
-                onClick={handleClick}
+                onClick={() => router.push("/dashboard/products")}
               >
-                Add Product
+                View All
               </Button>
             </div>
           </CardHeader>
@@ -262,9 +262,9 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 className="rounded-none hover:cursor-pointer hover:bg-gray-100"
-                onClick={handleNewCustomer}
+                onClick={() => router.push("/dashboard/customers")}
               >
-                Add Customer
+                All Customers
               </Button>
             </div>
           </CardHeader>
