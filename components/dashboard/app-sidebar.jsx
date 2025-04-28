@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   ArrowUpCircleIcon,
   BarChartIcon,
@@ -18,6 +17,7 @@ import {
   SettingsIcon,
   UsersIcon,
 } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
 // import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/dashboard/nav-main";
@@ -31,6 +31,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { getBusinessForUser } from "@/lib/functions/business/getBusinessForUser";
+import { useEffect, useState } from "react";
 
 const data = {
   navMain: [
@@ -140,6 +142,16 @@ const data = {
 };
 
 export function AppSidebar({ ...props }) {
+  const { user } = useUser();
+  const [business, setBusiness] = useState("");
+
+  useEffect(() => {
+    if (user?.id) {
+      getBusinessForUser(user.id)
+        .then((businessData) => setBusiness(businessData))
+        .catch((error) => console.error(error));
+    }
+  }, [user]);
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -151,7 +163,7 @@ export function AppSidebar({ ...props }) {
             >
               <a href="#">
                 <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">Business Name</span>
+                <span className="text-base font-semibold">{business}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
