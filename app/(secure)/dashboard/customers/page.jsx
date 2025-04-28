@@ -14,6 +14,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
 
 export default function CustomersPage() {
   const { user } = useUser();
@@ -59,6 +60,9 @@ export default function CustomersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Address</TableHead>
                 {/* <TableHead>Description</TableHead>
                 <TableHead>Unit</TableHead>
                 <TableHead className="text-right">Price</TableHead>
@@ -77,6 +81,32 @@ export default function CustomersPage() {
                   }
                 >
                   <TableCell className="font-medium">{customer.name}</TableCell>
+                  <TableCell>
+                    <Link
+                      href={`mailto:${customer.email}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:text-blue-500 "
+                    >
+                      {customer.email}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <Link
+                      href={`tel:${customer.phone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:text-blue-500 "
+                    >
+                      {customer.phone
+                        .replace(/\D/g, "")
+                        .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    {customer.address.split("\n").map((line, index) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </TableCell>
+
                   {/* <TableCell>{product.description}</TableCell>
                   <TableCell>{product.unit}</TableCell>
                   <TableCell className="text-right">

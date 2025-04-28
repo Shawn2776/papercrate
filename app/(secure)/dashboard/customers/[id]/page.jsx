@@ -118,7 +118,11 @@ export default function CustomerPage() {
             {isEditing ? (
               <Input
                 type="text"
-                value={customer.phone || ""}
+                value={
+                  customer.phone
+                    .replace(/\D/g, "")
+                    .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3") || ""
+                }
                 onChange={(e) =>
                   setCustomer({
                     ...customer,
@@ -129,7 +133,11 @@ export default function CustomerPage() {
               />
             ) : (
               <span className="text-right font-medium text-green-600">
-                {customer.phone || <em className="text-muted">No Phone</em>}
+                {customer.phone
+                  .replace(/\D/g, "")
+                  .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3") || (
+                  <em className="text-muted">No Phone</em>
+                )}
               </span>
             )}
           </div>
