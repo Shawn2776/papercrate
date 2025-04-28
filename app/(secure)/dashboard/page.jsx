@@ -293,8 +293,9 @@ export default function DashboardPage() {
                           .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
                       </TableCell>
                       <TableCell className="text-right">
-                        {customer.billingAddressLine1}, {customer.billingCity},{" "}
-                        {customer.billingState}
+                        {customer.address.split("\n").map((line, index) => (
+                          <p key={index}>{line}</p>
+                        ))}
                       </TableCell>
                     </TableRow>
                   ))}
