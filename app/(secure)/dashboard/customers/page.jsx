@@ -43,7 +43,7 @@ export default function CustomersPage() {
   if (loading) return <p className="p-4">Loading Customers...</p>;
 
   return (
-    <Card className="rounded-2xl shadow-sm hover:shadow-md transition max-w-2xl mx-auto mt-5">
+    <Card className="shadow-sm hover:shadow-md transition max-w-[98%] mx-auto mt-5 rounded-none">
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Customers</CardTitle>

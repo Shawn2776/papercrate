@@ -42,7 +42,7 @@ export default function ProductsPage() {
   if (loading) return <p className="p-4">Loading Products...</p>;
 
   return (
-    <Card className="rounded-2xl shadow-sm hover:shadow-md transition max-w-2xl mx-auto mt-5">
+    <Card className="rounded-none shadow-sm hover:shadow-md transition max-w-[98%] mx-auto mt-5">
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Products</CardTitle>
