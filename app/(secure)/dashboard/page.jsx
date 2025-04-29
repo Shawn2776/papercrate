@@ -1,6 +1,6 @@
 "use client";
 
-import { UserButton, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -201,7 +201,7 @@ export default function DashboardPage() {
                 className="rounded-none hover:cursor-pointer hover:bg-gray-100"
                 onClick={() => router.push("/dashboard/products")}
               >
-                View All
+                All Products
               </Button>
             </div>
           </CardHeader>

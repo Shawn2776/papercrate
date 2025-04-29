@@ -31,8 +31,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { getBusinessForUser } from "@/lib/functions/business/getBusinessForUser";
-import { useEffect, useState } from "react";
+import { useBusiness } from "@/lib/hooks/useBusiness";
 
 const data = {
   navMain: [
@@ -142,16 +141,13 @@ const data = {
 };
 
 export function AppSidebar({ ...props }) {
-  const { user } = useUser();
-  const [business, setBusiness] = useState("");
+  // const { user } = useUser();
 
-  useEffect(() => {
-    if (user?.id) {
-      getBusinessForUser(user.id)
-        .then((businessData) => setBusiness(businessData))
-        .catch((error) => console.error(error));
-    }
-  }, [user]);
+  const { business, isLoading } = useBusiness();
+  if (isLoading) return <div>Loading...</div>;
+  if (!business) return null;
+  const businessName = business.name || "Unnamed Business";
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -163,7 +159,7 @@ export function AppSidebar({ ...props }) {
             >
               <a href="#">
                 <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">{business}</span>
+                <span className="text-base font-semibold">{businessName}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
