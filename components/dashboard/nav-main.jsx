@@ -21,15 +21,7 @@ export function NavMain({ items }) {
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton tooltip={item.title}>
                 {item.icon && <item.icon />}
-                <Link
-                  href={
-                    item.title === "Dashboard" || "dashboard"
-                      ? "/dashboard"
-                      : `/dashboard/${item.title.toLowerCase()}`
-                  }
-                >
-                  {item.title}
-                </Link>
+                <Link href={item.url}>{item.title}</Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}

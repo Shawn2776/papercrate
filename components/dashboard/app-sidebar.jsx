@@ -37,7 +37,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: LayoutDashboardIcon,
     },
     {
@@ -47,12 +47,12 @@ const data = {
     },
     {
       title: "Customers",
-      url: "#",
+      url: "/dashboard/customers",
       icon: BarChartIcon,
     },
     {
       title: "Products",
-      url: "#",
+      url: "/dashboard/products",
       icon: FolderIcon,
     },
   ],
