@@ -16,6 +16,8 @@ import {
   SearchIcon,
   SettingsIcon,
   UsersIcon,
+  BoxIcon,
+  ServerIcon,
 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
@@ -48,12 +50,17 @@ const data = {
     {
       title: "Customers",
       url: "/dashboard/customers",
-      icon: BarChartIcon,
+      icon: UsersIcon,
     },
     {
       title: "Products",
       url: "/dashboard/products",
-      icon: FolderIcon,
+      icon: BoxIcon,
+    },
+    {
+      title: "Services",
+      url: "/dashboard/services",
+      icon: ServerIcon,
     },
   ],
   navClouds: [
