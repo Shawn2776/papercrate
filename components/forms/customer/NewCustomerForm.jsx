@@ -1,47 +1,45 @@
 "use client";
 
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+import { createCustomer } from "@/lib/redux/slices/customersSlice";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
 
 export default function NewCustomerForm() {
   const [name, setName] = useState("");
-
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const dispatch = useDispatch();
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const res = await fetch("/api/customers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        email,
-        phone,
-        address,
-      }),
-    });
+    const result = await dispatch(
+      createCustomer({ name, email, phone, address })
+    );
 
     setLoading(false);
-    if (res.ok) {
+
+    if (createCustomer.fulfilled.match(result)) {
       setSuccess(true);
       setName("");
       setEmail("");
       setPhone("");
       setAddress("");
-
       router.push("/dashboard");
+    } else {
+      console.error("Customer creation failed:", result.payload);
     }
   };
 

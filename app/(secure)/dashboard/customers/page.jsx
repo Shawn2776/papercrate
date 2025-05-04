@@ -15,30 +15,24 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCustomers } from "@/lib/redux/slices/customersSlice";
 
 export default function CustomersPage() {
   const { user } = useUser();
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  const customers = useSelector((state) => state.customers.items);
+  const loading = useSelector((state) => state.customers.loading);
 
   const handleNewCustomer = () => {
     router.push("/dashboard/customers/new");
   };
 
   useEffect(() => {
-    fetch("/api/customers")
-      .then((res) => res.json())
-      .then((data) => {
-        setCustomers(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching customers:", error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+    dispatch(fetchCustomers());
+  }, [dispatch]);
 
   if (loading) return <p className="p-4">Loading Customers...</p>;
 
