@@ -302,7 +302,7 @@ export default function DashboardPage() {
               </Table>
             ) : (
               <p>
-                <Button onClick={handleClick}>Add Product</Button>
+                <Button onClick={handleNewProduct}>Add Product</Button>
               </p>
             )}
           </CardContent>
@@ -357,7 +357,7 @@ export default function DashboardPage() {
               </Table>
             ) : (
               <p>
-                <Button onClick={handleClick}>Add Product</Button>
+                <Button onClick={handleNewProduct}>Add Product</Button>
               </p>
             )}
           </CardContent>

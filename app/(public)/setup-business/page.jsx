@@ -24,6 +24,23 @@ export default function SetupBusinessPage() {
     }
   }, [user]);
 
+  useEffect(() => {
+    const checkBusiness = async () => {
+      try {
+        const res = await fetch("/api/business");
+        if (res.ok) {
+          router.push("/dashboard");
+        }
+      } catch (err) {
+        console.error("❌ Error checking business:", err);
+      }
+    };
+
+    if (user) {
+      checkBusiness();
+    }
+  }, [user, router]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
