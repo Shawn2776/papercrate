@@ -35,17 +35,17 @@ export default function ServicePage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        rate: product.rate,
-        unit: product.unit,
+        id: service.id,
+        name: service.name,
+        description: service.description,
+        rate: service.rate,
+        unit: service.unit,
       }),
     });
 
     if (res.ok) {
       setIsEditing(false);
-      setOriginal(product);
+      setOriginal(service);
     }
   };
 
@@ -66,7 +66,7 @@ export default function ServicePage() {
       <Card className="rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden">
         {/* Header image / emoji */}
         <div className="relative h-36 bg-muted flex items-center justify-center text-6xl">
-          <span role="img" aria-label="product">
+          <span role="img" aria-label="service">
             {service.emoji || "🥤"}
           </span>
           {!isEditing && (
@@ -87,7 +87,7 @@ export default function ServicePage() {
               <Input
                 value={service.name}
                 onChange={(e) =>
-                  setProduct({ ...service, name: e.target.value })
+                  setService({ ...service, name: e.target.value })
                 }
                 required
               />
@@ -100,7 +100,7 @@ export default function ServicePage() {
               <Input
                 value={service.description || ""}
                 onChange={(e) =>
-                  setProduct({ ...service, description: e.target.value })
+                  setService({ ...service, description: e.target.value })
                 }
               />
             ) : (
@@ -142,7 +142,7 @@ export default function ServicePage() {
               <Input
                 value={service.unit}
                 onChange={(e) =>
-                  setProduct({ ...service, unit: e.target.value })
+                  setService({ ...service, unit: e.target.value })
                 }
                 className="w-24 text-right"
               />
