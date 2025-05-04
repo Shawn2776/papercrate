@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 
-export default function NewProductForm() {
+export default function NewServiceForm() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [rate, setRate] = useState("");
