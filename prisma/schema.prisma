@@ -48,6 +48,7 @@ model Business {
   users        User[]
   invoices     Invoice[]
   products     Product[]
+  services     Service[]
 }
 
 model Invoice {
@@ -69,6 +70,20 @@ model Product {
   name        String
   description String?
   price       Decimal  @db.Decimal(10, 2)
+  unit        String
+  quantity    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deleted     Boolean  @default(false)
+  business    Business @relation(fields: [businessId], references: [id])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  businessId  String
+  name        String
+  description String?
+  rate        Decimal  @db.Decimal(10, 2)
   unit        String
   quantity    Int
   createdAt   DateTime @default(now())
