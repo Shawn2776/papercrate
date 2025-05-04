@@ -3,7 +3,7 @@ import React from "react";
 
 const NewProductPage = () => {
   return (
-    <div>
+    <div className="flex flex-col gap-4 p-4">
       <NewCustomerForm />
     </div>
   );
