@@ -148,11 +148,15 @@ const data = {
 };
 
 export function AppSidebar({ ...props }) {
-  // const { user } = useUser();
-
+  const { user, isLoaded, isSignedIn } = useUser();
   const { business, isLoading } = useBusiness();
-  if (isLoading) return <div>Loading...</div>;
-  if (!business) return null;
+
+  // Prevent render until both Clerk and business are ready
+  if (!isLoaded || isLoading) return <div>Loading sidebar...</div>;
+
+  // Handle sign out or business not found
+  if (!isSignedIn || !business) return null;
+
   const businessName = business.name || "Unnamed Business";
 
   return (

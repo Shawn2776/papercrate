@@ -2,9 +2,10 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -15,70 +16,55 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MapPin, Mail, Building, Phone, Globe } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomers } from "@/lib/redux/slices/customersSlice";
 import { fetchProducts } from "@/lib/redux/slices/productsSlice";
 import { fetchServices } from "@/lib/redux/slices/servicesSlice";
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { user, isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const dispatch = useDispatch();
 
+  // ✅ All hooks go first
   const customers = useSelector((state) => state.customers.items);
   const loadingCustomers = useSelector((state) => state.customers.loading);
-
   const products = useSelector((state) => state.products.items);
   const loadingProducts = useSelector((state) => state.products.loading);
-
   const services = useSelector((state) => state.services.items);
   const loadingServices = useSelector((state) => state.services.loading);
-
   const [business, setBusiness] = useState(null);
   const [loadingBusiness, setLoadingBusiness] = useState(true);
-  const [loadingData, setLoadingData] = useState(true);
 
-  const handleNewProduct = () => {
-    router.push("/dashboard/products/new");
-  };
+  // ✅ Instead of returning early, just don't render yet
+  const shouldRender = isLoaded && isSignedIn;
 
-  const handleNewCustomer = () => {
-    router.push("/dashboard/customers/new");
-  };
-
-  const handleNewService = () => {
-    router.push("/dashboard/services/new");
-  };
-
-  // Fetch business info
   useEffect(() => {
-    async function fetchBusiness() {
+    if (!shouldRender) return;
+
+    const fetchBusiness = async () => {
       try {
         const res = await fetch("/api/business");
-        if (res.status === 404) {
-          router.push("/setup-business");
-          return;
-        }
+        if (res.status === 404) return router.push("/setup-business");
         const data = await res.json();
-        console.log("📦 Business data from API:", data);
         setBusiness(data);
-      } catch (error) {
-        console.error("Error fetching business:", error);
+      } catch (err) {
         router.push("/setup-business");
       } finally {
         setLoadingBusiness(false);
       }
-    }
+    };
 
     fetchBusiness();
-  }, [router]);
+  }, [shouldRender, router]);
 
-  // Fetch products and customers
   useEffect(() => {
+    if (!shouldRender) return;
     dispatch(fetchCustomers());
     dispatch(fetchProducts());
     dispatch(fetchServices());
-  }, [dispatch]);
+  }, [shouldRender, dispatch]);
+
+  if (!shouldRender) return <p className="p-4">Loading...</p>;
 
   if (
     loadingBusiness ||
@@ -86,9 +72,10 @@ export default function DashboardPage() {
     loadingProducts ||
     loadingServices
   ) {
-    return <p className="p-4">Loading dashboard...</p>;
+    return <p className="p-4">Loading dashboard data...</p>;
   }
 
+  // Main return
   return (
     <main className="max-w-5xl mx-auto py-12 px-4 space-y-6">
       <h1 className="text-2xl font-semibold">
@@ -103,7 +90,6 @@ export default function DashboardPage() {
             <CardTitle className="text-lg">Your Business</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            {/* Name & Email */}
             <div className="flex items-start gap-2">
               <Building className="w-4 h-4 mt-1 text-muted-foreground" />
               <div>
@@ -112,7 +98,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Phone */}
             {business.phone && (
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-muted-foreground" />
@@ -124,7 +109,6 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Address */}
             {(business.addressLine1 || business.city || business.state) && (
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
@@ -140,7 +124,6 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Website */}
             {business.website && (
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4 text-muted-foreground" />
@@ -155,7 +138,6 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Edit Button */}
             <div className="flex justify-end">
               <Button
                 variant="outline"
@@ -197,7 +179,7 @@ export default function DashboardPage() {
               <CardTitle>Customers</CardTitle>
               <Button
                 variant="outline"
-                className="rounded-none hover:cursor-pointer hover:bg-gray-100"
+                className="rounded-none hover:bg-gray-100"
                 onClick={() => router.push("/dashboard/customers")}
               >
                 All Customers
@@ -207,10 +189,10 @@ export default function DashboardPage() {
           <CardContent>
             {customers.length > 0 ? (
               <Table>
-                <TableCaption>A list of your recent customers.</TableCaption>
+                <TableCaption>Recent customers.</TableCaption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Customer Name</TableHead>
+                    <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead className="text-right">Address</TableHead>
@@ -219,9 +201,7 @@ export default function DashboardPage() {
                 <TableBody>
                   {customers.map((customer) => (
                     <TableRow key={customer.id}>
-                      <TableCell className="font-medium">
-                        {customer.name}
-                      </TableCell>
+                      <TableCell>{customer.name}</TableCell>
                       <TableCell>{customer.email}</TableCell>
                       <TableCell>
                         {customer.phone
@@ -229,8 +209,8 @@ export default function DashboardPage() {
                           .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
                       </TableCell>
                       <TableCell className="text-right">
-                        {customer.address.split("\n").map((line, index) => (
-                          <p key={index}>{line}</p>
+                        {customer.address.split("\n").map((line, i) => (
+                          <p key={i}>{line}</p>
                         ))}
                       </TableCell>
                     </TableRow>
@@ -238,9 +218,7 @@ export default function DashboardPage() {
                 </TableBody>
               </Table>
             ) : (
-              <p>
-                <Button onClick={handleNewCustomer}>Add Customer</Button>
-              </p>
+              <Button onClick={handleNewCustomer}>Add Customer</Button>
             )}
           </CardContent>
         </Card>
@@ -252,7 +230,7 @@ export default function DashboardPage() {
               <CardTitle>Products</CardTitle>
               <Button
                 variant="outline"
-                className="rounded-none hover:cursor-pointer hover:bg-gray-100"
+                className="rounded-none hover:bg-gray-100"
                 onClick={() => router.push("/dashboard/products")}
               >
                 All Products
@@ -262,14 +240,14 @@ export default function DashboardPage() {
           <CardContent>
             {products.length > 0 ? (
               <Table>
-                <TableCaption>A list of your recent products.</TableCaption>
+                <TableCaption>Recent products.</TableCaption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Invoice</TableHead>
+                    <TableHead>Name</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Unit</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Stock</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -277,14 +255,12 @@ export default function DashboardPage() {
                   {products.map((product) => (
                     <TableRow
                       key={product.id}
-                      className="cursor-pointer hover:bg-muted/50 transition"
+                      className="cursor-pointer hover:bg-muted/50"
                       onClick={() =>
                         router.push(`/dashboard/products/${product.id}`)
                       }
                     >
-                      <TableCell className="font-medium">
-                        {product.name}
-                      </TableCell>
+                      <TableCell>{product.name}</TableCell>
                       <TableCell>{product.description}</TableCell>
                       <TableCell>{product.unit}</TableCell>
                       <TableCell className="text-right">
@@ -301,9 +277,7 @@ export default function DashboardPage() {
                 </TableBody>
               </Table>
             ) : (
-              <p>
-                <Button onClick={handleNewProduct}>Add Product</Button>
-              </p>
+              <Button onClick={handleNewProduct}>Add Product</Button>
             )}
           </CardContent>
         </Card>
@@ -315,7 +289,7 @@ export default function DashboardPage() {
               <CardTitle>Services</CardTitle>
               <Button
                 variant="outline"
-                className="rounded-none hover:cursor-pointer hover:bg-gray-100"
+                className="rounded-none hover:bg-gray-100"
                 onClick={() => router.push("/dashboard/services")}
               >
                 All Services
@@ -325,7 +299,7 @@ export default function DashboardPage() {
           <CardContent>
             {services.length > 0 ? (
               <Table>
-                <TableCaption>A list of your recent services.</TableCaption>
+                <TableCaption>Recent services.</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
@@ -338,14 +312,12 @@ export default function DashboardPage() {
                   {services.map((service) => (
                     <TableRow
                       key={service.id}
-                      className="cursor-pointer hover:bg-muted/50 transition"
+                      className="cursor-pointer hover:bg-muted/50"
                       onClick={() =>
                         router.push(`/dashboard/services/${service.id}`)
                       }
                     >
-                      <TableCell className="font-medium">
-                        {service.name}
-                      </TableCell>
+                      <TableCell>{service.name}</TableCell>
                       <TableCell>{service.description}</TableCell>
                       <TableCell>{service.unit}</TableCell>
                       <TableCell className="text-right">
@@ -356,9 +328,7 @@ export default function DashboardPage() {
                 </TableBody>
               </Table>
             ) : (
-              <p>
-                <Button onClick={handleNewProduct}>Add Product</Button>
-              </p>
+              <Button onClick={handleNewService}>Add Service</Button>
             )}
           </CardContent>
         </Card>

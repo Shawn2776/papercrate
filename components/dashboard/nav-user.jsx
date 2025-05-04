@@ -25,10 +25,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { SignOutButton, useUser } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { user } = useUser();
+
+  if (!user) redirect("/sign-in");
 
   return (
     <SidebarMenu>
