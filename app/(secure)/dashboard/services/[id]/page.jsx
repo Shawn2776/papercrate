@@ -14,33 +14,32 @@ import {
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 
-export default function ProductPage() {
+export default function ServicePage() {
   const { id } = useParams();
   const router = useRouter();
-  const [product, setProduct] = useState(null);
+  const [service, setService] = useState(null);
   const [original, setOriginal] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/products/${id}`)
+    fetch(`/api/services/${id}`)
       .then((res) => res.json())
       .then((data) => {
-        setProduct(data);
+        setService(data);
         setOriginal(data);
       });
   }, [id]);
 
   const handleSave = async () => {
-    const res = await fetch("/api/products", {
+    const res = await fetch("/api/services", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: product.id,
         name: product.name,
         description: product.description,
-        price: product.price,
+        rate: product.rate,
         unit: product.unit,
-        quantity: product.quantity,
       }),
     });
 
@@ -51,26 +50,24 @@ export default function ProductPage() {
   };
 
   const handleCancel = () => {
-    setProduct(original);
+    setService(original);
     setIsEditing(false);
   };
 
-  if (!product) return <p className="p-4">Loading product...</p>;
-
-  const inventoryValue = (product.price * product.quantity).toFixed(2);
+  if (!service) return <p className="p-4">Loading service...</p>;
 
   return (
     <div className="max-w-xl mx-auto p-6 space-y-4">
-      <Link href="/dashboard/products" className="inline-block mb-4">
+      <Link href="/dashboard/services" className="inline-block mb-4">
         <Button variant="ghost" className="rounded-none">
-          <ChevronLeft /> Back to Products
+          <ChevronLeft /> Back to Services
         </Button>
       </Link>
       <Card className="rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden">
         {/* Header image / emoji */}
         <div className="relative h-36 bg-muted flex items-center justify-center text-6xl">
           <span role="img" aria-label="product">
-            {product.emoji || "🥤"}
+            {service.emoji || "🥤"}
           </span>
           {!isEditing && (
             <Button
@@ -88,26 +85,26 @@ export default function ProductPage() {
           <CardTitle className="text-xl">
             {isEditing ? (
               <Input
-                value={product.name}
+                value={service.name}
                 onChange={(e) =>
-                  setProduct({ ...product, name: e.target.value })
+                  setProduct({ ...service, name: e.target.value })
                 }
                 required
               />
             ) : (
-              product.name
+              service.name
             )}
           </CardTitle>
           <CardDescription>
             {isEditing ? (
               <Input
-                value={product.description || ""}
+                value={service.description || ""}
                 onChange={(e) =>
-                  setProduct({ ...product, description: e.target.value })
+                  setProduct({ ...service, description: e.target.value })
                 }
               />
             ) : (
-              product.description || (
+              service.description || (
                 <em className="text-muted">No description</em>
               )
             )}
@@ -115,17 +112,17 @@ export default function ProductPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Price */}
+          {/* Rate */}
           <div className="flex justify-between">
-            <span className="text-muted-foreground font-medium">Price</span>
+            <span className="text-muted-foreground font-medium">Rate</span>
             {isEditing ? (
               <Input
                 type="number"
                 step="0.01"
-                value={product.price || 0}
+                value={service.rate || 0}
                 onChange={(e) =>
-                  setProduct({
-                    ...product,
+                  setService({
+                    ...service,
                     price: parseFloat(e.target.value) || 0,
                   })
                 }
@@ -133,7 +130,7 @@ export default function ProductPage() {
               />
             ) : (
               <span className="text-right font-medium text-green-600">
-                ${Number(product.price).toFixed(2)}
+                ${Number(service.rate).toFixed(2)}
               </span>
             )}
           </div>
@@ -143,44 +140,15 @@ export default function ProductPage() {
             <span className="text-muted-foreground font-medium">Unit</span>
             {isEditing ? (
               <Input
-                value={product.unit}
+                value={service.unit}
                 onChange={(e) =>
-                  setProduct({ ...product, unit: e.target.value })
+                  setProduct({ ...service, unit: e.target.value })
                 }
                 className="w-24 text-right"
               />
             ) : (
-              <span className="text-right">{product.unit}</span>
+              <span className="text-right">{service.unit}</span>
             )}
-          </div>
-
-          {/* Quantity */}
-          <div className="flex justify-between">
-            <span className="text-muted-foreground font-medium">Quantity</span>
-            {isEditing ? (
-              <Input
-                type="number"
-                value={product.quantity || 0}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setProduct({
-                    ...product,
-                    quantity: isNaN(val) ? product.quantity : val,
-                  });
-                }}
-                className="w-24 text-right"
-              />
-            ) : (
-              <span className="text-right">{product.quantity}</span>
-            )}
-          </div>
-
-          {/* Inventory Value */}
-          <div className="flex justify-between pt-4 border-t mt-4">
-            <span className="font-medium text-muted-foreground">
-              Inventory Value
-            </span>
-            <span className="font-semibold">${inventoryValue}</span>
           </div>
 
           {/* Save / Cancel */}

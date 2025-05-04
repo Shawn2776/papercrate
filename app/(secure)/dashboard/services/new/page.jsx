@@ -1,12 +1,9 @@
-import NewProductForm from "@/components/forms/products/NewProductForm";
-import React from "react";
-
-const NewProductPage = () => {
+const NewServicePage = () => {
   return (
     <div>
-      <NewProductForm />
+      <NewServiceForm />
     </div>
   );
 };
 
-export default NewProductPage;
+export default NewServicePage;

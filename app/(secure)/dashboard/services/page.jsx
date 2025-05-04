@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 
-export default function ProductsPage() {
+export default function ServicesPage() {
   const { user } = useUser();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export default function ProductsPage() {
     fetch("/api/services")
       .then((res) => res.json())
       .then((data) => {
-        setProducts(data);
+        setServices(data);
       })
       .catch((error) => {
         console.error("Error fetching services:", error);
@@ -53,7 +53,7 @@ export default function ProductsPage() {
       </CardHeader>
 
       <CardContent>
-        {products.length > 0 ? (
+        {services.length > 0 ? (
           <Table>
             <TableCaption>A list of your services.</TableCaption>
             <TableHeader>
@@ -89,7 +89,7 @@ export default function ProductsPage() {
             <p className="text-muted-foreground mb-4">
               No services found. Add your first service!
             </p>
-            <Button onClick={handleNewProduct}>Add Service</Button>
+            <Button onClick={handleNewService}>Add Service</Button>
           </div>
         )}
       </CardContent>
