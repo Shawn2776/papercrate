@@ -15,24 +15,39 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MapPin, Mail, Building, Phone, Globe } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCustomers } from "@/lib/redux/slices/customersSlice";
+import { fetchProducts } from "@/lib/redux/slices/productsSlice";
+import { fetchServices } from "@/lib/redux/slices/servicesSlice";
 
 export default function DashboardPage() {
   const { user } = useUser();
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  const customers = useSelector((state) => state.customers.items);
+  const loadingCustomers = useSelector((state) => state.customers.loading);
+
+  const products = useSelector((state) => state.products.items);
+  const loadingProducts = useSelector((state) => state.products.loading);
+
+  const services = useSelector((state) => state.services.items);
+  const loadingServices = useSelector((state) => state.services.loading);
 
   const [business, setBusiness] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [customers, setCustomers] = useState([]);
-
   const [loadingBusiness, setLoadingBusiness] = useState(true);
   const [loadingData, setLoadingData] = useState(true);
 
-  const handleClick = () => {
+  const handleNewProduct = () => {
     router.push("/dashboard/products/new");
   };
 
   const handleNewCustomer = () => {
     router.push("/dashboard/customers/new");
+  };
+
+  const handleNewService = () => {
+    router.push("/dashboard/services/new");
   };
 
   // Fetch business info
@@ -60,33 +75,17 @@ export default function DashboardPage() {
 
   // Fetch products and customers
   useEffect(() => {
-    async function fetchProductsAndCustomers() {
-      try {
-        const [productsRes, customersRes] = await Promise.all([
-          fetch("/api/products"),
-          fetch("/api/customers"),
-        ]);
+    dispatch(fetchCustomers());
+    dispatch(fetchProducts());
+    dispatch(fetchServices());
+  }, [dispatch]);
 
-        if (!productsRes.ok || !customersRes.ok) {
-          throw new Error("Failed to fetch products or customers");
-        }
-
-        const productsData = await productsRes.json();
-        const customersData = await customersRes.json();
-
-        setProducts(productsData);
-        setCustomers(customersData);
-      } catch (error) {
-        console.error("Error fetching products/customers:", error);
-      } finally {
-        setLoadingData(false);
-      }
-    }
-
-    fetchProductsAndCustomers();
-  }, []);
-
-  if (loadingBusiness || loadingData) {
+  if (
+    loadingBusiness ||
+    loadingCustomers ||
+    loadingProducts ||
+    loadingServices
+  ) {
     return <p className="p-4">Loading dashboard...</p>;
   }
 
@@ -191,6 +190,61 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Customer List */}
+        <Card className="sm:col-span-3">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Customers</CardTitle>
+              <Button
+                variant="outline"
+                className="rounded-none hover:cursor-pointer hover:bg-gray-100"
+                onClick={() => router.push("/dashboard/customers")}
+              >
+                All Customers
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {customers.length > 0 ? (
+              <Table>
+                <TableCaption>A list of your recent customers.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-right">Address</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customers.map((customer) => (
+                    <TableRow key={customer.id}>
+                      <TableCell className="font-medium">
+                        {customer.name}
+                      </TableCell>
+                      <TableCell>{customer.email}</TableCell>
+                      <TableCell>
+                        {customer.phone
+                          .replace(/\D/g, "")
+                          .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {customer.address.split("\n").map((line, index) => (
+                          <p key={index}>{line}</p>
+                        ))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p>
+                <Button onClick={handleNewCustomer}>Add Customer</Button>
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Product List */}
         <Card className="sm:col-span-3">
           <CardHeader>
@@ -254,48 +308,48 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Customer List */}
+        {/* Services List */}
         <Card className="sm:col-span-3">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>Customers</CardTitle>
+              <CardTitle>Services</CardTitle>
               <Button
                 variant="outline"
                 className="rounded-none hover:cursor-pointer hover:bg-gray-100"
-                onClick={() => router.push("/dashboard/customers")}
+                onClick={() => router.push("/dashboard/services")}
               >
-                All Customers
+                All Services
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            {customers.length > 0 ? (
+            {services.length > 0 ? (
               <Table>
-                <TableCaption>A list of your recent customers.</TableCaption>
+                <TableCaption>A list of your recent services.</TableCaption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Customer Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead className="text-right">Address</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead className="text-right">Rate</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customers.map((customer) => (
-                    <TableRow key={customer.id}>
+                  {services.map((service) => (
+                    <TableRow
+                      key={service.id}
+                      className="cursor-pointer hover:bg-muted/50 transition"
+                      onClick={() =>
+                        router.push(`/dashboard/services/${service.id}`)
+                      }
+                    >
                       <TableCell className="font-medium">
-                        {customer.name}
+                        {service.name}
                       </TableCell>
-                      <TableCell>{customer.email}</TableCell>
-                      <TableCell>
-                        {customer.phone
-                          .replace(/\D/g, "")
-                          .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
-                      </TableCell>
+                      <TableCell>{service.description}</TableCell>
+                      <TableCell>{service.unit}</TableCell>
                       <TableCell className="text-right">
-                        {customer.address.split("\n").map((line, index) => (
-                          <p key={index}>{line}</p>
-                        ))}
+                        ${service.rate}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -303,7 +357,7 @@ export default function DashboardPage() {
               </Table>
             ) : (
               <p>
-                <Button onClick={handleNewCustomer}>Add Customer</Button>
+                <Button onClick={handleClick}>Add Product</Button>
               </p>
             )}
           </CardContent>

@@ -14,30 +14,24 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchServices } from "@/lib/redux/slices/servicesSlice";
 
 export default function ServicesPage() {
   const { user } = useUser();
-  const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const handleNewService = () => {
     router.push("/dashboard/services/new");
   };
 
+  const services = useSelector((state) => state.services.items);
+  const loading = useSelector((state) => state.services.loading);
+
   useEffect(() => {
-    fetch("/api/services")
-      .then((res) => res.json())
-      .then((data) => {
-        setServices(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching services:", error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+    dispatch(fetchServices());
+  }, [dispatch]);
 
   if (loading) return <p className="p-4">Loading Services...</p>;
 

@@ -12,32 +12,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProducts } from "@/lib/redux/slices/productsSlice";
 
 export default function ProductsPage() {
   const { user } = useUser();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const dispatch = useDispatch();
+
+  const products = useSelector((state) => state.products.items);
+  const loading = useSelector((state) => state.products.loading);
 
   const handleNewProduct = () => {
     router.push("/dashboard/products/new");
   };
 
   useEffect(() => {
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching products:", error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
   if (loading) return <p className="p-4">Loading Products...</p>;
 
