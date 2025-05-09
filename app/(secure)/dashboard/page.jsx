@@ -67,10 +67,12 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex items-start gap-2">
-              <Building className="w-4 h-4 mt-1 text-muted-foreground" />
-              <div>
+              <Building className="w-4 h-4 mt-1 text-muted-foreground shrink-0" />
+              <div className="flex flex-col flex-1 min-w-0">
                 <p className="font-medium">{business.name}</p>
-                <p className="text-muted-foreground">{business.email}</p>
+                <p className="text-muted-foreground text-sm overflow-hidden text-ellipsis whitespace-nowrap">
+                  {business.email}
+                </p>
               </div>
             </div>
 
