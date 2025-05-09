@@ -15,67 +15,43 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MapPin, Mail, Building, Phone, Globe } from "lucide-react";
+import { MapPin, Mail, Building, Phone, Globe, Plus } from "lucide-react";
 import { fetchCustomers } from "@/lib/redux/slices/customersSlice";
 import { fetchProducts } from "@/lib/redux/slices/productsSlice";
 import { fetchServices } from "@/lib/redux/slices/servicesSlice";
+import { useRequireBusiness } from "@/hooks/useRequireBusiness";
 
 export default function DashboardPage() {
   const { user, isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const dispatch = useDispatch();
 
-  // ✅ All hooks go first
+  const { business, loading } = useRequireBusiness();
+
   const customers = useSelector((state) => state.customers.items);
   const loadingCustomers = useSelector((state) => state.customers.loading);
   const products = useSelector((state) => state.products.items);
   const loadingProducts = useSelector((state) => state.products.loading);
   const services = useSelector((state) => state.services.items);
   const loadingServices = useSelector((state) => state.services.loading);
-  const [business, setBusiness] = useState(null);
-  const [loadingBusiness, setLoadingBusiness] = useState(true);
 
-  // ✅ Instead of returning early, just don't render yet
-  const shouldRender = isLoaded && isSignedIn;
-
-  useEffect(() => {
-    if (!shouldRender) return;
-
-    const fetchBusiness = async () => {
-      try {
-        const res = await fetch("/api/business");
-        if (res.status === 404) return router.push("/setup-business");
-        const data = await res.json();
-        setBusiness(data);
-      } catch (err) {
-        router.push("/setup-business");
-      } finally {
-        setLoadingBusiness(false);
-      }
-    };
-
-    fetchBusiness();
-  }, [shouldRender, router]);
+  const handleNewCustomer = () => router.push("/dashboard/customers/new");
+  const handleNewProduct = () => router.push("/dashboard/products/new");
+  const handleNewService = () => router.push("/dashboard/services/new");
 
   useEffect(() => {
-    if (!shouldRender) return;
+    if (!isLoaded || !isSignedIn) return;
     dispatch(fetchCustomers());
     dispatch(fetchProducts());
     dispatch(fetchServices());
-  }, [shouldRender, dispatch]);
+  }, [isLoaded, isSignedIn, dispatch]);
 
-  if (!shouldRender) return <p className="p-4">Loading...</p>;
+  if (!isLoaded || !isSignedIn) return <p className="p-4">Loading...</p>;
 
-  if (
-    loadingBusiness ||
-    loadingCustomers ||
-    loadingProducts ||
-    loadingServices
-  ) {
+  if (loading || loadingCustomers || loadingProducts || loadingServices) {
     return <p className="p-4">Loading dashboard data...</p>;
   }
 
-  // Main return
   return (
     <main className="max-w-5xl mx-auto py-12 px-4 space-y-6">
       <h1 className="text-2xl font-semibold">
@@ -103,8 +79,8 @@ export default function DashboardPage() {
                 <Phone className="w-4 h-4 text-muted-foreground" />
                 <p>
                   {business.phone
-                    .replace(/\D/g, "")
-                    .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
+                    ?.replace(/\D/g, "")
+                    ?.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
                 </p>
               </div>
             )}
@@ -153,12 +129,46 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="text-lg">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button className="w-full" variant="default">
-              Create Invoice
-            </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Button
+                variant="outline"
+                className="flex items-center justify-start gap-2"
+                onClick={() => router.push("/dashboard/invoices/new")}
+              >
+                <Plus className="w-4 h-4" />
+                Invoice
+              </Button>
+
+              <Button
+                variant="outline"
+                className="flex items-center justify-start gap-2"
+                onClick={handleNewProduct}
+              >
+                <Plus className="w-4 h-4" />
+                Product
+              </Button>
+
+              <Button
+                variant="outline"
+                className="flex items-center justify-start gap-2"
+                onClick={handleNewService}
+              >
+                <Plus className="w-4 h-4" />
+                Service
+              </Button>
+
+              <Button
+                variant="outline"
+                className="flex items-center justify-start gap-2"
+                onClick={handleNewCustomer}
+              >
+                <Plus className="w-4 h-4" />
+                Customer
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -168,7 +178,9 @@ export default function DashboardPage() {
             <CardTitle>Recent Invoices</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>No invoices yet.</p>
+            <p className="text-sm text-muted-foreground text-center">
+              No invoices yet.
+            </p>
           </CardContent>
         </Card>
 
@@ -205,8 +217,10 @@ export default function DashboardPage() {
                       <TableCell>{customer.email}</TableCell>
                       <TableCell>
                         {customer.phone
-                          .replace(/\D/g, "")
-                          .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
+                          ? customer.phone
+                              .replace(/\D/g, "")
+                              .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")
+                          : ""}
                       </TableCell>
                       <TableCell className="text-right">
                         {customer.address.split("\n").map((line, i) => (
