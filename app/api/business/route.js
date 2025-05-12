@@ -93,80 +93,52 @@ export async function GET() {
 }
 
 export async function PATCH(req) {
-  const user = await currentUser();
-  if (!user) {
-    console.error("❌ No user authenticated");
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
-
-  const dbUser = await prisma.user.findUnique({
-    where: { clerkId: user.id },
-  });
-
-  console.log("👤 dbUser:", dbUser);
-
-  if (!dbUser?.businessId) {
-    console.error("❌ No business associated with user");
-    return new NextResponse("No business associated", { status: 404 });
-  }
-
-  const rawBody = await req.json();
-  console.log("📥 Raw PATCH Body:", rawBody);
-
-  // Clean empty strings → null
-  const body = Object.fromEntries(
-    Object.entries(rawBody).map(([key, value]) => [
-      key,
-      value === "" ? null : value,
-    ])
-  );
-
-  console.log("🧹 Cleaned PATCH Body:", body);
-
-  const parsed = fullBusinessSchema.safeParse(body);
-
-  if (!parsed.success) {
-    console.error(
-      "❌ Zod Validation Failed:",
-      parsed.error.flatten().fieldErrors
-    );
-    return NextResponse.json(
-      { errors: parsed.error.flatten() },
-      { status: 400 }
-    );
-  }
-
-  console.log("✅ Passed Zod Validation:", parsed.data);
-
-  // ✨ Enforce Required Fields Manually
-  const requiredFields = [
-    "addressLine1",
-    "city",
-    "state",
-    "country",
-    "postalCode",
-  ];
-  const missingFields = requiredFields.filter((field) => !parsed.data[field]);
-
-  if (missingFields.length > 0) {
-    console.error("❌ Missing required fields:", missingFields);
-    return NextResponse.json(
-      { error: `Missing required fields: ${missingFields.join(", ")}` },
-      { status: 400 }
-    );
-  }
-
   try {
+    // Authenticate the user
+    const user = await currentUser();
+    if (!user) {
+      console.error("❌ No user authenticated");
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Fetch the user's business
+    const dbUser = await prisma.user.findUnique({
+      where: { clerkId: user.id },
+    });
+
+    if (!dbUser?.businessId) {
+      console.error("❌ No business associated with user");
+      return new NextResponse("No business associated", { status: 404 });
+    }
+
+    // Parse the request body
+    const rawBody = await req.json();
+    const parsed = fullBusinessSchema.safeParse(rawBody);
+
+    if (!parsed.success) {
+      console.error(
+        "❌ Zod Validation Failed:",
+        parsed.error.flatten().fieldErrors
+      );
+      return NextResponse.json(
+        { errors: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const updateData = parsed.data;
+
+    // Update the business
     const updatedBusiness = await auditedUpdate({
       user,
-      model: "business",
+      model: "Business",
       where: { id: dbUser.businessId },
-      data: parsed.data,
+      data: updateData,
     });
 
     console.log("🎯 Successfully updated business:", updatedBusiness);
 
-    return NextResponse.json(updatedBusiness);
+    return NextResponse.json(updatedBusiness, { status: 200 });
   } catch (error) {
     console.error("❌ Error updating business:", error);
     return new NextResponse(

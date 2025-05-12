@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { fullBusinessSchema } from "@/lib/schemas/business";
+import { ArrowBigLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function EditBusinessPage() {
   const [business, setBusiness] = useState(null);
@@ -21,7 +23,21 @@ export default function EditBusinessPage() {
         if (!res.ok) throw new Error("Failed to fetch business data.");
         return res.json();
       })
-      .then((data) => setBusiness(data))
+      .then((data) => {
+        // Normalize empty fields to avoid null errors
+        const cleanedData = {
+          ...data,
+          phone: data.phone || "",
+          addressLine1: data.addressLine1 || "",
+          addressLine2: data.addressLine2 || "",
+          city: data.city || "",
+          state: data.state || "",
+          country: data.country || "",
+          postalCode: data.postalCode || "",
+          website: data.website || "",
+        };
+        setBusiness(cleanedData);
+      })
       .catch((error) => {
         console.error("Error fetching business:", error);
         setBusiness(null);
@@ -29,51 +45,50 @@ export default function EditBusinessPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleCancel = () => {
+    router.back();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("🛠 Raw form data before cleaning:", business);
-
     const cleanedBusiness = {
       ...business,
-      phone: business.phone || null,
-      addressLine2: business.addressLine2 || null,
-      website: business.website || null,
+      phone: business.phone || "",
+      addressLine2: business.addressLine2 || "",
+      website: business.website || "",
     };
-
-    console.log("🧹 Cleaned form data:", cleanedBusiness);
 
     const parsed = fullBusinessSchema.safeParse(cleanedBusiness);
 
     if (!parsed.success) {
-      console.error(
-        "❌ Validation errors:",
-        parsed.error.flatten().fieldErrors
-      );
-      setErrors(parsed.error.flatten().fieldErrors);
-      setErrorMessage("Please fix the errors before submitting.");
+      const { formErrors, fieldErrors } = parsed.error.flatten();
+      setErrors(fieldErrors);
+      setErrorMessage(formErrors.join(" "));
       return;
     }
-
-    console.log("✅ Validation passed, data to submit:", parsed.data);
 
     setErrors({});
     setErrorMessage("");
 
-    const res = await fetch("/api/business", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(parsed.data),
-    });
+    try {
+      const res = await fetch("/api/business", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
 
-    console.log("📦 API Response Status:", res.status);
-
-    if (res.ok) {
-      console.log("🎯 Successfully updated business!");
-      router.push("/dashboard");
-    } else {
-      console.error("❌ Failed to update business.");
-      setErrorMessage("Failed to update business. Please try again later.");
+      if (res.ok) {
+        router.push("/dashboard");
+      } else {
+        const errorData = await res.json();
+        setErrorMessage(
+          errorData.error ||
+            "Failed to update business. Please try again later."
+        );
+      }
+    } catch (err) {
+      setErrorMessage("Network error. Please try again later.");
     }
   };
 
@@ -88,6 +103,7 @@ export default function EditBusinessPage() {
           type={type}
           value={business[name] || ""}
           onChange={(e) => setBusiness({ ...business, [name]: e.target.value })}
+          className={errors[name] ? "border-red-500" : ""}
         />
         {errors[name] && (
           <p className="text-red-500 text-xs mt-1">{errors[name]}</p>
@@ -98,6 +114,11 @@ export default function EditBusinessPage() {
 
   return (
     <main className="max-w-2xl mx-auto py-12 px-4">
+      <Button onClick={handleCancel} variant="outline" className="mb-5">
+        <ArrowBigLeft />
+        Cancel
+      </Button>
+
       <Card>
         <CardHeader>
           <CardTitle>Edit Business Details</CardTitle>
