@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Papercrate",
-  description: "Simple, powerful invoicing for small businesses.",
+  description:
+    "Use Papercrate’s free invoice tool to create, customize, and send invoices instantly. Designed for contractors, small business owners, and freelancers.",
 };
 
 export default function RootLayout({ children }) {
