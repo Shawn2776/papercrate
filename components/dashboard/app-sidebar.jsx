@@ -33,7 +33,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useBusiness } from "@/lib/hooks/useBusiness";
+import { useDispatch, useSelector } from "react-redux";
+import { use, useEffect } from "react";
+import { fetchBusiness } from "@/lib/redux/slices/businessSlice";
+import AppSidebarSkeleton from "../skeletons/AppSidebarSkeleton";
+// import { useBusiness } from "@/lib/hooks/useBusiness__old";
 
 const data = {
   navMain: [
@@ -149,10 +153,17 @@ const data = {
 
 export function AppSidebar({ ...props }) {
   const { user, isLoaded, isSignedIn } = useUser();
-  const { business, isLoading } = useBusiness();
+
+  const dispatch = useDispatch();
+  const business = useSelector((state) => state.business.item);
+  const loading = useSelector((state) => state.business.loading);
+
+  useEffect(() => {
+    dispatch(fetchBusiness());
+  }, [dispatch]);
 
   // Prevent render until both Clerk and business are ready
-  if (!isLoaded || isLoading) return <div>Loading sidebar...</div>;
+  if (!isLoaded || loading) return <AppSidebarSkeleton />;
 
   // Handle sign out or business not found
   if (!isSignedIn || !business) return null;

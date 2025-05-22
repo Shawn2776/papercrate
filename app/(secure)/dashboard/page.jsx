@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -16,22 +16,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { MapPin, Mail, Building, Phone, Globe, Plus } from "lucide-react";
+
 import { fetchCustomers } from "@/lib/redux/slices/customersSlice";
 import { fetchProducts } from "@/lib/redux/slices/productsSlice";
 import { fetchServices } from "@/lib/redux/slices/servicesSlice";
-import { useRequireBusiness } from "@/hooks/useRequireBusiness";
+import { fetchBusiness } from "@/lib/redux/slices/businessSlice";
+import DashboardSkeleton from "@/components/skeletons/DashboardSkeleton";
 
 export default function DashboardPage() {
   const { user, isSignedIn, isLoaded } = useUser();
   const router = useRouter();
   const dispatch = useDispatch();
 
-  const { business, loading } = useRequireBusiness();
+  // ✅ Pull from Redux
+  const business = useSelector((state) => state.business.item);
+  const loadingBusiness = useSelector((state) => state.business.loading);
 
   const customers = useSelector((state) => state.customers.items);
   const loadingCustomers = useSelector((state) => state.customers.loading);
+
   const products = useSelector((state) => state.products.items);
   const loadingProducts = useSelector((state) => state.products.loading);
+
   const services = useSelector((state) => state.services.items);
   const loadingServices = useSelector((state) => state.services.loading);
 
@@ -41,6 +47,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
+
+    dispatch(fetchBusiness());
     dispatch(fetchCustomers());
     dispatch(fetchProducts());
     dispatch(fetchServices());
@@ -48,8 +56,17 @@ export default function DashboardPage() {
 
   if (!isLoaded || !isSignedIn) return <p className="p-4">Loading...</p>;
 
-  if (loading || loadingCustomers || loadingProducts || loadingServices) {
-    return <p className="p-4">Loading dashboard data...</p>;
+  if (
+    loadingBusiness ||
+    loadingCustomers ||
+    loadingProducts ||
+    loadingServices
+  ) {
+    return (
+      <p className="p-4">
+        <DashboardSkeleton />
+      </p>
+    );
   }
 
   return (
