@@ -15,9 +15,11 @@ export default function NewInvoiceForm() {
   const products = useSelector((state) => state.products.items);
   const services = useSelector((state) => state.services.items);
 
+  const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+
   const [form, setForm] = useState({
     customerId: "",
-    dueDate: "",
+    dueDate: today,
     lineItems: [
       {
         type: "custom",
@@ -29,7 +31,7 @@ export default function NewInvoiceForm() {
         rate: 0,
       },
     ],
-    tax: 0.1,
+    tax: 0.06,
   });
 
   const handleChange = (index, field, value) => {
@@ -268,7 +270,7 @@ export default function NewInvoiceForm() {
 
           <div className="flex flex-col items-end space-y-1 text-right">
             <div>Subtotal: ${subtotal.toFixed(2)}</div>
-            <div>Tax (10%): ${taxAmount.toFixed(2)}</div>
+            <div>Tax (6%): ${taxAmount.toFixed(2)}</div>
             <div className="text-lg font-semibold">
               Total: ${total.toFixed(2)}
             </div>
