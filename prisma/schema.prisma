@@ -88,7 +88,7 @@ model Customer {
   id           String    @id @default(cuid())
   businessId   String
   name         String
-  email        String?
+  email        String?   @unique
   phone        String?
   addressLine1 String?
   addressLine2 String?

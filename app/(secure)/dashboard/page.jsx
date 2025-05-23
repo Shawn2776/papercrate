@@ -301,9 +301,15 @@ export default function DashboardPage() {
                           : ""}
                       </TableCell>
                       <TableCell className="text-right">
-                        {customer.address.split("\n").map((line, i) => (
-                          <p key={i}>{line}</p>
-                        ))}
+                        <p>{customer.addressLine1}</p>
+                        {customer.addressLine2 && (
+                          <p>{customer.addressLine2}</p>
+                        )}
+                        <p>
+                          {customer.city}, {customer.state}{" "}
+                          {customer.postalCode}
+                        </p>
+                        {/* <p>{customer.country}</p> */}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
+import { useUser } from "@clerk/nextjs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -12,13 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { toast } from "sonner";
+import { fetchCustomers } from "@/lib/redux/slices/customersSlice";
 
 const customerSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email().optional(),
+  email: z.string().email("Invalid email").optional(),
   phone: z.string().optional(),
   addressLine1: z.string().optional(),
   addressLine2: z.string().optional(),
@@ -41,8 +42,26 @@ function isBusinessInfoComplete(business) {
 export default function NewInvoiceForm() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { isSignedIn, isLoaded } = useUser();
+
   const customers = useSelector((state) => state.customers.items);
+  const loadingCustomers = useSelector((state) => state.customers.loading);
   const business = useSelector((state) => state.business.item);
+  const loadingBusiness = useSelector((state) => state.business.loading);
+
+  const [hasCheckedBusiness, setHasCheckedBusiness] = useState(false);
+
+  useEffect(() => {
+    if (isSignedIn && isLoaded) {
+      dispatch(fetchCustomers());
+    }
+  }, [isSignedIn, isLoaded, dispatch]);
+
+  useEffect(() => {
+    if (!loadingBusiness) {
+      setHasCheckedBusiness(true);
+    }
+  }, [loadingBusiness]);
 
   const [form, setForm] = useState({
     customerId: "",
@@ -72,6 +91,19 @@ export default function NewInvoiceForm() {
       toast.error(parsed.error.issues[0]?.message);
       return;
     }
+
+    const match = customers.find(
+      (c) =>
+        c.email?.toLowerCase() === parsed.data.email?.toLowerCase() &&
+        c.name.toLowerCase() === parsed.data.name.toLowerCase()
+    );
+
+    if (match) {
+      toast.info("Customer already exists. Using existing record.");
+      setForm((f) => ({ ...f, customerId: match.id }));
+      return;
+    }
+
     const res = await fetch("/api/customers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -109,6 +141,14 @@ export default function NewInvoiceForm() {
   );
   const tax = subtotal * 0.0625;
   const total = subtotal + tax;
+
+  if (!hasCheckedBusiness || loadingCustomers) {
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        Loading business and customer info...
+      </div>
+    );
+  }
 
   if (!isBusinessInfoComplete(business)) {
     return (
