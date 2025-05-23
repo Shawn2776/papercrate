@@ -16,17 +16,26 @@ import {
 import { z } from "zod";
 import { toast } from "sonner";
 import { fetchCustomers } from "@/lib/redux/slices/customersSlice";
+import { fetchProducts } from "@/lib/redux/slices/productsSlice";
+import { fetchServices } from "@/lib/redux/slices/servicesSlice";
 
-const customerSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email").optional(),
-  phone: z.string().optional(),
-  addressLine1: z.string().optional(),
-  addressLine2: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  postalCode: z.string().optional(),
-  country: z.string().optional(),
+const lineItemSchema = z.object({
+  description: z.string().min(1, "Description is required"),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  rate: z.number().min(0, "Rate must be 0 or greater"),
+  unit: z.string().min(1, "Unit is required"),
+});
+
+const invoiceSchema = z.object({
+  customerId: z.string().min(1, "Customer is required"),
+  dueDate: z.string().min(1, "Due date is required"),
+  poNumber: z.string().optional(),
+  invoiceNumber: z.string().optional(),
+  invoiceDate: z.string().optional(),
+  terms: z.string().optional(),
+  lineItems: z
+    .array(lineItemSchema)
+    .min(1, "At least one line item is required"),
 });
 
 function isBusinessInfoComplete(business) {
@@ -46,6 +55,8 @@ export default function NewInvoiceForm() {
 
   const customers = useSelector((state) => state.customers.items);
   const loadingCustomers = useSelector((state) => state.customers.loading);
+  const products = useSelector((state) => state.products.items);
+  const services = useSelector((state) => state.services.items);
   const business = useSelector((state) => state.business.item);
   const loadingBusiness = useSelector((state) => state.business.loading);
 
@@ -54,6 +65,8 @@ export default function NewInvoiceForm() {
   useEffect(() => {
     if (isSignedIn && isLoaded) {
       dispatch(fetchCustomers());
+      dispatch(fetchProducts());
+      dispatch(fetchServices());
     }
   }, [isSignedIn, isLoaded, dispatch]);
 
@@ -73,60 +86,14 @@ export default function NewInvoiceForm() {
     terms: "",
   });
 
-  const [newCustomer, setNewCustomer] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    addressLine1: "",
-    addressLine2: "",
-    city: "",
-    state: "",
-    postalCode: "",
-    country: "",
-  });
-
-  const handleCustomerSubmit = async () => {
-    const parsed = customerSchema.safeParse(newCustomer);
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message);
-      return;
-    }
-
-    const match = customers.find(
-      (c) =>
-        c.email?.toLowerCase() === parsed.data.email?.toLowerCase() &&
-        c.name.toLowerCase() === parsed.data.name.toLowerCase()
-    );
-
-    if (match) {
-      toast.info("Customer already exists. Using existing record.");
-      setForm((f) => ({ ...f, customerId: match.id }));
-      return;
-    }
-
-    const res = await fetch("/api/customers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(parsed.data),
-    });
-
-    if (res.ok) {
-      const customer = await res.json();
-      setForm((f) => ({ ...f, customerId: customer.id }));
-      toast.success(`Customer added: ${customer.name}`);
-    } else {
-      toast.error("Could not create customer.");
-    }
-  };
-
   const addLineItem = () => {
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       lineItems: [
-        ...form.lineItems,
+        ...prev.lineItems,
         { description: "", quantity: 1, rate: 0, unit: "" },
       ],
-    });
+    }));
   };
 
   const updateLineItem = (index, field, value) => {
@@ -141,6 +108,35 @@ export default function NewInvoiceForm() {
   );
   const tax = subtotal * 0.0625;
   const total = subtotal + tax;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const parsed = invoiceSchema.safeParse(form);
+
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0];
+      toast.error(firstError?.message || "Invalid form");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+
+      if (res.ok) {
+        toast.success("Invoice created");
+        router.push("/dashboard/invoices");
+      } else {
+        const msg = await res.text();
+        toast.error(msg || "Failed to create invoice");
+      }
+    } catch (err) {
+      toast.error("Server error");
+    }
+  };
 
   if (!hasCheckedBusiness || loadingCustomers) {
     return (
@@ -167,7 +163,7 @@ export default function NewInvoiceForm() {
   }
 
   return (
-    <form className="max-w-5xl mx-auto p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="max-w-5xl mx-auto p-6 space-y-6">
       <div className="flex justify-between">
         <div className="text-sm">
           <h2 className="text-xl font-semibold">{business?.name}</h2>
@@ -181,119 +177,26 @@ export default function NewInvoiceForm() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <h3 className="font-semibold">Bill To</h3>
+          <label className="font-semibold">Bill To</label>
           <select
             className="w-full border rounded p-2"
             value={form.customerId}
             onChange={(e) => setForm({ ...form, customerId: e.target.value })}
           >
             <option value="">Select Customer</option>
-            <option value="__new">+ Add New Customer</option>
             {customers.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
           </select>
-          {form.customerId === "__new" && (
-            <Dialog
-              open
-              onOpenChange={(open) =>
-                !open && setForm({ ...form, customerId: "" })
-              }
-            >
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>New Customer</DialogTitle>
-                </DialogHeader>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Input
-                    placeholder="Name"
-                    value={newCustomer.name}
-                    onChange={(e) =>
-                      setNewCustomer({ ...newCustomer, name: e.target.value })
-                    }
-                  />
-                  <Input
-                    placeholder="Email"
-                    value={newCustomer.email}
-                    onChange={(e) =>
-                      setNewCustomer({ ...newCustomer, email: e.target.value })
-                    }
-                  />
-                  <Input
-                    placeholder="Phone"
-                    value={newCustomer.phone}
-                    onChange={(e) =>
-                      setNewCustomer({ ...newCustomer, phone: e.target.value })
-                    }
-                  />
-                  <Input
-                    placeholder="Address Line 1"
-                    value={newCustomer.addressLine1}
-                    onChange={(e) =>
-                      setNewCustomer({
-                        ...newCustomer,
-                        addressLine1: e.target.value,
-                      })
-                    }
-                  />
-                  <Input
-                    placeholder="Address Line 2"
-                    value={newCustomer.addressLine2}
-                    onChange={(e) =>
-                      setNewCustomer({
-                        ...newCustomer,
-                        addressLine2: e.target.value,
-                      })
-                    }
-                  />
-                  <Input
-                    placeholder="City"
-                    value={newCustomer.city}
-                    onChange={(e) =>
-                      setNewCustomer({ ...newCustomer, city: e.target.value })
-                    }
-                  />
-                  <Input
-                    placeholder="State"
-                    value={newCustomer.state}
-                    onChange={(e) =>
-                      setNewCustomer({ ...newCustomer, state: e.target.value })
-                    }
-                  />
-                  <Input
-                    placeholder="Postal Code"
-                    value={newCustomer.postalCode}
-                    onChange={(e) =>
-                      setNewCustomer({
-                        ...newCustomer,
-                        postalCode: e.target.value,
-                      })
-                    }
-                  />
-                  <Input
-                    placeholder="Country"
-                    value={newCustomer.country}
-                    onChange={(e) =>
-                      setNewCustomer({
-                        ...newCustomer,
-                        country: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="text-right pt-4">
-                  <Button onClick={handleCustomerSubmit}>Save Customer</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
         </div>
+
         <div>
-          <h3 className="font-semibold">Ship To</h3>
+          <label className="font-semibold">Ship To</label>
           <Textarea disabled value="(Same as billing)" />
         </div>
+
         <div className="space-y-2">
           <Input
             placeholder="Invoice #"
@@ -396,7 +299,9 @@ export default function NewInvoiceForm() {
       </div>
 
       <div className="text-right mt-4">
-        <Button type="submit">Save Invoice</Button>
+        <Button type="submit" disabled={form.lineItems.length === 0}>
+          Save Invoice
+        </Button>
       </div>
     </form>
   );
