@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/dashboard/site-header";
 import { ReduxProvider } from "@/components/providers/redux-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { prisma } from "@/lib/db";
+import { fallbackCreateUser } from "@/lib/utils/fallbackCreateUser";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -15,11 +16,15 @@ export default async function SecureLayout({ children }) {
     return redirect("/sign-in");
   }
 
-  // Look up user in your DB
-  const dbUser = await prisma.user.findUnique({
+  let dbUser = await prisma.user.findUnique({
     where: { clerkId: user.id },
     select: { businessId: true },
   });
+
+  if (!dbUser) {
+    const createdUser = await fallbackCreateUser(user);
+    dbUser = { businessId: createdUser.businessId };
+  }
 
   // If the user is not in the DB yet or no business is linked
   if (!dbUser?.businessId) {
