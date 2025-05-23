@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ArrowBigLeft } from "lucide-react";
 
 export default function NewCustomerForm() {
   const [name, setName] = useState("");
@@ -20,6 +21,10 @@ export default function NewCustomerForm() {
 
   const dispatch = useDispatch();
   const router = useRouter();
+
+  const handleCancel = () => {
+    router.back();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,52 +49,58 @@ export default function NewCustomerForm() {
   };
 
   return (
-    <Card className="max-w-md">
-      <CardHeader>
-        <CardTitle>Add New Customer</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <Input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Phone</label>
-            <Input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Address</label>
-            <Textarea
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </div>
+    <>
+      <Button onClick={handleCancel} variant="outline" className="max-w-fit">
+        <ArrowBigLeft />
+        Cancel
+      </Button>
+      <Card className="max-w-md">
+        <CardHeader>
+          <CardTitle>Add New Customer</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Email</label>
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Phone</label>
+              <Input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Address</label>
+              <Textarea
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+            </div>
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Saving..." : "Create Customer"}
-          </Button>
-          {success && (
-            <p className="text-green-600 text-sm mt-2">Customer created!</p>
-          )}
-        </form>
-      </CardContent>
-    </Card>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Saving..." : "Create Customer"}
+            </Button>
+            {success && (
+              <p className="text-green-600 text-sm mt-2">Customer created!</p>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+    </>
   );
 }

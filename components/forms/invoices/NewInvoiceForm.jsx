@@ -2,84 +2,95 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
-import { Button } from "@/components/ui/button";
+import { useSelector, useDispatch } from "react-redux";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { z } from "zod";
+import { toast } from "sonner";
+
+const customerSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  addressLine1: z.string().optional(),
+  addressLine2: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  postalCode: z.string().optional(),
+  country: z.string().optional(),
+});
 
 export default function NewInvoiceForm() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const customers = useSelector((state) => state.customers.items);
-  const products = useSelector((state) => state.products.items);
-  const services = useSelector((state) => state.services.items);
-
-  const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+  const business = useSelector((state) => state.business.item);
 
   const [form, setForm] = useState({
     customerId: "",
-    dueDate: today,
-    lineItems: [
-      {
-        type: "custom",
-        refId: null,
-        name: "",
-        description: "",
-        quantity: 1,
-        unit: "",
-        rate: 0,
-      },
-    ],
-    tax: 0.06,
+    dueDate: "",
+    poNumber: "",
+    invoiceNumber: "",
+    invoiceDate: new Date().toISOString().split("T")[0],
+    lineItems: [],
+    terms: "",
   });
 
-  const handleChange = (index, field, value) => {
-    const updated = [...form.lineItems];
-    updated[index][field] =
-      field === "rate" || field === "quantity" ? Number(value) : value;
-    setForm({ ...form, lineItems: updated });
-  };
+  const [newCustomer, setNewCustomer] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "",
+  });
 
-  const handleTypeChange = (index, type, id) => {
-    const updated = [...form.lineItems];
-    updated[index].type = type;
-    updated[index].refId = id;
-
-    let ref;
-    if (type === "product") ref = products.find((p) => p.id === id);
-    if (type === "service") ref = services.find((s) => s.id === id);
-
-    if (ref) {
-      updated[index].name = ref.name;
-      updated[index].description = ref.description || "";
-      updated[index].unit = ref.unit;
-      updated[index].rate = type === "product" ? ref.price : ref.rate;
+  const handleCustomerSubmit = async () => {
+    const parsed = customerSchema.safeParse(newCustomer);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message);
+      return;
     }
+    const res = await fetch("/api/customers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(parsed.data),
+    });
 
-    setForm({ ...form, lineItems: updated });
+    if (res.ok) {
+      const customer = await res.json();
+      setForm((f) => ({ ...f, customerId: customer.id }));
+      toast.success(`Customer added: ${customer.name}`);
+    } else {
+      toast.error("Could not create customer.");
+    }
   };
 
-  const addItem = () => {
+  const addLineItem = () => {
     setForm({
       ...form,
       lineItems: [
         ...form.lineItems,
-        {
-          type: "custom",
-          refId: null,
-          name: "",
-          description: "",
-          quantity: 1,
-          unit: "",
-          rate: 0,
-        },
+        { description: "", quantity: 1, rate: 0, unit: "" },
       ],
     });
   };
 
-  const removeItem = (index) => {
-    const updated = form.lineItems.filter((_, i) => i !== index);
+  const updateLineItem = (index, field, value) => {
+    const updated = [...form.lineItems];
+    updated[index][field] = value;
     setForm({ ...form, lineItems: updated });
   };
 
@@ -87,202 +98,241 @@ export default function NewInvoiceForm() {
     (sum, item) => sum + item.quantity * item.rate,
     0
   );
-  const taxAmount = subtotal * form.tax;
-  const total = subtotal + taxAmount;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const payload = {
-      ...form,
-      dueDate: new Date(form.dueDate).toISOString(),
-      lineItems: form.lineItems.map((item) => ({
-        ...item,
-        rate: Number(item.rate),
-        quantity: Number(item.quantity),
-      })),
-    };
-
-    const res = await fetch("/api/invoices", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (res.ok) {
-      router.push("/dashboard");
-    } else {
-      const errText = await res.text();
-      console.error("Failed to create invoice:", res.status, errText);
-    }
-  };
+  const tax = subtotal * 0.0625;
+  const total = subtotal + tax;
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-8 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">New Invoice</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <Label>Customer</Label>
-              <select
-                value={form.customerId}
-                onChange={(e) =>
-                  setForm({ ...form, customerId: e.target.value })
-                }
-                className="w-full border rounded p-2"
-                required
-              >
-                <option value="">Select a customer</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label>Due Date</Label>
-              <Input
-                type="date"
-                value={form.dueDate}
-                onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
-                required
-              />
-            </div>
-          </div>
+    <form className="max-w-5xl mx-auto p-6 space-y-6">
+      <div className="flex justify-between">
+        <div className="text-sm">
+          <h2 className="text-xl font-semibold">{business?.name}</h2>
+          <p>{business?.addressLine1}</p>
+          <p>
+            {business?.city}, {business?.state} {business?.postalCode}
+          </p>
+        </div>
+        <div className="text-2xl font-bold">INVOICE</div>
+      </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b font-semibold text-left">
-                <tr>
-                  <th className="py-2">Item</th>
-                  <th className="py-2">Description</th>
-                  <th className="py-2">Unit</th>
-                  <th className="py-2">Qty</th>
-                  <th className="py-2">Rate</th>
-                  <th className="py-2 text-right">Total</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {form.lineItems.map((item, index) => (
-                  <tr key={index} className="border-b">
-                    <td className="py-2">
-                      <select
-                        value={`${item.type}:${item.refId || ""}`}
-                        onChange={(e) => {
-                          const [type, id] = e.target.value.split(":");
-                          handleTypeChange(index, type, id);
-                        }}
-                        className="border rounded w-full"
-                      >
-                        <option value="custom">Custom</option>
-                        <optgroup label="Products">
-                          {products.map((p) => (
-                            <option key={p.id} value={`product:${p.id}`}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="Services">
-                          {services.map((s) => (
-                            <option key={s.id} value={`service:${s.id}`}>
-                              {s.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
-                      {item.type === "custom" && (
-                        <Input
-                          value={item.name}
-                          onChange={(e) =>
-                            handleChange(index, "name", e.target.value)
-                          }
-                          placeholder="Item name"
-                          className="mt-1"
-                        />
-                      )}
-                    </td>
-                    <td className="py-2">
-                      <Textarea
-                        value={item.description}
-                        onChange={(e) =>
-                          handleChange(index, "description", e.target.value)
-                        }
-                        placeholder="Optional"
-                      />
-                    </td>
-                    <td className="py-2">
-                      <Input
-                        value={item.unit}
-                        onChange={(e) =>
-                          handleChange(index, "unit", e.target.value)
-                        }
-                      />
-                    </td>
-                    <td className="py-2">
-                      <Input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) =>
-                          handleChange(index, "quantity", e.target.value)
-                        }
-                        min={1}
-                      />
-                    </td>
-                    <td className="py-2">
-                      <Input
-                        type="number"
-                        value={item.rate}
-                        onChange={(e) =>
-                          handleChange(index, "rate", e.target.value)
-                        }
-                        min={0}
-                        step="0.01"
-                      />
-                    </td>
-                    <td className="py-2 text-right">
-                      ${(item.quantity * item.rate).toFixed(2)}
-                    </td>
-                    <td className="py-2 text-right">
-                      <Button
-                        variant="destructive"
-                        type="button"
-                        onClick={() => removeItem(index)}
-                        disabled={form.lineItems.length === 1}
-                      >
-                        ×
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="mt-2">
-              <Button type="button" onClick={addItem} variant="outline">
-                Add Line Item
-              </Button>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <h3 className="font-semibold">Bill To</h3>
+          <select
+            className="w-full border rounded p-2"
+            value={form.customerId}
+            onChange={(e) => setForm({ ...form, customerId: e.target.value })}
+          >
+            <option value="">Select Customer</option>
+            <option value="__new">+ Add New Customer</option>
+            {customers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          {form.customerId === "__new" && (
+            <Dialog
+              open
+              onOpenChange={(open) =>
+                !open && setForm({ ...form, customerId: "" })
+              }
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>New Customer</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input
+                    placeholder="Name"
+                    value={newCustomer.name}
+                    onChange={(e) =>
+                      setNewCustomer({ ...newCustomer, name: e.target.value })
+                    }
+                  />
+                  <Input
+                    placeholder="Email"
+                    value={newCustomer.email}
+                    onChange={(e) =>
+                      setNewCustomer({ ...newCustomer, email: e.target.value })
+                    }
+                  />
+                  <Input
+                    placeholder="Phone"
+                    value={newCustomer.phone}
+                    onChange={(e) =>
+                      setNewCustomer({ ...newCustomer, phone: e.target.value })
+                    }
+                  />
+                  <Input
+                    placeholder="Address Line 1"
+                    value={newCustomer.addressLine1}
+                    onChange={(e) =>
+                      setNewCustomer({
+                        ...newCustomer,
+                        addressLine1: e.target.value,
+                      })
+                    }
+                  />
+                  <Input
+                    placeholder="Address Line 2"
+                    value={newCustomer.addressLine2}
+                    onChange={(e) =>
+                      setNewCustomer({
+                        ...newCustomer,
+                        addressLine2: e.target.value,
+                      })
+                    }
+                  />
+                  <Input
+                    placeholder="City"
+                    value={newCustomer.city}
+                    onChange={(e) =>
+                      setNewCustomer({ ...newCustomer, city: e.target.value })
+                    }
+                  />
+                  <Input
+                    placeholder="State"
+                    value={newCustomer.state}
+                    onChange={(e) =>
+                      setNewCustomer({ ...newCustomer, state: e.target.value })
+                    }
+                  />
+                  <Input
+                    placeholder="Postal Code"
+                    value={newCustomer.postalCode}
+                    onChange={(e) =>
+                      setNewCustomer({
+                        ...newCustomer,
+                        postalCode: e.target.value,
+                      })
+                    }
+                  />
+                  <Input
+                    placeholder="Country"
+                    value={newCustomer.country}
+                    onChange={(e) =>
+                      setNewCustomer({
+                        ...newCustomer,
+                        country: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="text-right pt-4">
+                  <Button onClick={handleCustomerSubmit}>Save Customer</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+        <div>
+          <h3 className="font-semibold">Ship To</h3>
+          <Textarea disabled value="(Same as billing)" />
+        </div>
+        <div className="space-y-2">
+          <Input
+            placeholder="Invoice #"
+            value={form.invoiceNumber}
+            onChange={(e) =>
+              setForm({ ...form, invoiceNumber: e.target.value })
+            }
+          />
+          <Input
+            type="date"
+            value={form.invoiceDate}
+            onChange={(e) => setForm({ ...form, invoiceDate: e.target.value })}
+          />
+          <Input
+            placeholder="PO#"
+            value={form.poNumber}
+            onChange={(e) => setForm({ ...form, poNumber: e.target.value })}
+          />
+          <Input
+            type="date"
+            value={form.dueDate}
+            onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+          />
+        </div>
+      </div>
 
-          <div className="flex flex-col items-end space-y-1 text-right">
-            <div>Subtotal: ${subtotal.toFixed(2)}</div>
-            <div>Tax (6%): ${taxAmount.toFixed(2)}</div>
-            <div className="text-lg font-semibold">
-              Total: ${total.toFixed(2)}
-            </div>
-          </div>
+      <div>
+        <table className="w-full border text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="border px-2">QTY</th>
+              <th className="border px-2">DESCRIPTION</th>
+              <th className="border px-2">UNIT</th>
+              <th className="border px-2">UNIT PRICE</th>
+              <th className="border px-2">AMOUNT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {form.lineItems.map((item, index) => (
+              <tr key={index}>
+                <td className="border px-2">
+                  <Input
+                    type="number"
+                    value={item.quantity}
+                    onChange={(e) =>
+                      updateLineItem(index, "quantity", Number(e.target.value))
+                    }
+                  />
+                </td>
+                <td className="border px-2">
+                  <Input
+                    value={item.description}
+                    onChange={(e) =>
+                      updateLineItem(index, "description", e.target.value)
+                    }
+                  />
+                </td>
+                <td className="border px-2">
+                  <Input
+                    value={item.unit}
+                    onChange={(e) =>
+                      updateLineItem(index, "unit", e.target.value)
+                    }
+                  />
+                </td>
+                <td className="border px-2">
+                  <Input
+                    type="number"
+                    value={item.rate}
+                    onChange={(e) =>
+                      updateLineItem(index, "rate", Number(e.target.value))
+                    }
+                  />
+                </td>
+                <td className="border px-2 text-right">
+                  ${(item.quantity * item.rate).toFixed(2)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <Button onClick={addLineItem} type="button" className="mt-2">
+          + Add Line Item
+        </Button>
+      </div>
 
-          <div className="text-right">
-            <Button type="submit" className="mt-4">
-              Save Invoice
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-right space-y-1">
+        <div>Subtotal: ${subtotal.toFixed(2)}</div>
+        <div>Sales Tax 6.25%: ${tax.toFixed(2)}</div>
+        <div className="font-semibold text-lg">TOTAL: ${total.toFixed(2)}</div>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="font-semibold">Terms & Conditions</h3>
+        <Textarea
+          value={form.terms}
+          onChange={(e) => setForm({ ...form, terms: e.target.value })}
+          placeholder="Payment is due within 15 days."
+        />
+      </div>
+
+      <div className="text-right mt-4">
+        <Button type="submit">Save Invoice</Button>
+      </div>
     </form>
   );
 }

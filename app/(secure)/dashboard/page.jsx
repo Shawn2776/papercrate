@@ -76,10 +76,28 @@ export default function DashboardPage() {
 
   return (
     <main className="max-w-5xl mx-auto py-12 px-4 space-y-6">
-      <h1 className="text-2xl font-semibold">
-        Welcome,{" "}
-        {user?.firstName || user?.primaryEmailAddress?.emailAddress || "there"}!
-      </h1>
+      <div>
+        <h1 className="text-2xl font-semibold">
+          Welcome,{" "}
+          {user?.firstName ||
+            user?.primaryEmailAddress?.emailAddress ||
+            "there"}
+          !
+        </h1>
+        <p className="text-muted-foreground text-sm mt-[5px]">
+          Last Login:{" "}
+          {user?.lastSignInAt
+            ? new Date(user.lastSignInAt).toLocaleString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })
+            : "Unknown"}
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Business Info */}

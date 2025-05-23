@@ -85,17 +85,23 @@ model Service {
 }
 
 model Customer {
-  id         String    @id @default(cuid())
-  businessId String
-  name       String
-  email      String?
-  phone      String?
-  address    String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deleted    Boolean   @default(false)
-  business   Business  @relation(fields: [businessId], references: [id])
-  invoices   Invoice[]
+  id           String    @id @default(cuid())
+  businessId   String
+  name         String
+  email        String?
+  phone        String?
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deleted      Boolean   @default(false)
+  business     Business  @relation(fields: [businessId], references: [id])
+  invoices     Invoice[]
+  notes        String?
 }
 
 model AuditLog {

@@ -40,21 +40,28 @@ export async function GET() {
 
 export async function POST(req) {
   const user = await currentUser();
-  if (!user) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+  if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: user.id },
   });
-
   if (!dbUser?.businessId) {
     return new NextResponse("No business found", { status: 404 });
   }
 
-  const { name, email, phone, address } = await req.json();
+  const {
+    name,
+    email,
+    phone,
+    addressLine1,
+    addressLine2,
+    city,
+    state,
+    postalCode,
+    country,
+  } = await req.json();
 
-  if (!name || !email || !phone || !address) {
+  if (!name) {
     return new NextResponse("Missing required fields", { status: 400 });
   }
 
@@ -64,30 +71,38 @@ export async function POST(req) {
         name,
         email,
         phone,
-        address,
+        addressLine1,
+        addressLine2,
+        city,
+        state,
+        postalCode,
+        country,
         businessId: dbUser.businessId,
       },
     });
 
-    if (customer) {
-      await prisma.auditLog.create({
-        data: {
-          userId: dbUser.id,
+    await prisma.auditLog.create({
+      data: {
+        userId: dbUser.id,
+        email,
+        action: "created_customer",
+        entity: "customer",
+        entityId: customer.id,
+        metadata: {
+          name,
           email,
-          action: "created_customer",
-          entity: "customer",
-          entityId: customer.id,
-          metadata: {
-            name,
-            email,
-            phone,
-            address,
-          },
+          phone,
+          addressLine1,
+          addressLine2,
+          city,
+          state,
+          postalCode,
+          country,
         },
-      });
-    }
+      },
+    });
 
-    return NextResponse.json(customer, { status: 201 }); // ✅ moved inside
+    return NextResponse.json(customer, { status: 201 });
   } catch (error) {
     console.error("Error creating customer:", error);
     return new NextResponse("Error creating customer", { status: 500 });
