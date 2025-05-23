@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { z } from "zod";
@@ -28,6 +27,16 @@ const customerSchema = z.object({
   postalCode: z.string().optional(),
   country: z.string().optional(),
 });
+
+function isBusinessInfoComplete(business) {
+  return !!(
+    business?.name &&
+    business?.addressLine1 &&
+    business?.city &&
+    business?.state &&
+    business?.postalCode
+  );
+}
 
 export default function NewInvoiceForm() {
   const router = useRouter();
@@ -100,6 +109,22 @@ export default function NewInvoiceForm() {
   );
   const tax = subtotal * 0.0625;
   const total = subtotal + tax;
+
+  if (!isBusinessInfoComplete(business)) {
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="bg-yellow-100 text-yellow-800 p-4 rounded text-sm">
+          ⚠️ Please complete your Business Details before creating an invoice.{" "}
+          <a
+            href="/dashboard/business/edit"
+            className="underline text-blue-700"
+          >
+            Edit Business Info
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form className="max-w-5xl mx-auto p-6 space-y-6">
