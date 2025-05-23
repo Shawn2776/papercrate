@@ -55,7 +55,7 @@ export default function NotFound() {
       {/* Sticky note message */}
       {showNote && (
         <div className="absolute top-8 right-8 bg-yellow-100 border border-yellow-300 shadow p-2 rounded rotate-6">
-          📝 This route doesn’t exist!
+          📝 This route doesn't exist!
         </div>
       )}
 
