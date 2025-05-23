@@ -3,10 +3,15 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function NotFound() {
   const [showNote, setShowNote] = useState(false);
+
+  const pathname = usePathname();
+  const isDashboard = pathname?.startsWith("/dashboard");
+  const backHref = isDashboard ? "/dashboard" : "/";
 
   useEffect(() => {
     const timeout = setTimeout(() => setShowNote(true), 2000);
@@ -23,10 +28,10 @@ export default function NotFound() {
       </p>
 
       <Link
-        href="/"
+        href={backHref}
         className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
       >
-        🏠 Back to Home
+        🏠 Back to {isDashboard ? "Dashboard" : "Home"}
       </Link>
 
       {/* Animated floating crate */}

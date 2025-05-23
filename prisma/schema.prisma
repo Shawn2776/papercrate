@@ -1,67 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-enum InvoiceStatus {
-  DRAFT
-  SENT
-  PARTIALLY_PAID
-  PAID
-  OVERDUE
-  CANCELLED
-  VOID
-}
-
 model User {
   id         String   @id @default(cuid())
-  clerkId    String   @unique
   email      String   @unique
   name       String?
+  businessId String   @unique
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   deleted    Boolean  @default(false)
-  businessId String   @unique
+  clerkId    String   @unique
   business   Business @relation(fields: [businessId], references: [id])
 }
 
 model Business {
   id           String     @id @default(cuid())
   name         String
-  email        String
-  phone        String?
-  addressLine1 String?
-  addressLine2 String?
-  city         String?
-  state        String?
-  country      String?
-  postalCode   String?
-  website      String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   deleted      Boolean    @default(false)
+  email        String
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  country      String?
+  phone        String?
+  postalCode   String?
+  state        String?
+  website      String?
   customers    Customer[]
-  users        User[]
   invoices     Invoice[]
   products     Product[]
   services     Service[]
+  users        User?
 }
 
 model Invoice {
   id         String        @id @default(cuid())
   number     String
+  status     InvoiceStatus @default(DRAFT)
   amount     Decimal       @db.Decimal(10, 2)
   dueDate    DateTime
   businessId String
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
   deleted    Boolean       @default(false)
-  status     InvoiceStatus @default(DRAFT)
+  customerId String?
   business   Business      @relation(fields: [businessId], references: [id])
+  customer   Customer?     @relation(fields: [customerId], references: [id])
+  LineItem   LineItem[]
 }
 
 model Product {
@@ -70,11 +63,11 @@ model Product {
   name        String
   description String?
   price       Decimal  @db.Decimal(10, 2)
-  unit        String
-  quantity    Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   deleted     Boolean  @default(false)
+  quantity    Int
+  unit        String
   business    Business @relation(fields: [businessId], references: [id])
 }
 
@@ -92,16 +85,17 @@ model Service {
 }
 
 model Customer {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   businessId String
   name       String
   email      String?
   phone      String?
   address    String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deleted    Boolean  @default(false)
-  business   Business @relation(fields: [businessId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted    Boolean   @default(false)
+  business   Business  @relation(fields: [businessId], references: [id])
+  invoices   Invoice[]
 }
 
 model AuditLog {
@@ -112,6 +106,30 @@ model AuditLog {
   entity    String
   entityId  String?
   metadata  Json?
-  summary   String?
   createdAt DateTime @default(now())
+  summary   String?
+}
+
+model LineItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  name        String
+  description String?
+  unit        String
+  quantity    Int
+  rate        Decimal  @db.Decimal(10, 2)
+  total       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  Invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  VOID
 }

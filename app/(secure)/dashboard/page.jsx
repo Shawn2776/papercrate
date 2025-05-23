@@ -22,6 +22,7 @@ import { fetchProducts } from "@/lib/redux/slices/productsSlice";
 import { fetchServices } from "@/lib/redux/slices/servicesSlice";
 import { fetchBusiness } from "@/lib/redux/slices/businessSlice";
 import DashboardSkeleton from "@/components/skeletons/DashboardSkeleton";
+import { fetchInvoices } from "@/lib/redux/slices/invoicesSlice";
 
 export default function DashboardPage() {
   const { user, isSignedIn, isLoaded } = useUser();
@@ -41,6 +42,9 @@ export default function DashboardPage() {
   const services = useSelector((state) => state.services.items);
   const loadingServices = useSelector((state) => state.services.loading);
 
+  const invoices = useSelector((state) => state.invoices.items);
+  const loading = useSelector((state) => state.invoices.loading);
+
   const handleNewCustomer = () => router.push("/dashboard/customers/new");
   const handleNewProduct = () => router.push("/dashboard/products/new");
   const handleNewService = () => router.push("/dashboard/services/new");
@@ -52,9 +56,10 @@ export default function DashboardPage() {
     dispatch(fetchCustomers());
     dispatch(fetchProducts());
     dispatch(fetchServices());
+    dispatch(fetchInvoices());
   }, [isLoaded, isSignedIn, dispatch]);
 
-  if (!isLoaded || !isSignedIn) return <p className="p-4">Loading...</p>;
+  if (!isLoaded || !isSignedIn) return <div className="p-4">Loading...</div>;
 
   if (
     loadingBusiness ||
@@ -63,9 +68,9 @@ export default function DashboardPage() {
     loadingServices
   ) {
     return (
-      <p className="p-4">
+      <div className="p-4">
         <DashboardSkeleton />
-      </p>
+      </div>
     );
   }
 
@@ -86,14 +91,14 @@ export default function DashboardPage() {
             <div className="flex items-start gap-2">
               <Building className="w-4 h-4 mt-1 text-muted-foreground shrink-0" />
               <div className="flex flex-col flex-1 min-w-0">
-                <p className="font-medium">{business.name}</p>
+                <p className="font-medium">{business?.name}</p>
                 <p className="text-muted-foreground text-sm overflow-hidden text-ellipsis whitespace-nowrap">
-                  {business.email}
+                  {business?.email}
                 </p>
               </div>
             </div>
 
-            {business.phone && (
+            {business?.phone && (
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-muted-foreground" />
                 <p>
@@ -104,7 +109,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {(business.addressLine1 || business.city || business.state) && (
+            {(business?.addressLine1 || business?.city || business?.state) && (
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-1 text-muted-foreground" />
                 <div>
@@ -119,7 +124,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {business.website && (
+            {business?.website && (
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4 text-muted-foreground" />
                 <a
@@ -197,9 +202,45 @@ export default function DashboardPage() {
             <CardTitle>Recent Invoices</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground text-center">
-              No invoices yet.
-            </p>
+            {invoices.length > 0 ? (
+              <Table>
+                <TableCaption>Recent invoices.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>#</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoices.slice(0, 5).map((invoice) => (
+                    <TableRow
+                      key={invoice.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() =>
+                        router.push(`/dashboard/invoices/${invoice.id}`)
+                      }
+                    >
+                      <TableCell>{invoice.number}</TableCell>
+                      <TableCell className="capitalize text-sm">
+                        {invoice.status.toLowerCase().replace("_", " ")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        ${Number(invoice.amount).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => router.push("/dashboard/invoices/new")}
+              >
+                Create Your First Invoice
+              </Button>
+            )}
           </CardContent>
         </Card>
 
