@@ -256,7 +256,7 @@ export default function DashboardPage() {
                 className="w-full"
                 onClick={() => router.push("/dashboard/invoices/new")}
               >
-                Create Your First Invoice
+                Create Your First Invoice!
               </Button>
             )}
           </CardContent>
