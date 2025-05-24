@@ -31,9 +31,9 @@ export default async function InvoicePage({ params }) {
     <main className="max-w-4xl mx-auto py-12 px-4 space-y-8">
       <h1 className="text-2xl font-bold">Invoice {invoice.number}</h1>
       <p className="text-muted-foreground">Status: {invoice.status}</p>
-      <p className="text-muted-foreground">
+      <div className="text-muted-foreground">
         <p className="text-muted-foreground">Due: {formattedDueDate}</p>
-      </p>
+      </div>
 
       <section className="border-t pt-6 space-y-2">
         <h2 className="font-semibold text-lg">Customer</h2>

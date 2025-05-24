@@ -56,23 +56,25 @@ export async function POST(req) {
     return NextResponse.json(parsed.error.format(), { status: 400 });
   }
 
-  const { customerId, dueDate, lineItems } = parsed.data;
+  const { customerId, dueDate, invoiceNumber, poNumber, terms, lineItems } =
+    parsed.data;
 
-  // Generate next invoice number
   const count = await prisma.invoice.count({
     where: { businessId: dbUser.businessId },
   });
-  const number = `INV-${String(count + 1).padStart(4, "0")}`;
+
+  const finalInvoiceNumber =
+    invoiceNumber?.trim() || `INV-${String(count + 1).padStart(4, "0")}`;
 
   const amount = lineItems.reduce(
-    (total, item) => total + item.quantity * item.rate,
+    (sum, item) => sum + item.quantity * item.rate,
     0
   );
 
   try {
     const invoice = await prisma.invoice.create({
       data: {
-        number,
+        number: finalInvoiceNumber,
         amount,
         dueDate: new Date(dueDate),
         status: "DRAFT",
@@ -80,7 +82,11 @@ export async function POST(req) {
         customerId,
         LineItem: {
           create: lineItems.map((item) => ({
-            ...item,
+            name: item.name,
+            description: item.description ?? "",
+            unit: item.unit,
+            quantity: item.quantity,
+            rate: item.rate,
             total: item.quantity * item.rate,
             createdAt: new Date(),
             updatedAt: new Date(),
