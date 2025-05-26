@@ -23,11 +23,9 @@ export function InvoiceTotalsAndNotes({ items }) {
   }, [dispatch]);
 
   useEffect(() => {
-    if (taxRates.length === 0) {
-      setShowTaxModal(true);
-    } else {
+    if (taxRates.length > 0 && !selectedTaxRateId) {
       const defaultRate = taxRates.find((r) => r.isDefault);
-      if (defaultRate && !selectedTaxRateId) {
+      if (defaultRate) {
         setSelectedTaxRateId(defaultRate.id);
       }
     }
@@ -76,10 +74,11 @@ export function InvoiceTotalsAndNotes({ items }) {
               <select
                 value={selectedTaxRateId || ""}
                 onChange={(e) => {
-                  if (e.target.value === "new") {
+                  const value = e.target.value;
+                  if (value === "new") {
                     setShowTaxModal(true);
                   } else {
-                    setSelectedTaxRateId(e.target.value || null);
+                    setSelectedTaxRateId(value || null);
                   }
                 }}
                 className="border p-1 rounded text-sm"
