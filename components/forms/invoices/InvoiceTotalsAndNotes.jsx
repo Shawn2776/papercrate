@@ -83,6 +83,7 @@ export function InvoiceTotalsAndNotes({ items }) {
                 }}
                 className="border p-1 rounded text-sm"
               >
+                {taxRates.length > 0 && <option value="">-- No Tax --</option>}
                 <option value="new">+ Add New Tax Rate</option>
                 {taxRates.map((rate) => (
                   <option key={rate.id} value={rate.id}>
