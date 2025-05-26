@@ -2,23 +2,19 @@
 
 import { useState } from "react";
 import CustomerModal from "./CustomerModal";
+import { useSelector } from "react-redux";
 
-const CustomerDropdown = () => {
+const CustomerDropdown = ({ customerId, setCustomerId }) => {
   const [showModal, setShowModal] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState("");
-
-  const customers = [
-    { id: "1", name: "Jane Doe", email: "jane@example.com" },
-    { id: "2", name: "Acme Corp", email: "billing@acme.com" },
-  ];
+  const customers = useSelector((state) => state.customers.items);
 
   const handleChange = (e) => {
     const value = e.target.value;
     if (value === "new") {
       setShowModal(true);
-      setSelectedCustomer(""); // Reset selection
+      setCustomerId(null);
     } else {
-      setSelectedCustomer(value);
+      setCustomerId(value);
     }
   };
 
@@ -26,9 +22,9 @@ const CustomerDropdown = () => {
     <div className="space-y-2">
       <label className="block font-medium">Select a Customer</label>
       <select
-        value={selectedCustomer}
+        value={customerId || ""}
         onChange={handleChange}
-        className="w-full border p-2 rounded"
+        className="border p-2 rounded w-full"
       >
         <option value="">-- Choose Customer --</option>
         <option value="new">+ Add New Customer</option>
@@ -39,7 +35,15 @@ const CustomerDropdown = () => {
         ))}
       </select>
 
-      {showModal && <CustomerModal onClose={() => setShowModal(false)} />}
+      {showModal && (
+        <CustomerModal
+          onClose={() => setShowModal(false)}
+          onSave={(newCustomer) => {
+            setCustomerId(newCustomer.id);
+            setShowModal(false);
+          }}
+        />
+      )}
     </div>
   );
 };

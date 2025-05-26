@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auditedCreate, auditedUpdate } from "@/lib/db/audited";
-import { productSchema } from "@/lib/schemas/product";
+import { createProductSchema } from "@/lib/schemas/product";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -42,7 +42,7 @@ export async function POST(req) {
   }
 
   const body = await req.json();
-  const parsed = productSchema.safeParse(body);
+  const parsed = createProductSchema.safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json(
@@ -97,7 +97,7 @@ export async function PATCH(req) {
     return new NextResponse("Missing product ID", { status: 400 });
   }
 
-  const parsed = productSchema.safeParse(data);
+  const parsed = createProductSchema.safeParse(data);
   if (!parsed.success) {
     return NextResponse.json(
       { errors: parsed.error.flatten() },

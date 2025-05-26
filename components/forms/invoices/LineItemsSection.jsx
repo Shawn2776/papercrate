@@ -1,12 +1,32 @@
 import { useState } from "react";
-import LineItemModal from "./LineItemModal";
+import { useSelector } from "react-redux";
+import AddProductServiceModal from "./AddProductServiceModal";
 
 export function LineItemsSection({ items, setItems }) {
-  const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [error, setError] = useState(null);
+
+  const products = useSelector((state) => state.products.items);
+  const services = useSelector((state) => state.services.items);
+
+  const allItems = [...products, ...services];
 
   const handleAddItem = (item) => {
-    setItems([...items, item]);
-    setShowModal(false);
+    if (!item || !item.name || !item.unit || (!item.price && !item.rate)) {
+      setError("Invalid item returned from modal.");
+      return;
+    }
+
+    const fullItem = {
+      name: item.name,
+      unit: item.unit,
+      rate: parseFloat(item.price || item.rate), // ensure number
+      quantity: 1,
+      total: parseFloat(item.price || item.rate),
+    };
+    setItems([...items, fullItem]);
+    setShowAddModal(false);
+    setError(null);
   };
 
   const handleRemoveItem = (index) => {
@@ -14,11 +34,6 @@ export function LineItemsSection({ items, setItems }) {
     updated.splice(index, 1);
     setItems(updated);
   };
-
-  const productsAndServices = [
-    { id: "1", name: "Website Design", rate: 500, unit: "service" },
-    { id: "2", name: "Hosting", rate: 50, unit: "month" },
-  ];
 
   return (
     <div className="space-y-2 border p-4 rounded">
@@ -28,28 +43,40 @@ export function LineItemsSection({ items, setItems }) {
         <select
           onChange={(e) => {
             if (e.target.value === "new") {
-              setShowModal(true);
+              setShowAddModal(true);
+              setError(null);
             } else {
-              const selected = productsAndServices.find(
-                (p) => p.id === e.target.value
-              );
+              const selected = allItems.find((p) => p.id === e.target.value);
+              if (!selected) {
+                setError("Item not found.");
+                return;
+              }
+              const rate = parseFloat(selected.price || selected.rate);
               setItems([
                 ...items,
-                { ...selected, quantity: 1, total: selected.rate },
+                {
+                  name: selected.name,
+                  unit: selected.unit,
+                  rate,
+                  quantity: 1,
+                  total: rate,
+                },
               ]);
+              setError(null);
             }
-            e.target.value = ""; // reset
+            e.target.value = "";
           }}
           className="border p-2 rounded w-full"
         >
           <option value="">-- Choose Product or Service --</option>
           <option value="new">+ Add New Product or Service</option>
-          {productsAndServices.map((item) => (
+          {allItems.map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name} (${item.rate}/{item.unit})
+              {item.name} (${item.price || item.rate}/{item.unit})
             </option>
           ))}
         </select>
+        {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
       </div>
 
       <table className="w-full mt-4 border border-gray-300">
@@ -67,7 +94,19 @@ export function LineItemsSection({ items, setItems }) {
           {items.map((item, i) => (
             <tr key={i} className="border-t">
               <td className="p-2">{item.name}</td>
-              <td className="p-2">{item.quantity}</td>
+              <td className="p-2">
+                <input
+                  type="number"
+                  min={1}
+                  value={item.quantity}
+                  onChange={(e) => {
+                    const updated = [...items];
+                    updated[i].quantity = parseInt(e.target.value);
+                    setItems(updated);
+                  }}
+                  className="w-16 border rounded px-1 text-right"
+                />
+              </td>
               <td className="p-2">{item.unit}</td>
               <td className="p-2">${item.rate}</td>
               <td className="p-2">${item.quantity * item.rate}</td>
@@ -79,9 +118,9 @@ export function LineItemsSection({ items, setItems }) {
         </tbody>
       </table>
 
-      {showModal && (
-        <LineItemModal
-          onClose={() => setShowModal(false)}
+      {showAddModal && (
+        <AddProductServiceModal
+          onClose={() => setShowAddModal(false)}
           onSave={handleAddItem}
         />
       )}

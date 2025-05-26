@@ -38,23 +38,38 @@ model Business {
   invoices     Invoice[]
   products     Product[]
   services     Service[]
+  taxRates     TaxRate[]
   users        User?
 }
 
-model Invoice {
-  id         String        @id @default(cuid())
-  number     String
-  status     InvoiceStatus @default(DRAFT)
-  amount     Decimal       @db.Decimal(10, 2)
-  dueDate    DateTime
+model TaxRate {
+  id         String  @id @default(cuid())
   businessId String
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  deleted    Boolean       @default(false)
-  customerId String?
-  business   Business      @relation(fields: [businessId], references: [id])
-  customer   Customer?     @relation(fields: [customerId], references: [id])
-  LineItem   LineItem[]
+  name       String // e.g. "Sales Tax", "Service Tax"
+  rate       Decimal @db.Decimal(5, 2) // e.g. 6.50 for 6.5%
+  isDefault  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  number      String
+  status      InvoiceStatus @default(DRAFT)
+  amount      Decimal       @db.Decimal(10, 2)
+  invoiceDate DateTime      @default(now())
+  dueDate     DateTime
+  businessId  String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deleted     Boolean       @default(false)
+  customerId  String?
+  business    Business      @relation(fields: [businessId], references: [id])
+  customer    Customer?     @relation(fields: [customerId], references: [id])
+  LineItem    LineItem[]
 }
 
 model Product {

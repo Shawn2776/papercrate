@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { auditedCreate, auditedUpdate } from "@/lib/db/audited";
-import { serviceSchema } from "@/lib/schemas/service";
+import { createServiceSchema } from "@/lib/schemas/service";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -42,7 +42,7 @@ export async function POST(req) {
   }
 
   const body = await req.json();
-  const parsed = serviceSchema.safeParse(body);
+  const parsed = createServiceSchema.safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json(
@@ -96,7 +96,7 @@ export async function PATCH(req) {
     return new NextResponse("Missing service ID", { status: 400 });
   }
 
-  const parsed = serviceSchema.safeParse(data);
+  const parsed = createServiceSchema.safeParse(data);
   if (!parsed.success) {
     return NextResponse.json(
       { errors: parsed.error.flatten() },
