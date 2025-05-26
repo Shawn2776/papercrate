@@ -78,7 +78,7 @@ export function InvoiceTotalsAndNotes({ items }) {
 
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium whitespace-nowrap">
+              <label className="text-sm font-medium whitespace-nowrap sr-only">
                 Tax:
               </label>
               <select
@@ -86,6 +86,7 @@ export function InvoiceTotalsAndNotes({ items }) {
                 onChange={handleChange}
                 className="border p-1 rounded text-sm"
               >
+                <option value="">-- Choose Tax Rate --</option>
                 <option value="new">+ Add New Tax Rate</option>
                 {taxRates.map((rate) => (
                   <option key={rate.id} value={rate.id}>
