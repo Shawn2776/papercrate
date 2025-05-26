@@ -22,20 +22,20 @@ export function InvoiceTotalsAndNotes({ items }) {
     dispatch(fetchTaxRates());
   }, [dispatch]);
 
-  // useEffect(() => {
-  //   const newSubtotal = items.reduce(
-  //     (sum, item) => sum + item.quantity * item.rate,
-  //     0
-  //   );
-  //   setSubtotal(newSubtotal);
-  // }, [items]);
-
   useEffect(() => {
     const defaultRate = taxRates.find((r) => r.isDefault);
     if (defaultRate && !selectedTaxRateId) {
       setSelectedTaxRateId(defaultRate.id);
     }
   }, [taxRates, selectedTaxRateId]);
+
+  useEffect(() => {
+    const newSubtotal = items.reduce(
+      (sum, item) => sum + item.quantity * item.rate,
+      0
+    );
+    setSubtotal(newSubtotal);
+  }, [items]);
 
   const taxAmount = subtotal * ((parseFloat(taxRatePercent) || 0) / 100);
   const total = subtotal + taxAmount;
@@ -80,9 +80,6 @@ export function InvoiceTotalsAndNotes({ items }) {
                 }}
                 className="border p-1 rounded text-sm"
               >
-                {taxRates.some((r) => r.rate === 0) && (
-                  <option value="">-- No Tax --</option>
-                )}
                 <option value="new">+ Add New Tax Rate</option>
                 {taxRates.map((rate) => (
                   <option key={rate.id} value={rate.id}>
