@@ -23,9 +23,13 @@ export function InvoiceTotalsAndNotes({ items }) {
   }, [dispatch]);
 
   useEffect(() => {
-    const defaultRate = taxRates.find((r) => r.isDefault);
-    if (defaultRate && !selectedTaxRateId) {
-      setSelectedTaxRateId(defaultRate.id);
+    if (taxRates.length === 0) {
+      setShowTaxModal(true);
+    } else {
+      const defaultRate = taxRates.find((r) => r.isDefault);
+      if (defaultRate && !selectedTaxRateId) {
+        setSelectedTaxRateId(defaultRate.id);
+      }
     }
   }, [taxRates, selectedTaxRateId]);
 
