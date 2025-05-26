@@ -43,6 +43,16 @@ export function InvoiceTotalsAndNotes({ items }) {
   const total = subtotal + taxAmount;
   const balanceDue = total;
 
+  const handleChange = (e) => {
+    const value = e.target.value;
+    if (value === "new") {
+      setShowTaxModal(true);
+      setSelectedTaxRateId(null);
+    } else {
+      setSelectedTaxRateId(value);
+    }
+  };
+
   return (
     <div className="space-y-4 border p-4 rounded">
       <h2 className="text-lg font-semibold">Totals & Notes</h2>
@@ -68,22 +78,14 @@ export function InvoiceTotalsAndNotes({ items }) {
 
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium whitespace-nowrap sr-only">
-                Tax ({taxRatePercent}%):
+              <label className="text-sm font-medium whitespace-nowrap">
+                Tax:
               </label>
               <select
                 value={selectedTaxRateId || ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === "new") {
-                    setShowTaxModal(true);
-                  } else {
-                    setSelectedTaxRateId(value || null);
-                  }
-                }}
+                onChange={handleChange}
                 className="border p-1 rounded text-sm"
               >
-                {taxRates.length > 0 && <option value="">-- No Tax --</option>}
                 <option value="new">+ Add New Tax Rate</option>
                 {taxRates.map((rate) => (
                   <option key={rate.id} value={rate.id}>
