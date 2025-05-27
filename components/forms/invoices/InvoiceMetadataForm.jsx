@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
-function formatDate(date) {
-  return date.toISOString().split("T")[0];
-}
-
-export function InvoiceMetadataForm() {
-  const [invoiceNumber, setInvoiceNumber] = useState("INV-00123"); // TODO: Replace with real logic
-  const [invoiceDate, setInvoiceDate] = useState(formatDate(new Date()));
-  const [dueDate, setDueDate] = useState(formatDate(new Date()));
-  const [status, setStatus] = useState("DRAFT");
-
+export function InvoiceMetadataForm({
+  invoiceNumber,
+  onRefreshInvoiceNumber,
+  invoiceDate,
+  setInvoiceDate,
+  dueDate,
+  setDueDate,
+  status,
+  setStatus,
+}) {
   return (
     <div className="space-y-2 border p-4 rounded">
       <h2 className="text-lg font-semibold">Invoice Details</h2>
@@ -17,11 +17,21 @@ export function InvoiceMetadataForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block font-medium">Invoice Number</label>
-          <input
-            className="w-full border p-2 rounded bg-gray-100 text-gray-500"
-            value={invoiceNumber}
-            readOnly
-          />
+          <div className="flex items-center gap-2">
+            <input
+              className="w-full border p-2 rounded bg-gray-100 text-gray-500"
+              value={invoiceNumber}
+              readOnly
+            />
+            <Button
+              variant={"outline"}
+              type="button"
+              onClick={onRefreshInvoiceNumber}
+              className="text-sm px-2 py-1 "
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
 
         <div>

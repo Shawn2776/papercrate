@@ -7,11 +7,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import TaxRateModal from "./TaxRateModal";
 
-export function InvoiceTotalsAndNotes({ items }) {
+export function InvoiceTotalsAndNotes({
+  items,
+  notes,
+  setNotes,
+  selectedTaxRateId,
+  setSelectedTaxRateId,
+}) {
   const dispatch = useDispatch();
-  const [subtotal, setSubtotal] = useState(0);
-  const [notes, setNotes] = useState("Thank you for your business!");
-  const [selectedTaxRateId, setSelectedTaxRateId] = useState(null);
   const [showTaxModal, setShowTaxModal] = useState(false);
 
   const taxRates = useSelector((state) => state.taxRates.items);
@@ -29,16 +32,12 @@ export function InvoiceTotalsAndNotes({ items }) {
         setSelectedTaxRateId(defaultRate.id);
       }
     }
-  }, [taxRates, selectedTaxRateId]);
+  }, [taxRates, selectedTaxRateId, setSelectedTaxRateId]);
 
-  useEffect(() => {
-    const newSubtotal = items.reduce(
-      (sum, item) => sum + item.quantity * item.rate,
-      0
-    );
-    setSubtotal(newSubtotal);
-  }, [items]);
-
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.quantity * item.rate,
+    0
+  );
   const taxAmount = subtotal * ((parseFloat(taxRatePercent) || 0) / 100);
   const total = subtotal + taxAmount;
   const balanceDue = total;
@@ -78,9 +77,7 @@ export function InvoiceTotalsAndNotes({ items }) {
 
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium whitespace-nowrap sr-only">
-                Tax:
-              </label>
+              <label className="sr-only">Tax</label>
               <select
                 value={selectedTaxRateId || ""}
                 onChange={handleChange}

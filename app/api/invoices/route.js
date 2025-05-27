@@ -81,6 +81,16 @@ export async function POST(req) {
 
     const invoiceNumber = `INV-${String(nextNumber).padStart(4, "0")}`;
 
+    if (data.status !== "DRAFT" && !data.customerId) {
+      return new NextResponse("Missing customer", { status: 400 });
+    }
+
+    if (data.status !== "DRAFT" && (!data.items || data.items.length === 0)) {
+      return new NextResponse("Invoice must have at least one item", {
+        status: 400,
+      });
+    }
+
     // Create the invoice
     const invoice = await prisma.invoice.create({
       data: {
