@@ -105,6 +105,75 @@ export default function NewInvoiceForm({ invoiceId = null }) {
     }
   }, [invoiceNumber, initialInvoiceNumber]);
 
+  useEffect(() => {
+    setIsDirty(true);
+  }, [
+    customerId,
+    items,
+    invoiceDate,
+    dueDate,
+    notes,
+    status,
+    selectedTaxRateId,
+  ]);
+
+  useEffect(() => {
+    if (!invoiceId) return; // only auto-save existing drafts
+
+    const interval = setInterval(async () => {
+      if (!isDirty) return;
+
+      const payload = {
+        businessId,
+        customerId,
+        invoiceDate,
+        dueDate,
+        status: "DRAFT", // force draft
+        notes,
+        taxRateId: selectedTaxRateId,
+        taxRatePercent,
+        items: items.map((item) => ({
+          name: item.name,
+          unit: item.unit,
+          quantity: Number(item.quantity),
+          rate: Number(item.rate),
+          description: item.description || "",
+          type: item.type || "product",
+        })),
+      };
+
+      try {
+        const res = await fetch(`/api/invoices/${invoiceId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          setIsDirty(false);
+          setLastSavedAt(new Date());
+        } else {
+          console.warn("Auto-save failed");
+        }
+      } catch (err) {
+        console.error("Auto-save error:", err);
+      }
+    }, 30000); // every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [
+    invoiceId,
+    isDirty,
+    customerId,
+    invoiceDate,
+    dueDate,
+    notes,
+    status,
+    selectedTaxRateId,
+    items,
+    businessId,
+  ]);
+
   const numberChanged =
     initialInvoiceNumber && invoiceNumber !== initialInvoiceNumber;
 
@@ -224,6 +293,14 @@ export default function NewInvoiceForm({ invoiceId = null }) {
         selectedTaxRateId={selectedTaxRateId}
         setSelectedTaxRateId={setSelectedTaxRateId}
       />
+
+      <div>
+        {lastSavedAt && (
+          <p className="text-xs text-gray-500">
+            Auto-saved at {lastSavedAt.toLocaleTimeString()}
+          </p>
+        )}
+      </div>
 
       <div className="flex justify-end pt-4 space-x-2">
         <Button variant="outline" onClick={() => router.back()}>

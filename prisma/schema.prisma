@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum LineItemType {
+  PRODUCT
+  SERVICE
+}
+
 model User {
   id         String   @id @default(cuid())
   email      String   @unique
@@ -52,24 +57,29 @@ model TaxRate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id])
+  business Business  @relation(fields: [businessId], references: [id])
+  invoices Invoice[]
 }
 
 model Invoice {
-  id          String        @id @default(cuid())
-  number      String
-  status      InvoiceStatus @default(DRAFT)
-  amount      Decimal       @db.Decimal(10, 2)
-  invoiceDate DateTime      @default(now())
-  dueDate     DateTime
-  businessId  String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  deleted     Boolean       @default(false)
-  customerId  String?
-  business    Business      @relation(fields: [businessId], references: [id])
-  customer    Customer?     @relation(fields: [customerId], references: [id])
-  LineItem    LineItem[]
+  id             String        @id @default(cuid())
+  number         String
+  status         InvoiceStatus @default(DRAFT)
+  amount         Decimal       @db.Decimal(10, 2)
+  invoiceDate    DateTime      @default(now())
+  dueDate        DateTime
+  businessId     String
+  customerId     String?
+  taxRateId      String?
+  taxRatePercent Decimal?      @db.Decimal(5, 2)
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deleted        Boolean       @default(false)
+  taxRate        TaxRate?      @relation(fields: [taxRateId], references: [id])
+  business       Business      @relation(fields: [businessId], references: [id])
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+  LineItem       LineItem[]
 }
 
 model Product {
@@ -132,17 +142,18 @@ model AuditLog {
 }
 
 model LineItem {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   invoiceId   String
   name        String
   description String?
   unit        String
   quantity    Int
-  rate        Decimal  @db.Decimal(10, 2)
-  total       Decimal  @db.Decimal(10, 2)
-  createdAt   DateTime @default(now())
+  rate        Decimal       @db.Decimal(10, 2)
+  total       Decimal       @db.Decimal(10, 2)
+  type        LineItemType?
+  createdAt   DateTime      @default(now())
   updatedAt   DateTime
-  Invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  Invoice     Invoice       @relation(fields: [invoiceId], references: [id])
 }
 
 enum InvoiceStatus {
