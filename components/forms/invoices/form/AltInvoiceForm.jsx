@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronDown, Save } from "lucide-react";
 
-import CustomerDropdown from "./CustomerDropdown";
-import { InvoiceMetadataForm } from "./InvoiceMetadataForm";
-import { LineItemsSection } from "./LineItemsSection";
-import { InvoiceTotalsAndNotes } from "./InvoiceTotalsAndNotes";
+import CustomerDropdown from "@/components/forms/invoices/form/CustomerDropdown";
+import { InvoiceMetadataForm } from "@/components/forms/invoices/form/InvoiceMetadataForm";
+import { LineItemsSection } from "@/components/forms/invoices/form/LineItemsSection";
+import { InvoiceTotalsAndNotes } from "@/components/forms/invoices/form/InvoiceTotalsAndNotes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -131,7 +131,7 @@ export default function NewInvoiceForm({ invoiceId = null }) {
         status: "DRAFT", // force draft
         notes,
         taxRateId: selectedTaxRateId,
-        taxRatePercent,
+        taxRatePercent: selectedTaxRate?.rate || null,
         items: items.map((item) => ({
           name: item.name,
           unit: item.unit,

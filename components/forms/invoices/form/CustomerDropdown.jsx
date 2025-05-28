@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import CustomerModal from "./CustomerModal";
+import CustomerModal from "@/components/forms/invoices/modals/CustomerModal";
 import { useSelector } from "react-redux";
 
 const CustomerDropdown = ({ customerId, setCustomerId }) => {

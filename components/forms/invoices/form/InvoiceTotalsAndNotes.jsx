@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchTaxRates, createTaxRate } from "@/lib/redux/slices/taxRatesSlice";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import TaxRateModal from "./TaxRateModal";
+import TaxRateModal from "@/components/forms/invoices/modals/TaxRateModal";
 
 export function InvoiceTotalsAndNotes({
   items,

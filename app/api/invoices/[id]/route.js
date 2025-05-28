@@ -8,7 +8,19 @@ export async function GET(req, { params }) {
 
   const invoice = await prisma.invoice.findUnique({
     where: { id: params.id },
-    include: { LineItem: true },
+    select: {
+      id: true,
+      number: true,
+      status: true,
+      invoiceDate: true,
+      dueDate: true,
+      taxRateId: true,
+      taxRatePercent: true, // <- FIXED LINE
+      notes: true,
+      customerId: true,
+      businessId: true,
+      LineItem: true,
+    },
   });
 
   return NextResponse.json(invoice);
@@ -23,6 +35,7 @@ export async function PUT(req, context) {
   }
 
   const body = await req.json();
+  console.log("Invoice update payload:", body);
   const { items, invoiceDate, dueDate, ...rest } = body;
 
   try {
@@ -31,7 +44,14 @@ export async function PUT(req, context) {
       data: {
         status: rest.status,
         notes: rest.notes,
-        taxRateId: rest.taxRateId,
+        taxRate: rest.taxRateId
+          ? { connect: { id: rest.taxRateId } }
+          : undefined, // ✅ use the relation field
+        taxRatePercent: rest.taxRatePercent
+          ? Number(rest.taxRatePercent)
+          : null,
+        taxRatePercent: rest.taxRatePercent,
+
         invoiceDate: new Date(invoiceDate),
         dueDate: new Date(dueDate),
         customer: rest.customerId
@@ -47,7 +67,7 @@ export async function PUT(req, context) {
             quantity: item.quantity,
             rate: item.rate,
             total: item.quantity * item.rate,
-            type: item.type,
+            type: item.type?.toUpperCase() ?? "PRODUCT",
             updatedAt: new Date(),
           })),
         },

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import AddProductServiceModal from "./AddProductServiceModal";
+import AddProductServiceModal from "@/components/forms/invoices/form/AddProductServiceModal";
 
 export function LineItemsSection({ items, setItems }) {
   const [showAddModal, setShowAddModal] = useState(false);

@@ -1,56 +1,9 @@
-// /app/invoices/[id]/page.jsx
 "use client";
-
-import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useParams } from "next/navigation";
 
-export default function InvoicePage() {
-  const { id } = useParams();
-  const [invoice, setInvoice] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function InvoicePrintView({ invoice }) {
   const business = useSelector((state) => state.business.item);
-
-  useEffect(() => {
-    const fetchInvoice = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/invoices/${id}`);
-        const data = await res.json();
-        setInvoice(data);
-      } catch (err) {
-        console.error("Failed to load invoice", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchInvoice();
-  }, [id]);
-
-  if (loading || !invoice) {
-    return (
-      <div className="max-w-4xl mx-auto p-10 animate-pulse text-gray-400">
-        <div className="h-6 w-1/2 bg-gray-200 mb-4 rounded"></div>
-        <div className="h-4 w-1/3 bg-gray-200 mb-2 rounded"></div>
-        <div className="h-4 w-2/3 bg-gray-200 mb-8 rounded"></div>
-        <div className="h-6 w-full bg-gray-200 mb-4 rounded"></div>
-        <div className="h-4 w-full bg-gray-200 mb-2 rounded"></div>
-        <div className="h-4 w-3/4 bg-gray-200 mb-2 rounded"></div>
-        <div className="h-4 w-2/3 bg-gray-200 mb-2 rounded"></div>
-      </div>
-    );
-  }
-
-  const formatPhone = (phone) => {
-    if (!phone) return "";
-    const cleaned = phone.replace(/[^0-9]/g, "");
-    if (cleaned.length === 10) {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(
-        6
-      )}`;
-    }
-    return phone;
-  };
+  console.log("business:", business);
 
   const subtotal = invoice.LineItem.reduce(
     (sum, item) => sum + item.rate * item.quantity,
@@ -62,6 +15,7 @@ export default function InvoicePage() {
   const taxRatePercent = Number(invoice.taxRatePercent || 0);
   const taxDue = taxableAmount * (taxRatePercent / 100);
   const total = subtotal + taxDue;
+
   const formattedDate = new Date(invoice.invoiceDate).toLocaleDateString();
   const formattedDueDate = new Date(invoice.dueDate).toLocaleDateString();
 
@@ -72,15 +26,13 @@ export default function InvoicePage() {
           <h1 className="text-3xl font-bold uppercase tracking-wide text-gray-800">
             {business?.name || "Company Name"}
           </h1>
-          {business?.addressLine1 && <p>{business.addressLine1}</p>}
+          <p>{business?.addressLine1}</p>
           {business?.addressLine2 && <p>{business.addressLine2}</p>}
-          {(business?.city || business?.state || business?.postalCode) && (
-            <p>
-              {business?.city}, {business?.state} {business?.postalCode}
-            </p>
-          )}
-          {business?.phone && <p>{formatPhone(business.phone)}</p>}
-          {business?.email && <p>{business.email}</p>}
+          <p>
+            {business?.city}, {business?.state} {business?.postalCode}
+          </p>
+          <p>{business?.phone}</p>
+          <p>{business?.email}</p>
         </div>
 
         <div className="text-right space-y-1">
@@ -111,7 +63,7 @@ export default function InvoicePage() {
             {invoice.customer?.city}, {invoice.customer?.state}{" "}
             {invoice.customer?.postalCode}
           </p>
-          <p>{formatPhone(invoice.customer?.phone)}</p>
+          <p>{invoice.customer?.phone}</p>
         </div>
       </section>
 
@@ -168,7 +120,7 @@ export default function InvoicePage() {
         <p className="mt-4">Thank you for your business!</p>
         <p className="text-gray-500">
           If you have questions about this invoice, contact {business?.name},{" "}
-          {formatPhone(business?.phone)}, {business?.email}
+          {business?.phone}, {business?.email}
         </p>
       </footer>
     </div>
