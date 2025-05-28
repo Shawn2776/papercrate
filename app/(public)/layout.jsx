@@ -1,3 +1,4 @@
+import Footer from "@/components/footer/Footer";
 import PublicNav from "@/components/nav/PublicNav";
 import React from "react";
 
@@ -6,6 +7,7 @@ const PublicLayout = ({ children }) => {
     <div>
       <PublicNav />
       <div>{children}</div>
+      <Footer />
     </div>
   );
 };
