@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronDown, Save } from "lucide-react";
+import { ChevronDown, Save, Send } from "lucide-react";
 
 import CustomerDropdown from "@/components/forms/invoices/form/CustomerDropdown";
 import { InvoiceMetadataForm } from "@/components/forms/invoices/form/InvoiceMetadataForm";
@@ -237,7 +237,26 @@ export default function NewInvoiceForm({ invoiceId = null }) {
       if (!res.ok) throw new Error("Failed to save");
 
       const result = await res.json();
+      const customerRes = await fetch(`/api/customers/${result.customerId}`);
+      const customer = await customerRes.json();
       toast.success(`Invoice #${result.number} created successfully!`);
+
+      try {
+        await fetch("/api/invoices/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: customer.email,
+            invoiceData: result, // or format however your email template expects
+          }),
+        });
+
+        toast.success("Invoice sent to customer!");
+      } catch (sendErr) {
+        console.error("Email send failed:", sendErr);
+        toast.warning("Invoice saved, but failed to send email.");
+      }
+
       router.push("/dashboard/invoices");
     } catch (err) {
       console.error(err);
@@ -313,8 +332,8 @@ export default function NewInvoiceForm({ invoiceId = null }) {
               disabled={isSubmitting}
               className="rounded-r-none"
             >
-              <Save className="mr-2 h-4 w-4" />
-              Save Invoice
+              <Send className="mr-2 h-4 w-4" />
+              Send Invoice
             </Button>
             <DropdownMenuTrigger asChild>
               <Button
