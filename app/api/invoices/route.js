@@ -3,7 +3,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { invoiceSchema } from "@/lib/schemas/invoice"; // ✅ imported
+import { invoiceSchema } from "@/lib/schemas/invoice";
 
 export async function GET(req) {
   try {
