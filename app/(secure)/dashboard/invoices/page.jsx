@@ -324,7 +324,7 @@ export default function InvoicesPage() {
                                 <DropdownMenuItem
                                   onClick={() =>
                                     router.push(
-                                      `/dashboard/invoices/${invoice.id}/edit`
+                                      `/dashboard/invoices/edit/${invoice.id}/`
                                     )
                                   }
                                 >
