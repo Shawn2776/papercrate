@@ -1,41 +1,88 @@
+// app>api>invoices>route.js
+
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-// import { createInvoiceSchema } from "@/lib/schemas/invoice";
 import { invoiceSchema } from "@/lib/schemas/invoice"; // ✅ imported
 
-// GET /api/invoices — Get all invoices for current user’s business
-export async function GET() {
-  const user = await currentUser();
+export async function GET(req) {
+  try {
+    const user = await currentUser();
+    if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-  if (!user) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
+    const dbUser = await prisma.user.findUnique({
+      where: { clerkId: user.id },
+      include: { business: true },
+    });
+    if (!dbUser?.businessId)
+      return new NextResponse("No associated business", { status: 404 });
 
-  const dbUser = await prisma.user.findUnique({
-    where: { clerkId: user.id },
-    include: { business: true },
-  });
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSizeParam = searchParams.get("pageSize") || "10";
+    const search = searchParams.get("search") || "";
+    const sort = searchParams.get("sort") || "invoiceDate_desc";
 
-  if (!dbUser?.businessId) {
-    return new NextResponse("No associated business", { status: 404 });
-  }
+    const pageSize =
+      pageSizeParam === "all" ? undefined : parseInt(pageSizeParam);
+    const skip = pageSize ? (page - 1) * pageSize : undefined;
 
-  const invoices = await prisma.invoice.findMany({
-    where: {
+    const where = {
       businessId: dbUser.businessId,
       deleted: false,
-    },
-    include: {
-      customer: true,
-      LineItem: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+      OR: [
+        { number: { contains: search, mode: "insensitive" } },
+        { customer: { name: { contains: search, mode: "insensitive" } } },
+      ],
+    };
 
-  return NextResponse.json(invoices);
+    const [sortField, sortOrder] = sort.split("_");
+    let orderBy;
+    if (sortField === "customer") {
+      orderBy = { customer: { name: sortOrder } };
+    } else if (sortField === "business") {
+      orderBy = { business: { name: sortOrder } };
+    } else {
+      orderBy = { [sortField]: sortOrder };
+    }
+
+    const total = await prisma.invoice.count({ where });
+
+    let rawInvoices = await prisma.invoice.findMany({
+      where,
+      include: { customer: true },
+      orderBy:
+        sortField === "customer"
+          ? { customer: { name: sortOrder } }
+          : sortField === "business"
+            ? { business: { name: sortOrder } }
+            : sortField !== "balanceDue"
+              ? { [sortField]: sortOrder }
+              : undefined, // skip orderBy for balanceDue
+      skip,
+      take: pageSize,
+    });
+
+    // Add balanceDue manually if sorting on it
+    let invoices = rawInvoices.map((inv) => ({
+      ...inv,
+      balanceDue: parseFloat(inv.amount) - (parseFloat(inv.amountPaid) || 0),
+    }));
+
+    // Sort in-memory if needed
+    if (sortField === "balanceDue") {
+      invoices.sort((a, b) =>
+        sortOrder === "asc"
+          ? a.balanceDue - b.balanceDue
+          : b.balanceDue - a.balanceDue
+      );
+    }
+
+    return NextResponse.json({ invoices, total });
+  } catch (err) {
+    console.error("Error in GET /api/invoices:", err);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
 }
 
 // POST /api/invoices — Create a new invoice
@@ -53,6 +100,33 @@ export async function POST(req) {
 
   if (!dbUser?.businessId) {
     return new NextResponse("No associated business", { status: 404 });
+  }
+
+  // Step 2: Check plan tier limits
+  const business = await prisma.business.findUnique({
+    where: { id: dbUser.businessId },
+    include: { invoices: true },
+  });
+
+  const currentCount = await prisma.invoice.count({
+    where: {
+      businessId: business.id,
+      deleted: false,
+    },
+  });
+
+  const planLimits = {
+    FREE: 10,
+    BASIC: 50,
+    PRO: Infinity,
+    ENTERPRISE: Infinity,
+  };
+
+  const maxInvoices = planLimits[business.plan];
+  if (currentCount >= maxInvoices) {
+    return new NextResponse("Invoice limit reached for your plan", {
+      status: 403,
+    });
   }
 
   try {

@@ -12,6 +12,23 @@ enum LineItemType {
   SERVICE
 }
 
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  VOID
+}
+
+enum PlanTier {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
 model User {
   id         String   @id @default(cuid())
   email      String   @unique
@@ -31,6 +48,7 @@ model Business {
   updatedAt    DateTime   @updatedAt
   deleted      Boolean    @default(false)
   email        String
+  plan         PlanTier   @default(FREE)
   addressLine1 String?
   addressLine2 String?
   city         String?
@@ -62,24 +80,25 @@ model TaxRate {
 }
 
 model Invoice {
-  id             String        @id @default(cuid())
+  id             String               @id @default(cuid())
   number         String
-  status         InvoiceStatus @default(DRAFT)
-  amount         Decimal       @db.Decimal(10, 2)
-  invoiceDate    DateTime      @default(now())
+  status         InvoiceStatus        @default(DRAFT)
+  amount         Decimal              @db.Decimal(10, 2)
+  invoiceDate    DateTime             @default(now())
   dueDate        DateTime
   businessId     String
   customerId     String?
   taxRateId      String?
-  taxRatePercent Decimal?      @db.Decimal(5, 2)
+  taxRatePercent Decimal?             @db.Decimal(5, 2)
   notes          String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  deleted        Boolean       @default(false)
-  taxRate        TaxRate?      @relation(fields: [taxRateId], references: [id])
-  business       Business      @relation(fields: [businessId], references: [id])
-  customer       Customer?     @relation(fields: [customerId], references: [id])
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  deleted        Boolean              @default(false)
+  taxRate        TaxRate?             @relation(fields: [taxRateId], references: [id])
+  business       Business             @relation(fields: [businessId], references: [id])
+  customer       Customer?            @relation(fields: [customerId], references: [id])
   LineItem       LineItem[]
+  accessTokens   InvoiceAccessToken[]
 }
 
 model Product {
@@ -156,12 +175,12 @@ model LineItem {
   Invoice     Invoice       @relation(fields: [invoiceId], references: [id])
 }
 
-enum InvoiceStatus {
-  DRAFT
-  SENT
-  PARTIALLY_PAID
-  PAID
-  OVERDUE
-  CANCELLED
-  VOID
+model InvoiceAccessToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

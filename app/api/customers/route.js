@@ -1,3 +1,5 @@
+// app > api > customers > route.js
+
 import { metadata } from "@/app/layout";
 import { prisma } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";

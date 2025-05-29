@@ -1,3 +1,5 @@
+// emails>InvoiceEmail.jsx
+
 import {
   Html,
   Head,
@@ -65,19 +67,21 @@ export default function InvoiceEmail({ invoice }) {
           <Hr />
 
           <Section style={{ textAlign: "center", marginTop: "24px" }}>
-            <Button
-              href={`https://papercrate.io/invoice/${invoice.id}`}
-              style={{
-                backgroundColor: "#3b82f6",
-                color: "#fff",
-                padding: "12px 24px",
-                borderRadius: "6px",
-                fontWeight: "bold",
-                textDecoration: "none",
-              }}
-            >
-              View Invoice
-            </Button>
+            {invoice.accessUrl && (
+              <Button
+                href={invoice.accessUrl}
+                style={{
+                  backgroundColor: "#3b82f6",
+                  color: "#fff",
+                  padding: "12px 24px",
+                  borderRadius: "6px",
+                  fontWeight: "bold",
+                  textDecoration: "none",
+                }}
+              >
+                View Invoice
+              </Button>
+            )}
           </Section>
 
           <Text
