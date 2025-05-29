@@ -58,31 +58,6 @@ export default function InvoicesPage() {
   });
 
   useEffect(() => {
-    const checkLimits = async () => {
-      try {
-        const res = await fetch("/api/invoices/limit");
-        const data = await res.json();
-
-        if (!data?.allowed) {
-          toast("Invoice Limit Reached", {
-            description:
-              "You’ve reached your invoice limit for your current plan.",
-            action: {
-              label: "Upgrade",
-              onClick: () => router.push("/dashboard/settings/billing"),
-            },
-          });
-
-          setTimeout(() => {
-            router.replace("/dashboard/invoices");
-          }, 2000); // give toast 2 seconds to show
-        }
-      } catch (err) {
-        console.error("Invoice limit check failed:", err);
-      }
-    };
-
-    checkLimits();
     dispatch(queryInvoices(query));
   }, [dispatch, query, router]);
 
