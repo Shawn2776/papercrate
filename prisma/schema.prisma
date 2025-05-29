@@ -132,7 +132,7 @@ model Customer {
   id           String    @id @default(cuid())
   businessId   String
   name         String
-  email        String?   @unique
+  email        String
   phone        String?
   addressLine1 String?
   addressLine2 String?
@@ -146,6 +146,8 @@ model Customer {
   business     Business  @relation(fields: [businessId], references: [id])
   invoices     Invoice[]
   notes        String?
+
+  @@unique([email, businessId])
 }
 
 model AuditLog {
