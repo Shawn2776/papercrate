@@ -1,5 +1,4 @@
 // app>(secure)>dashboard>invoices>page.jsx
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -35,6 +34,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+
 import { MoreVertical, ArrowUp, ArrowDown } from "lucide-react";
 import { utils, writeFile } from "xlsx";
 
@@ -57,8 +58,33 @@ export default function InvoicesPage() {
   });
 
   useEffect(() => {
+    const checkLimits = async () => {
+      try {
+        const res = await fetch("/api/invoices/limit");
+        const data = await res.json();
+
+        if (!data?.allowed) {
+          toast("Invoice Limit Reached", {
+            description:
+              "You’ve reached your invoice limit for your current plan.",
+            action: {
+              label: "Upgrade",
+              onClick: () => router.push("/dashboard/settings/billing"),
+            },
+          });
+
+          setTimeout(() => {
+            router.replace("/dashboard/invoices");
+          }, 2000); // give toast 2 seconds to show
+        }
+      } catch (err) {
+        console.error("Invoice limit check failed:", err);
+      }
+    };
+
+    checkLimits();
     dispatch(queryInvoices(query));
-  }, [dispatch, query]);
+  }, [dispatch, query, router]);
 
   const totalPages = pageSize === "all" ? 1 : Math.ceil(total / pageSize);
 
@@ -80,6 +106,7 @@ export default function InvoicesPage() {
   };
 
   const handleSort = (field) => {
+    if (field === "balanceDue") return; // Prevent sorting on virtual field
     const [currentField, currentOrder] = sort.split("_");
     const newOrder =
       currentField === field && currentOrder === "asc" ? "desc" : "asc";
@@ -139,17 +166,15 @@ export default function InvoicesPage() {
             New Invoice
           </Button>
         </div>
-        <div className="flex items-center gap-4 mt-4 flex-wrap">
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportCSV}>
-              Export CSV
-            </Button>
-            <Button variant="outline" onClick={handleExportPDF} disabled>
-              Export PDF
-            </Button>
-          </div>
-
-          <div className="ml-auto flex gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-4">
+          <Input
+            type="text"
+            placeholder="Search invoices..."
+            value={search}
+            onChange={handleSearchChange}
+            className="w-full sm:max-w-sm"
+          />
+          <div className="ml-auto flex gap-2 flex-wrap justify-end">
             {Object.keys(visibleColumns).map((col) => (
               <label
                 key={col}
@@ -181,6 +206,9 @@ export default function InvoicesPage() {
                   <TableHead
                     onClick={() => handleSort("number")}
                     className="cursor-pointer"
+                    aria-sort={
+                      sort.startsWith("number") ? sort.split("_")[1] : undefined
+                    }
                   >
                     # {getSortIndicator("number")}
                   </TableHead>
@@ -188,6 +216,11 @@ export default function InvoicesPage() {
                     <TableHead
                       onClick={() => handleSort("status")}
                       className="cursor-pointer"
+                      aria-sort={
+                        sort.startsWith("status")
+                          ? sort.split("_")[1]
+                          : undefined
+                      }
                     >
                       Status {getSortIndicator("status")}
                     </TableHead>
@@ -196,6 +229,11 @@ export default function InvoicesPage() {
                     <TableHead
                       onClick={() => handleSort("customer")}
                       className="cursor-pointer"
+                      aria-sort={
+                        sort.startsWith("customer")
+                          ? sort.split("_")[1]
+                          : undefined
+                      }
                     >
                       Customer {getSortIndicator("customer")}
                     </TableHead>
@@ -204,6 +242,11 @@ export default function InvoicesPage() {
                     <TableHead
                       onClick={() => handleSort("dueDate")}
                       className="cursor-pointer"
+                      aria-sort={
+                        sort.startsWith("dueDate")
+                          ? sort.split("_")[1]
+                          : undefined
+                      }
                     >
                       Due {getSortIndicator("dueDate")}
                     </TableHead>
@@ -212,17 +255,17 @@ export default function InvoicesPage() {
                     <TableHead
                       onClick={() => handleSort("amount")}
                       className="cursor-pointer text-right"
+                      aria-sort={
+                        sort.startsWith("amount")
+                          ? sort.split("_")[1]
+                          : undefined
+                      }
                     >
                       Amount {getSortIndicator("amount")}
                     </TableHead>
                   )}
                   {visibleColumns.balance && (
-                    <TableHead
-                      onClick={() => handleSort("balanceDue")}
-                      className="cursor-pointer text-right"
-                    >
-                      Balance Due {getSortIndicator("balanceDue")}
-                    </TableHead>
+                    <TableHead className="text-right">Balance Due</TableHead>
                   )}
                   {visibleColumns.actions && (
                     <TableHead className="text-right">Actions</TableHead>
@@ -268,7 +311,11 @@ export default function InvoicesPage() {
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                aria-label="Invoice actions"
+                              >
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -294,7 +341,6 @@ export default function InvoicesPage() {
                               >
                                 View Invoice
                               </DropdownMenuItem>
-
                               <DropdownMenuItem
                                 onClick={() =>
                                   window.open(
@@ -340,7 +386,9 @@ export default function InvoicesPage() {
         ) : (
           <div className="flex flex-col items-center justify-center py-8">
             <p className="text-muted-foreground mb-4">
-              No invoices found. Create your first invoice!
+              {search
+                ? "No invoices match your search."
+                : "No invoices found. Create your first invoice!"}
             </p>
             <Button onClick={() => router.push("/dashboard/invoices/new")}>
               New Invoice
