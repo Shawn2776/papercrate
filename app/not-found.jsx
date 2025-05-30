@@ -1,38 +1,49 @@
-// app/not-found.tsx
-
 "use client";
-
+import "@/app/globals.css";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
-export default function NotFound() {
+export default function GlobalError({ error, reset }) {
   const [showNote, setShowNote] = useState(false);
-
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith("/dashboard");
   const backHref = isDashboard ? "/dashboard" : "/";
 
   useEffect(() => {
-    const timeout = setTimeout(() => setShowNote(true), 2000);
-    return () => clearTimeout(timeout);
-  }, []);
+    const timeout1 = setTimeout(() => setShowNote(true), 2000);
+    const timeout2 = setTimeout(() => reset(), 10000);
+    return () => {
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+    };
+  }, [reset]);
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center bg-gray-50 text-gray-800 overflow-hidden px-4">
       <h1 className="text-5xl font-bold mb-4 animate-bounce">
-        404 - Lost in the PaperStack
+        Something Went Wrong 😵‍💫
       </h1>
-      <p className="text-lg mb-6">
-        We misplaced the page… maybe it slipped behind the filing cabinet?
+      <p className="text-lg mb-6 text-center">
+        We hit a snag trying to load this page.
+        <br />
+        Retrying automatically in 10 seconds…
       </p>
 
-      <Link
-        href={backHref}
-        className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
-      >
-        🏠 Back to {isDashboard ? "Dashboard" : "Home"}
-      </Link>
+      <div className="flex gap-4 mb-6">
+        <button
+          onClick={reset}
+          className="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition"
+        >
+          🔁 Try Again Now
+        </button>
+        <Link
+          href={backHref}
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          🏠 Back to {isDashboard ? "Dashboard" : "Home"}
+        </Link>
+      </div>
 
       {/* Animated floating crate */}
       <div className="absolute bottom-10 w-full flex justify-center">
@@ -55,7 +66,7 @@ export default function NotFound() {
       {/* Sticky note message */}
       {showNote && (
         <div className="absolute top-8 right-8 bg-yellow-100 border border-yellow-300 shadow p-2 rounded rotate-6">
-          📝 This route doesn't exist!
+          🧾 Something broke — but we’re working on it!
         </div>
       )}
 
