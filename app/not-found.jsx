@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export default function GlobalError({ error, reset }) {
+export default function NotFound({ error, reset }) {
   const [showNote, setShowNote] = useState(false);
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith("/dashboard");
