@@ -1,6 +1,12 @@
 "use client";
 
-import { SignedIn, SignedOut, SignUpButton, UserButton } from "@clerk/nextjs";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  SignUpButton,
+  UserButton,
+} from "@clerk/nextjs";
 import Link from "next/link";
 import { MdDashboard } from "react-icons/md";
 import { redirect } from "next/navigation";
@@ -18,7 +24,7 @@ const PublicNav = () => {
             Pricing
           </Link> */}
           <SignedOut>
-            <SignUpButton />
+            <SignInButton />
           </SignedOut>
           <SignedIn>
             <UserButton>
