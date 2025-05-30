@@ -1,8 +1,14 @@
-"use client";
+// app/error-test/page.jsx
+import { prisma } from "@/lib/db"; // adjust path as needed
 
-export default function ErrorTestPage() {
-  // Simulate an error when the component renders
-  throw new Error("Test error for GlobalError");
+export const dynamic = "force-dynamic"; // Prevent static generation
 
-  return <div>You won't see this text.</div>;
+export default async function ErrorTestPage() {
+  // Simulate a DB error
+  await prisma.invoice.findUnique({
+    where: { id: "nonexistent-id" },
+    rejectOnNotFound: true, // This will throw if not found
+  });
+
+  return <div>This should never render.</div>;
 }
