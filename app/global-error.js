@@ -1,4 +1,5 @@
 "use client";
+import "@/app/globals.css"; // 👈 necessary for Tailwind styles
 import { useEffect } from "react";
 import Link from "next/link";
 
@@ -6,8 +7,7 @@ export default function GlobalError({ error, reset }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       reset();
-    }, 10000); // Retry after 10 seconds
-
+    }, 10000);
     return () => clearTimeout(timer);
   }, [reset]);
 
