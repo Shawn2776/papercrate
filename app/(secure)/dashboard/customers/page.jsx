@@ -2,15 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
@@ -70,9 +62,7 @@ export default function CustomersPage() {
                 <TableRow
                   key={customer.id}
                   className="cursor-pointer hover:bg-muted/50 transition"
-                  onClick={() =>
-                    router.push(`/dashboard/customers/${customer.id}`)
-                  }
+                  onClick={() => router.push(`/dashboard/customers/${customer.id}`)}
                 >
                   <TableCell className="font-medium">{customer.name}</TableCell>
                   <TableCell>
@@ -90,13 +80,11 @@ export default function CustomersPage() {
                       onClick={(e) => e.stopPropagation()}
                       className="hover:text-blue-500 "
                     >
-                      {customer.phone
-                        .replace(/\D/g, "")
-                        .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
+                      {customer.phone.replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
                     </Link>
                   </TableCell>
                   <TableCell>
-                    {customer.address.split("\n").map((line, index) => (
+                    {customer?.address?.split("\n").map((line, index) => (
                       <p key={index}>{line}</p>
                     ))}
                   </TableCell>
@@ -118,9 +106,7 @@ export default function CustomersPage() {
           </Table>
         ) : (
           <div className="flex flex-col items-center justify-center py-8">
-            <p className="text-muted-foreground mb-4">
-              No customers found. Add your first customer!
-            </p>
+            <p className="text-muted-foreground mb-4">No customers found. Add your first customer!</p>
             <Button onClick={handleNewCustomer}>Add Customer</Button>
           </div>
         )}
