@@ -84,9 +84,12 @@ export default function CustomersPage() {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    {customer?.address?.split("\n").map((line, index) => (
-                      <p key={index}>{line}</p>
-                    ))}
+                    {customer.addressLine1 && <p>{customer.addressLine1}</p>}
+                    {customer.addressLine2 && <p>{customer.addressLine2}</p>}
+                    {(customer.city || customer.state || customer.postalCode) && (
+                      <p>{[customer.city, customer.state, customer.postalCode].filter(Boolean).join(", ")}</p>
+                    )}
+                    {customer.country && <p>{customer.country}</p>}
                   </TableCell>
 
                   {/* <TableCell>{product.description}</TableCell>

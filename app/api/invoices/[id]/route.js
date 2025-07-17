@@ -15,11 +15,25 @@ export async function GET(req, { params }) {
       invoiceDate: true,
       dueDate: true,
       taxRateId: true,
-      taxRatePercent: true, // <- FIXED LINE
+      taxRatePercent: true,
       notes: true,
       customerId: true,
       businessId: true,
       LineItem: true,
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          addressLine1: true,
+          addressLine2: true,
+          city: true,
+          state: true,
+          postalCode: true,
+          country: true,
+        },
+      },
     },
   });
 
@@ -44,19 +58,13 @@ export async function PUT(req, context) {
       data: {
         status: rest.status,
         notes: rest.notes,
-        taxRate: rest.taxRateId
-          ? { connect: { id: rest.taxRateId } }
-          : undefined, // ✅ use the relation field
-        taxRatePercent: rest.taxRatePercent
-          ? Number(rest.taxRatePercent)
-          : null,
+        taxRate: rest.taxRateId ? { connect: { id: rest.taxRateId } } : undefined, // ✅ use the relation field
+        taxRatePercent: rest.taxRatePercent ? Number(rest.taxRatePercent) : null,
         taxRatePercent: rest.taxRatePercent,
 
         invoiceDate: new Date(invoiceDate),
         dueDate: new Date(dueDate),
-        customer: rest.customerId
-          ? { connect: { id: rest.customerId } }
-          : undefined,
+        customer: rest.customerId ? { connect: { id: rest.customerId } } : undefined,
         business: { connect: { id: rest.businessId } },
         LineItem: {
           deleteMany: {},
@@ -77,9 +85,6 @@ export async function PUT(req, context) {
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Failed to update invoice:", error);
-    return NextResponse.json(
-      { error: "Invoice update failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Invoice update failed" }, { status: 500 });
   }
 }

@@ -45,20 +45,16 @@ export default function InvoicePage() {
     if (!phone) return "";
     const cleaned = phone.replace(/[^0-9]/g, "");
     if (cleaned.length === 10) {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(
-        6
-      )}`;
+      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
     }
     return phone;
   };
 
-  const subtotal = invoice.LineItem.reduce(
+  const subtotal = invoice.LineItem.reduce((sum, item) => sum + item.rate * item.quantity, 0);
+  const taxableAmount = invoice.LineItem.filter((item) => item.type === "PRODUCT").reduce(
     (sum, item) => sum + item.rate * item.quantity,
     0
   );
-  const taxableAmount = invoice.LineItem.filter(
-    (item) => item.type === "PRODUCT"
-  ).reduce((sum, item) => sum + item.rate * item.quantity, 0);
   const taxRatePercent = Number(invoice.taxRatePercent || 0);
   const taxDue = taxableAmount * (taxRatePercent / 100);
   const total = subtotal + taxDue;
@@ -92,7 +88,7 @@ export default function InvoicePage() {
             <strong>Invoice #:</strong> {invoice.number}
           </p>
           <p>
-            <strong>Customer ID:</strong> {invoice.customer?.id}
+            <strong>Customer ID:</strong> {invoice?.customerId}
           </p>
           <p>
             <strong>Due Date:</strong> {formattedDueDate}
@@ -101,15 +97,13 @@ export default function InvoicePage() {
       </header>
 
       <section className="mb-6">
-        <h3 className="font-bold text-gray-700 border-b border-gray-300 pb-1 mb-2">
-          Ship To
-        </h3>
+        <h3 className="font-bold text-gray-700 border-b border-gray-300 pb-1 mb-2">Ship To</h3>
         <div>
           <p>{invoice.customer?.name}</p>
           <p>{invoice.customer?.addressLine1}</p>
+          <p>{invoice.customer?.addressLine2}</p>
           <p>
-            {invoice.customer?.city}, {invoice.customer?.state}{" "}
-            {invoice.customer?.postalCode}
+            {invoice.customer?.city}, {invoice.customer?.state} {invoice.customer?.postalCode}
           </p>
           <p>{formatPhone(invoice.customer?.phone)}</p>
         </div>
@@ -129,12 +123,8 @@ export default function InvoicePage() {
               <td className="p-2">
                 {item.name} {item.description && `(${item.description})`}
               </td>
-              <td className="text-center p-2">
-                {item.type === "PRODUCT" ? "X" : ""}
-              </td>
-              <td className="text-right p-2">
-                ${(item.rate * item.quantity).toFixed(2)}
-              </td>
+              <td className="text-center p-2">{item.type === "PRODUCT" ? "X" : ""}</td>
+              <td className="text-right p-2">${(item.rate * item.quantity).toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
@@ -162,13 +152,12 @@ export default function InvoicePage() {
 
       <footer className="text-center text-xs border-t pt-4">
         <p>
-          Make all checks payable to{" "}
-          <strong>{business?.name || "Your Company Name"}</strong>
+          Make all checks payable to <strong>{business?.name || "Your Company Name"}</strong>
         </p>
         <p className="mt-4">Thank you for your business!</p>
         <p className="text-gray-500">
-          If you have questions about this invoice, contact {business?.name},{" "}
-          {formatPhone(business?.phone)}, {business?.email}
+          If you have questions about this invoice, contact {business?.name}, {formatPhone(business?.phone)},{" "}
+          {business?.email}
         </p>
       </footer>
     </div>
